@@ -176,7 +176,7 @@ bool CGUIWindow::Load(TiXmlDocument &xmlDoc)
 		1、
 
 	说明:
-		1、
+		1、加载对应此界面的xml  文件
 */
 	TiXmlElement* pRootElement = xmlDoc.RootElement();
 	if (strcmpi(pRootElement->Value(), "window"))
