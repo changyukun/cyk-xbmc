@@ -378,7 +378,7 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 {
 /*
 	参数:
-		1、
+		1、pInput	: 传入的为输入的实例，通常为在CDVDPlayer::OpenInputStream() 方法中实例的
 		
 	返回:
 		1、
@@ -411,7 +411,7 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 	// could be used for interupting ffmpeg while opening a file (eg internet streams)
 	// url_set_interrupt_cb(NULL);
 
-	m_pInput = pInput;
+	m_pInput = pInput;/* 保存传入的输入实例*/
 	strFile = m_pInput->GetFileName();
 
 	bool streaminfo = true; /* set to true if we want to look for streams before playback*/
@@ -460,8 +460,12 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 	}
 	else /* 类型为其他*/
 	{
+		/* 分配一个ffmpeg 缓冲空间*/
 		unsigned char* buffer = (unsigned char*)m_dllAvUtil.av_malloc(FFMPEG_FILE_BUFFER_SIZE);
+
+		/* 将文件的读、定位、buffer、输入流句柄等传入到avformat 模块中*/
 		m_ioContext = m_dllAvFormat.av_alloc_put_byte(buffer, FFMPEG_FILE_BUFFER_SIZE, 0, m_pInput, dvd_file_read, NULL, dvd_file_seek);
+
 		m_ioContext->max_packet_size = m_pInput->GetBlockSize();
 		
 		if(m_ioContext->max_packet_size)

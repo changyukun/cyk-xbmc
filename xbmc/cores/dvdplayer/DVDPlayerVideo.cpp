@@ -127,171 +127,241 @@ CDVDPlayerVideo::CDVDPlayerVideo( CDVDClock* pClock
 , m_messageQueue("video")
 , m_messageParent(parent)
 {
-  m_pClock = pClock;
-  m_pOverlayContainer = pOverlayContainer;
-  m_pTempOverlayPicture = NULL;
-  m_pVideoCodec = NULL;
-  m_pOverlayCodecCC = NULL;
-  m_speed = DVD_PLAYSPEED_NORMAL;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	m_pClock = pClock;
+	m_pOverlayContainer = pOverlayContainer;
+	m_pTempOverlayPicture = NULL;
+	m_pVideoCodec = NULL;
+	m_pOverlayCodecCC = NULL;
+	m_speed = DVD_PLAYSPEED_NORMAL;
 
-  m_bRenderSubs = false;
-  m_stalled = false;
-  m_started = false;
-  m_iVideoDelay = 0;
-  m_iSubtitleDelay = 0;
-  m_fForcedAspectRatio = 0;
-  m_iNrOfPicturesNotToSkip = 0;
-  m_messageQueue.SetMaxDataSize(40 * 1024 * 1024);
-  m_messageQueue.SetMaxTimeSize(8.0);
-  g_dvdPerformanceCounter.EnableVideoQueue(&m_messageQueue);
+	m_bRenderSubs = false;
+	m_stalled = false;
+	m_started = false;
+	m_iVideoDelay = 0;
+	m_iSubtitleDelay = 0;
+	m_fForcedAspectRatio = 0;
+	m_iNrOfPicturesNotToSkip = 0;
+	m_messageQueue.SetMaxDataSize(40 * 1024 * 1024);
+	m_messageQueue.SetMaxTimeSize(8.0);
+	g_dvdPerformanceCounter.EnableVideoQueue(&m_messageQueue);
 
-  m_iCurrentPts = DVD_NOPTS_VALUE;
-  m_iDroppedFrames = 0;
-  m_fFrameRate = 25;
-  m_bFpsInvalid = false;
-  m_bAllowFullscreen = false;
-  memset(&m_output, 0, sizeof(m_output));
+	m_iCurrentPts = DVD_NOPTS_VALUE;
+	m_iDroppedFrames = 0;
+	m_fFrameRate = 25;
+	m_bFpsInvalid = false;
+	m_bAllowFullscreen = false;
+	memset(&m_output, 0, sizeof(m_output));
 }
 
 CDVDPlayerVideo::~CDVDPlayerVideo()
 {
-  StopThread();
-  g_dvdPerformanceCounter.DisableVideoQueue();
-  g_VideoReferenceClock.StopThread();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	StopThread();
+	g_dvdPerformanceCounter.DisableVideoQueue();
+	g_VideoReferenceClock.StopThread();
 }
 
 double CDVDPlayerVideo::GetOutputDelay()
 {
-    double time = m_messageQueue.GetPacketCount(CDVDMsg::DEMUXER_PACKET);
-    if( m_fFrameRate )
-      time = (time * DVD_TIME_BASE) / m_fFrameRate;
-    else
-      time = 0.0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	double time = m_messageQueue.GetPacketCount(CDVDMsg::DEMUXER_PACKET);
+	if( m_fFrameRate )
+		time = (time * DVD_TIME_BASE) / m_fFrameRate;
+	else
+		time = 0.0;
 
-    if( m_speed != 0 )
-      time = time * DVD_PLAYSPEED_NORMAL / abs(m_speed);
+	if( m_speed != 0 )
+		time = time * DVD_PLAYSPEED_NORMAL / abs(m_speed);
 
-    return time;
+	return time;
 }
 
 bool CDVDPlayerVideo::OpenStream( CDVDStreamInfo &hint )
 {
-  unsigned int surfaces = 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	unsigned int surfaces = 0;
 #ifdef HAS_VIDEO_PLAYBACK
-  surfaces = g_renderManager.GetProcessorSize();
+	surfaces = g_renderManager.GetProcessorSize();
 #endif
 
-  CLog::Log(LOGNOTICE, "Creating video codec with codec id: %i", hint.codec);
-  CDVDVideoCodec* codec = CDVDFactoryCodec::CreateVideoCodec(hint, surfaces);
-  if(!codec)
-  {
-    CLog::Log(LOGERROR, "Unsupported video codec");
-    return false;
-  }
+	CLog::Log(LOGNOTICE, "Creating video codec with codec id: %i", hint.codec);
+	CDVDVideoCodec* codec = CDVDFactoryCodec::CreateVideoCodec(hint, surfaces);
+	if(!codec)
+	{
+		CLog::Log(LOGERROR, "Unsupported video codec");
+		return false;
+	}
 
-  if(g_guiSettings.GetBool("videoplayer.usedisplayasclock") && g_VideoReferenceClock.ThreadHandle() == NULL)
-  {
-    g_VideoReferenceClock.Create();
-    //we have to wait for the clock to start otherwise alsa can cause trouble
-    if (!g_VideoReferenceClock.WaitStarted(2000))
-      CLog::Log(LOGDEBUG, "g_VideoReferenceClock didn't start in time");
-  }
+	if(g_guiSettings.GetBool("videoplayer.usedisplayasclock") && g_VideoReferenceClock.ThreadHandle() == NULL)
+	{
+		g_VideoReferenceClock.Create();
+		//we have to wait for the clock to start otherwise alsa can cause trouble
+		if (!g_VideoReferenceClock.WaitStarted(2000))
+			CLog::Log(LOGDEBUG, "g_VideoReferenceClock didn't start in time");
+	}
 
-  if(m_messageQueue.IsInited())
-    m_messageQueue.Put(new CDVDMsgVideoCodecChange(hint, codec), 0);
-  else
-  {
-    OpenStream(hint, codec);
-    CLog::Log(LOGNOTICE, "Creating video thread");
-    m_messageQueue.Init();
-    Create();
-  }
-  return true;
+	if(m_messageQueue.IsInited())
+		m_messageQueue.Put(new CDVDMsgVideoCodecChange(hint, codec), 0);
+	else
+	{
+		OpenStream(hint, codec);
+		CLog::Log(LOGNOTICE, "Creating video thread");
+		m_messageQueue.Init();
+		Create(); /* changyukun --- 创建了并启动了视频线程*/
+	}
+	return true;
 }
 
 void CDVDPlayerVideo::OpenStream(CDVDStreamInfo &hint, CDVDVideoCodec* codec)
 {
-  //reported fps is usually not completely correct
-  if (hint.fpsrate && hint.fpsscale)
-    m_fFrameRate = DVD_TIME_BASE / CDVDCodecUtils::NormalizeFrameduration((double)DVD_TIME_BASE * hint.fpsscale / hint.fpsrate);
-  else
-    m_fFrameRate = 25;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	//reported fps is usually not completely correct
+	if (hint.fpsrate && hint.fpsscale)
+		m_fFrameRate = DVD_TIME_BASE / CDVDCodecUtils::NormalizeFrameduration((double)DVD_TIME_BASE * hint.fpsscale / hint.fpsrate);
+	else
+		m_fFrameRate = 25;
 
-  m_bFpsInvalid = (hint.fpsrate == 0 || hint.fpsscale == 0);
+	m_bFpsInvalid = (hint.fpsrate == 0 || hint.fpsscale == 0);
 
-  m_bCalcFrameRate = g_guiSettings.GetBool("videoplayer.usedisplayasclock") ||
-                     g_guiSettings.GetBool("videoplayer.adjustrefreshrate");
-  ResetFrameRateCalc();
+	m_bCalcFrameRate = g_guiSettings.GetBool("videoplayer.usedisplayasclock") || g_guiSettings.GetBool("videoplayer.adjustrefreshrate");
+	ResetFrameRateCalc();
 
-  m_iDroppedRequest = 0;
-  m_iLateFrames = 0;
-  m_autosync = 1;
+	m_iDroppedRequest = 0;
+	m_iLateFrames = 0;
+	m_autosync = 1;
 
-  if( m_fFrameRate > 100 || m_fFrameRate < 5 )
-  {
-    CLog::Log(LOGERROR, "CDVDPlayerVideo::OpenStream - Invalid framerate %d, using forced 25fps and just trust timestamps", (int)m_fFrameRate);
-    m_fFrameRate = 25;
-  }
+	if( m_fFrameRate > 100 || m_fFrameRate < 5 )
+	{
+		CLog::Log(LOGERROR, "CDVDPlayerVideo::OpenStream - Invalid framerate %d, using forced 25fps and just trust timestamps", (int)m_fFrameRate);
+		m_fFrameRate = 25;
+	}
 
-  // use aspect in stream if available
-  if(hint.forced_aspect)
-    m_fForcedAspectRatio = hint.aspect;
-  else
-    m_fForcedAspectRatio = 0.0;
+	// use aspect in stream if available
+	if(hint.forced_aspect)
+		m_fForcedAspectRatio = hint.aspect;
+	else
+		m_fForcedAspectRatio = 0.0;
 
-  if (m_pVideoCodec)
-    delete m_pVideoCodec;
+	if (m_pVideoCodec)
+		delete m_pVideoCodec;
 
-  m_pVideoCodec = codec;
-  m_hints   = hint;
-  m_stalled = m_messageQueue.GetPacketCount(CDVDMsg::DEMUXER_PACKET) == 0;
-  m_started = false;
-  m_codecname = m_pVideoCodec->GetName();
+	m_pVideoCodec = codec;
+	m_hints   = hint;
+	m_stalled = m_messageQueue.GetPacketCount(CDVDMsg::DEMUXER_PACKET) == 0;
+	m_started = false;
+	m_codecname = m_pVideoCodec->GetName();
 }
 
 void CDVDPlayerVideo::CloseStream(bool bWaitForBuffers)
 {
-  // wait until buffers are empty
-  if (bWaitForBuffers && m_speed > 0) m_messageQueue.WaitUntilEmpty();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// wait until buffers are empty
+	if (bWaitForBuffers && m_speed > 0) 
+		m_messageQueue.WaitUntilEmpty();
 
-  m_messageQueue.Abort();
+	m_messageQueue.Abort();
 
-  // wait for decode_video thread to end
-  CLog::Log(LOGNOTICE, "waiting for video thread to exit");
+	// wait for decode_video thread to end
+	CLog::Log(LOGNOTICE, "waiting for video thread to exit");
 
-  StopThread(); // will set this->m_bStop to true
+	StopThread(); // will set this->m_bStop to true
 
-  m_messageQueue.End();
+	m_messageQueue.End();
 
-  CLog::Log(LOGNOTICE, "deleting video codec");
-  if (m_pVideoCodec)
-  {
-    m_pVideoCodec->Dispose();
-    delete m_pVideoCodec;
-    m_pVideoCodec = NULL;
-  }
+	CLog::Log(LOGNOTICE, "deleting video codec");
+	if (m_pVideoCodec)
+	{
+		m_pVideoCodec->Dispose();
+		delete m_pVideoCodec;
+		m_pVideoCodec = NULL;
+	}
 
-  if (m_pTempOverlayPicture)
-  {
-    CDVDCodecUtils::FreePicture(m_pTempOverlayPicture);
-    m_pTempOverlayPicture = NULL;
-  }
+	if (m_pTempOverlayPicture)
+	{
+		CDVDCodecUtils::FreePicture(m_pTempOverlayPicture);
+		m_pTempOverlayPicture = NULL;
+	}
 
-  //tell the clock we stopped playing video
-  m_pClock->UpdateFramerate(0.0);
+	//tell the clock we stopped playing video
+	m_pClock->UpdateFramerate(0.0);
 }
 
 void CDVDPlayerVideo::OnStartup()
 {
-  m_iDroppedFrames = 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	m_iDroppedFrames = 0;
 
-  m_crop.x1 = m_crop.x2 = 0.0f;
-  m_crop.y1 = m_crop.y2 = 0.0f;
+	m_crop.x1 = m_crop.x2 = 0.0f;
+	m_crop.y1 = m_crop.y2 = 0.0f;
 
-  m_iCurrentPts = DVD_NOPTS_VALUE;
-  m_FlipTimeStamp = m_pClock->GetAbsoluteClock();
+	m_iCurrentPts = DVD_NOPTS_VALUE;
+	m_FlipTimeStamp = m_pClock->GetAbsoluteClock();
 
-  g_dvdPerformanceCounter.EnableVideoDecodePerformance(ThreadHandle());
+	g_dvdPerformanceCounter.EnableVideoDecodePerformance(ThreadHandle());
 }
 
 void CDVDPlayerVideo::Process()

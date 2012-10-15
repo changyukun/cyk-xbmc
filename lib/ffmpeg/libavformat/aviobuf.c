@@ -49,28 +49,39 @@ int init_put_byte(ByteIOContext *s,
                   int (*write_packet)(void *opaque, uint8_t *buf, int buf_size),
                   int64_t (*seek)(void *opaque, int64_t offset, int whence))
 {
-    s->buffer = buffer;
-    s->buffer_size = buffer_size;
-    s->buf_ptr = buffer;
-    s->opaque = opaque;
-    url_resetbuf(s, write_flag ? URL_WRONLY : URL_RDONLY);
-    s->write_packet = write_packet;
-    s->read_packet = read_packet;
-    s->seek = seek;
-    s->pos = 0;
-    s->must_flush = 0;
-    s->eof_reached = 0;
-    s->error = 0;
-    s->is_streamed = 0;
-    s->max_packet_size = 0;
-    s->update_checksum= NULL;
-    if(!read_packet && !write_flag){
-        s->pos = buffer_size;
-        s->buf_end = s->buffer + buffer_size;
-    }
-    s->read_pause = NULL;
-    s->read_seek  = NULL;
-    return 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	s->buffer = buffer;
+	s->buffer_size = buffer_size;
+	s->buf_ptr = buffer;
+	s->opaque = opaque;
+	url_resetbuf(s, write_flag ? URL_WRONLY : URL_RDONLY);
+	s->write_packet = write_packet;
+	s->read_packet = read_packet;
+	s->seek = seek;
+	s->pos = 0;
+	s->must_flush = 0;
+	s->eof_reached = 0;
+	s->error = 0;
+	s->is_streamed = 0;
+	s->max_packet_size = 0;
+	s->update_checksum= NULL;
+	if(!read_packet && !write_flag)
+	{
+	    s->pos = buffer_size;
+	    s->buf_end = s->buffer + buffer_size;
+	}
+	s->read_pause = NULL;
+	s->read_seek  = NULL;
+	return 0;
 }
 
 ByteIOContext *av_alloc_put_byte(
@@ -82,14 +93,33 @@ ByteIOContext *av_alloc_put_byte(
                   int (*write_packet)(void *opaque, uint8_t *buf, int buf_size),
                   int64_t (*seek)(void *opaque, int64_t offset, int whence))
 {
-    ByteIOContext *s = av_mallocz(sizeof(ByteIOContext));
-    init_put_byte(s, buffer, buffer_size, write_flag, opaque,
-                  read_packet, write_packet, seek);
-    return s;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	ByteIOContext *s = av_mallocz(sizeof(ByteIOContext));
+	init_put_byte(s, buffer, buffer_size, write_flag, opaque, read_packet, write_packet, seek);
+	return s;
 }
 
 static void flush_buffer(ByteIOContext *s)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
     if (s->buf_ptr > s->buffer) {
         if (s->write_packet && !s->error){
             int ret= s->write_packet(s->opaque, s->buffer, s->buf_ptr - s->buffer);
@@ -108,6 +138,16 @@ static void flush_buffer(ByteIOContext *s)
 
 void put_byte(ByteIOContext *s, int b)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
     *(s->buf_ptr)++ = b;
     if (s->buf_ptr >= s->buf_end)
         flush_buffer(s);
@@ -115,6 +155,16 @@ void put_byte(ByteIOContext *s, int b)
 
 void put_nbyte(ByteIOContext *s, int b, int count)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
     while (count > 0) {
         int len = FFMIN(s->buf_end - s->buf_ptr, count);
         memset(s->buf_ptr, b, len);
@@ -129,6 +179,16 @@ void put_nbyte(ByteIOContext *s, int b, int count)
 
 void put_buffer(ByteIOContext *s, const unsigned char *buf, int size)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
     while (size > 0) {
         int len = FFMIN(s->buf_end - s->buf_ptr, size);
         memcpy(s->buf_ptr, buf, len);
@@ -144,12 +204,32 @@ void put_buffer(ByteIOContext *s, const unsigned char *buf, int size)
 
 void put_flush_packet(ByteIOContext *s)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
     flush_buffer(s);
     s->must_flush = 0;
 }
 
 int64_t url_fseek(ByteIOContext *s, int64_t offset, int whence)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
     int64_t offset1;
     int64_t pos;
     int force = whence & AVSEEK_FORCE;
@@ -207,12 +287,32 @@ int64_t url_fseek(ByteIOContext *s, int64_t offset, int whence)
 
 int url_fskip(ByteIOContext *s, int64_t offset)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
     int64_t ret = url_fseek(s, offset, SEEK_CUR);
     return ret < 0 ? ret : 0;
 }
 
 int64_t url_ftell(ByteIOContext *s)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
     return url_fseek(s, 0, SEEK_CUR);
 }
 

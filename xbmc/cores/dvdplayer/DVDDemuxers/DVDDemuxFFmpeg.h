@@ -141,6 +141,6 @@ protected:
   unsigned m_program;
   XbmcThreads::EndTime  m_timeout;
 
-  CDVDInputStream* m_pInput;
+  CDVDInputStream* m_pInput; /* 保存输入模块的实例，见open 方法说明*/
 };
 

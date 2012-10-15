@@ -739,7 +739,12 @@ bool CDVDPlayer::OpenDemuxStream()
 		int attempts = 10;
 		while(!m_bStop && attempts-- > 0)
 		{
-			m_pDemuxer = CDVDFactoryDemuxer::CreateDemuxer(m_pInputStream); /* 根据输入流实例创建一个demux 实例*/
+			/* 
+				根据输入流实例创建一个demux 实例, 创建demux  实例的同
+				时会调用demux 的open 方法，就会将传入的输入实例input 实
+				例与demux 实例进行关联
+			*/
+			m_pDemuxer = CDVDFactoryDemuxer::CreateDemuxer(m_pInputStream); 
 			if(!m_pDemuxer && m_pInputStream->NextStream())
 			{
 				CLog::Log(LOGDEBUG, "%s - New stream available from input, retry open", __FUNCTION__);
@@ -1430,7 +1435,7 @@ void CDVDPlayer::Process()
 
 		// see if we can find something better to play
 		if (IsBetterStream(m_CurrentAudio,    pStream)) OpenAudioStream   (pStream->iId, pStream->source);
-		if (IsBetterStream(m_CurrentVideo,    pStream)) OpenVideoStream   (pStream->iId, pStream->source);
+		if (IsBetterStream(m_CurrentVideo,    pStream)) OpenVideoStream   (pStream->iId, pStream->source);/* changyukun --- 启动视频解码器*/
 		if (IsBetterStream(m_CurrentSubtitle, pStream)) OpenSubtitleStream(pStream->iId, pStream->source);
 		if (IsBetterStream(m_CurrentTeletext, pStream)) OpenTeletextStream(pStream->iId, pStream->source);
 
@@ -3598,7 +3603,7 @@ bool CDVDPlayer::OpenVideoStream(int iStream, int source)
 
 	if(m_CurrentVideo.id < 0|| m_CurrentVideo.hint != hint)
 	{
-		if (!m_dvdPlayerVideo.OpenStream(hint))
+		if (!m_dvdPlayerVideo.OpenStream(hint)) /* changyukun ============ */
 		{
 			/* mark stream as disabled, to disallaw further attempts */
 			CLog::Log(LOGWARNING, "%s - Unsupported stream %d. Stream disabled.", __FUNCTION__, iStream);
