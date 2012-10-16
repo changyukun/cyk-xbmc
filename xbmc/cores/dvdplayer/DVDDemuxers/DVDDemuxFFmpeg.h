@@ -84,63 +84,73 @@ public:
 class CDVDDemuxFFmpeg : public CDVDDemux
 {
 public:
-  CDVDDemuxFFmpeg();
-  virtual ~CDVDDemuxFFmpeg();
+	CDVDDemuxFFmpeg();
+	virtual ~CDVDDemuxFFmpeg();
 
-  bool Open(CDVDInputStream* pInput);
-  void Dispose();
-  void Reset();
-  void Flush();
-  void Abort();
-  void SetSpeed(int iSpeed);
-  virtual std::string GetFileName();
+	bool Open(CDVDInputStream* pInput);
+	void Dispose();
+	void Reset();
+	void Flush();
+	void Abort();
+	void SetSpeed(int iSpeed);
+	virtual std::string GetFileName();
 
-  DemuxPacket* Read();
+	DemuxPacket* Read();
 
-  bool SeekTime(int time, bool backwords = false, double* startpts = NULL);
-  bool SeekByte(__int64 pos);
-  int GetStreamLength();
-  CDemuxStream* GetStream(int iStreamId);
-  int GetNrOfStreams();
+	bool SeekTime(int time, bool backwords = false, double* startpts = NULL);
+	bool SeekByte(__int64 pos);
+	int GetStreamLength();
+	CDemuxStream* GetStream(int iStreamId);
+	int GetNrOfStreams();
 
-  bool SeekChapter(int chapter, double* startpts = NULL);
-  int GetChapterCount();
-  int GetChapter();
-  void GetChapterName(std::string& strChapterName);
-  virtual void GetStreamCodecName(int iStreamId, CStdString &strName);
+	bool SeekChapter(int chapter, double* startpts = NULL);
+	int GetChapterCount();
+	int GetChapter();
+	void GetChapterName(std::string& strChapterName);
+	virtual void GetStreamCodecName(int iStreamId, CStdString &strName);
 
-  bool Aborted();
+	bool Aborted();
 
-  AVFormatContext* m_pFormatContext;
+	AVFormatContext* m_pFormatContext;	/* 
+											通过调用m_dllAvFormat->av_open_input_stream()  方法对输入的input 进行分析后
+											得到此内容的值，见open 方法 
+										*/
 
 protected:
-  friend class CDemuxStreamAudioFFmpeg;
-  friend class CDemuxStreamVideoFFmpeg;
-  friend class CDemuxStreamSubtitleFFmpeg;
+	friend class CDemuxStreamAudioFFmpeg;
+	friend class CDemuxStreamVideoFFmpeg;
+	friend class CDemuxStreamSubtitleFFmpeg;
 
-  int ReadFrame(AVPacket *packet);
-  void AddStream(int iId);
+	int ReadFrame(AVPacket *packet);
+	void AddStream(int iId);
 
-  double ConvertTimestamp(int64_t pts, int den, int num);
-  void UpdateCurrentPTS();
+	double ConvertTimestamp(int64_t pts, int den, int num);
+	void UpdateCurrentPTS();
 
-  CCriticalSection m_critSection;
-  #define MAX_STREAMS 100
-  CDemuxStream* m_streams[MAX_STREAMS]; // maximum number of streams that ffmpeg can handle
+	CCriticalSection m_critSection;
+#define MAX_STREAMS 100
+	CDemuxStream* m_streams[MAX_STREAMS];/* 保存各个流的信息，即流信息的数组，一个id 流占用数组的一个单元*/             // maximum number of streams that ffmpeg can handle
 
-  ByteIOContext* m_ioContext;
+	
+	ByteIOContext* m_ioContext; 	/* 
+									视频流的文件与ffmpeg 动态库之间的描述数据结构，见open 方法中
+									对m_dllAvFormat->av_alloc_put_byte()  的调用，即传入了文件的read、seek、buffer 等
+									参数将视频文件(实质是文件cache) 与ffmpeg 关联
+								*/
 
-  DllAvFormat m_dllAvFormat;
-  DllAvCodec  m_dllAvCodec;
-  DllAvUtil   m_dllAvUtil;
+	
+	
+	DllAvFormat m_dllAvFormat; 	
+	DllAvCodec  m_dllAvCodec;
+	DllAvUtil   m_dllAvUtil;
 
-  double   m_iCurrentPts; // used for stream length estimation
-  bool     m_bMatroska;
-  bool     m_bAVI;
-  int      m_speed;
-  unsigned m_program;
-  XbmcThreads::EndTime  m_timeout;
+	double   m_iCurrentPts; // used for stream length estimation
+	bool     m_bMatroska;
+	bool     m_bAVI;
+	int      m_speed;
+	unsigned m_program;
+	XbmcThreads::EndTime  m_timeout;
 
-  CDVDInputStream* m_pInput; /* 保存输入模块的实例，见open 方法说明*/
+	CDVDInputStream* m_pInput; /* 保存输入模块的实例，见open 方法说明*/
 };
 

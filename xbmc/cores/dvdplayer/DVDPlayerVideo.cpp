@@ -51,72 +51,94 @@ using namespace std;
 class CPulldownCorrection
 {
 public:
-  CPulldownCorrection()
-  {
-    m_duration = 0.0;
-    m_accum    = 0;
-    m_total    = 0;
-    m_next     = m_pattern.end();
-  }
+	CPulldownCorrection()
+	{
+		m_duration = 0.0;
+		m_accum    = 0;
+		m_total    = 0;
+		m_next     = m_pattern.end();
+	}
 
-  void init(double fps, int *begin, int *end)
-  {
-    std::copy(begin, end, std::back_inserter(m_pattern));
-    m_duration = DVD_TIME_BASE / fps;
-    m_accum    = 0;
-    m_total    = std::accumulate(m_pattern.begin(), m_pattern.end(), 0);
-    m_next     = m_pattern.begin();
-  }
+	void init(double fps, int *begin, int *end)
+	{
+		std::copy(begin, end, std::back_inserter(m_pattern));
+		m_duration = DVD_TIME_BASE / fps;
+		m_accum    = 0;
+		m_total    = std::accumulate(m_pattern.begin(), m_pattern.end(), 0);
+		m_next     = m_pattern.begin();
+	}
 
-  double pts()
-  {
-    double input  = m_duration * std::distance(m_pattern.begin(), m_next);
-    double output = m_duration * m_accum / m_total;
-    return output - input;
-  }
+	double pts()
+	{
+		double input  = m_duration * std::distance(m_pattern.begin(), m_next);
+		double output = m_duration * m_accum / m_total;
+		return output - input;
+	}
 
-  double dur()
-  {
-    return m_duration * m_pattern.size() * *m_next / m_total;
-  }
+	double dur()
+	{
+		return m_duration * m_pattern.size() * *m_next / m_total;
+	}
 
-  void next()
-  {
-    m_accum += *m_next;
-    if(++m_next == m_pattern.end())
-    {
-      m_next  = m_pattern.begin();
-      m_accum = 0;
-    }
-  }
+	void next()
+	{
+		m_accum += *m_next;
+		if(++m_next == m_pattern.end())
+		{
+			m_next  = m_pattern.begin();
+			m_accum = 0;
+		}
+	}
 
-  bool enabled()
-  {
-    return m_pattern.size() > 0;
-  }
+	bool enabled()
+	{
+		return m_pattern.size() > 0;
+	}
 private:
-  double                     m_duration;
-  int                        m_total;
-  int                        m_accum;
-  std::vector<int>           m_pattern;
-  std::vector<int>::iterator m_next;
+	double                     m_duration;
+	int                        m_total;
+	int                        m_accum;
+	std::vector<int>           m_pattern;
+	std::vector<int>::iterator m_next;
 };
 
 
 class CDVDMsgVideoCodecChange : public CDVDMsg
 {
 public:
-  CDVDMsgVideoCodecChange(const CDVDStreamInfo &hints, CDVDVideoCodec* codec)
-    : CDVDMsg(GENERAL_STREAMCHANGE)
-    , m_codec(codec)
-    , m_hints(hints)
-  {}
- ~CDVDMsgVideoCodecChange()
-  {
-    delete m_codec;
-  }
-  CDVDVideoCodec* m_codec;
-  CDVDStreamInfo  m_hints;
+	CDVDMsgVideoCodecChange(const CDVDStreamInfo &hints, CDVDVideoCodec* codec)
+									: CDVDMsg(GENERAL_STREAMCHANGE)
+									, m_codec(codec)
+									, m_hints(hints)
+	{
+	/*
+		参数:
+			1、
+			
+		返回:
+			1、
+			
+		说明:
+			1、
+	*/
+	}
+	
+	~CDVDMsgVideoCodecChange()
+	{
+	/*
+		参数:
+			1、
+			
+		返回:
+			1、
+			
+		说明:
+			1、
+	*/
+		delete m_codec;
+	}
+	CDVDVideoCodec* m_codec;
+	CDVDStreamInfo  m_hints;
 };
 
 
@@ -244,7 +266,7 @@ bool CDVDPlayerVideo::OpenStream( CDVDStreamInfo &hint )
 		OpenStream(hint, codec);
 		CLog::Log(LOGNOTICE, "Creating video thread");
 		m_messageQueue.Init();
-		Create(); /* changyukun --- 创建了并启动了视频线程*/
+		Create(); /* changyukun AAA--3--AAA  间接创建启动视频解码器线程，即线程函数CDVDPlayerVideo::Process() */
 	}
 	return true;
 }
@@ -830,737 +852,865 @@ void CDVDPlayerVideo::Process()
 
 void CDVDPlayerVideo::OnExit()
 {
-  g_dvdPerformanceCounter.DisableVideoDecodePerformance();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	g_dvdPerformanceCounter.DisableVideoDecodePerformance();
 
-  if (m_pOverlayCodecCC)
-  {
-    m_pOverlayCodecCC->Dispose();
-    m_pOverlayCodecCC = NULL;
-  }
+	if (m_pOverlayCodecCC)
+	{
+		m_pOverlayCodecCC->Dispose();
+		m_pOverlayCodecCC = NULL;
+	}
 
-  CLog::Log(LOGNOTICE, "thread end: video_thread");
+	CLog::Log(LOGNOTICE, "thread end: video_thread");
 }
 
 void CDVDPlayerVideo::ProcessVideoUserData(DVDVideoUserData* pVideoUserData, double pts)
 {
-  // check userdata type
-  BYTE* data = pVideoUserData->data;
-  int size = pVideoUserData->size;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// check userdata type
+	BYTE* data = pVideoUserData->data;
+	int size = pVideoUserData->size;
 
-  if (size >= 2)
-  {
-    if (data[0] == 'C' && data[1] == 'C')
-    {
-      data += 2;
-      size -= 2;
+	if (size >= 2)
+	{
+		if (data[0] == 'C' && data[1] == 'C')
+		{
+			data += 2;
+			size -= 2;
 
-      // closed captioning
-      if (!m_pOverlayCodecCC)
-      {
-        m_pOverlayCodecCC = new CDVDOverlayCodecCC();
-        CDVDCodecOptions options;
-        CDVDStreamInfo info;
-        if (!m_pOverlayCodecCC->Open(info, options))
-        {
-          delete m_pOverlayCodecCC;
-          m_pOverlayCodecCC = NULL;
-        }
-      }
+			// closed captioning
+			if (!m_pOverlayCodecCC)
+			{
+				m_pOverlayCodecCC = new CDVDOverlayCodecCC();
+				CDVDCodecOptions options;
+				CDVDStreamInfo info;
+				if (!m_pOverlayCodecCC->Open(info, options))
+				{
+					delete m_pOverlayCodecCC;
+					m_pOverlayCodecCC = NULL;
+				}
+			}
 
-      if (m_pOverlayCodecCC)
-      {
-        m_pOverlayCodecCC->Decode(data, size, DVD_NOPTS_VALUE, DVD_NOPTS_VALUE);
+			if (m_pOverlayCodecCC)
+			{
+				m_pOverlayCodecCC->Decode(data, size, DVD_NOPTS_VALUE, DVD_NOPTS_VALUE);
 
-        CDVDOverlay* overlay;
-        while((overlay = m_pOverlayCodecCC->GetOverlay()) != NULL)
-        {
-          overlay->iGroupId = 0;
-          overlay->iPTSStartTime += pts;
-          if(overlay->iPTSStopTime != 0.0)
-            overlay->iPTSStopTime += pts;
+				CDVDOverlay* overlay;
+				while((overlay = m_pOverlayCodecCC->GetOverlay()) != NULL)
+				{
+					overlay->iGroupId = 0;
+					overlay->iPTSStartTime += pts;
+					if(overlay->iPTSStopTime != 0.0)
+						overlay->iPTSStopTime += pts;
 
-          m_pOverlayContainer->Add(overlay);
-          overlay->Release();
-        }
-      }
-    }
-  }
+					m_pOverlayContainer->Add(overlay);
+					overlay->Release();
+				}
+			}
+		}
+	}
 }
 
 bool CDVDPlayerVideo::InitializedOutputDevice()
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #ifdef HAS_VIDEO_PLAYBACK
-  return g_renderManager.IsStarted();
+	return g_renderManager.IsStarted();
 #else
-  return false;
+	return false;
 #endif
 }
 
 void CDVDPlayerVideo::SetSpeed(int speed)
 {
-  if(m_messageQueue.IsInited())
-    m_messageQueue.Put( new CDVDMsgInt(CDVDMsg::PLAYER_SETSPEED, speed), 1 );
-  else
-    m_speed = speed;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if(m_messageQueue.IsInited())
+		m_messageQueue.Put( new CDVDMsgInt(CDVDMsg::PLAYER_SETSPEED, speed), 1 );
+	else
+		m_speed = speed;
 }
 
 void CDVDPlayerVideo::StepFrame()
 {
-  m_iNrOfPicturesNotToSkip++;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	m_iNrOfPicturesNotToSkip++;
 }
 
 void CDVDPlayerVideo::Flush()
 {
-  /* flush using message as this get's called from dvdplayer thread */
-  /* and any demux packet that has been taken out of queue need to */
-  /* be disposed of before we flush */
-  m_messageQueue.Flush();
-  m_messageQueue.Put(new CDVDMsg(CDVDMsg::GENERAL_FLUSH), 1);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	/* flush using message as this get's called from dvdplayer thread */
+	/* and any demux packet that has been taken out of queue need to */
+	/* be disposed of before we flush */
+	m_messageQueue.Flush();
+	m_messageQueue.Put(new CDVDMsg(CDVDMsg::GENERAL_FLUSH), 1);
 }
 
 #ifdef HAS_VIDEO_PLAYBACK
 void CDVDPlayerVideo::ProcessOverlays(DVDVideoPicture* pSource, double pts)
 {
-  // remove any overlays that are out of time
-  m_pOverlayContainer->CleanUp(pts - m_iSubtitleDelay);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// remove any overlays that are out of time
+	m_pOverlayContainer->CleanUp(pts - m_iSubtitleDelay);
 
-  enum EOverlay
-  { OVERLAY_AUTO // select mode auto
-  , OVERLAY_GPU  // render osd using gpu
-  , OVERLAY_BUF  // render osd on buffer
-  } render = OVERLAY_AUTO;
+	enum EOverlay
+	{ 	OVERLAY_AUTO // select mode auto
+		, OVERLAY_GPU  // render osd using gpu
+		, OVERLAY_BUF  // render osd on buffer
+	} render = OVERLAY_AUTO;
 
-  if(pSource->format == DVDVideoPicture::FMT_YUV420P)
-  {
-    if(g_Windowing.GetRenderQuirks() & RENDER_QUIRKS_MAJORMEMLEAK_OVERLAYRENDERER)
-    {
-      // for now use cpu for ssa overlays as it currently allocates and
-      // frees textures for each frame this causes a hugh memory leak
-      // on some mesa intel drivers
+	if(pSource->format == DVDVideoPicture::FMT_YUV420P)
+	{
+		if(g_Windowing.GetRenderQuirks() & RENDER_QUIRKS_MAJORMEMLEAK_OVERLAYRENDERER)
+		{
+			// for now use cpu for ssa overlays as it currently allocates and
+			// frees textures for each frame this causes a hugh memory leak
+			// on some mesa intel drivers
 
-      if(m_pOverlayContainer->ContainsOverlayType(DVDOVERLAY_TYPE_SPU)
-      || m_pOverlayContainer->ContainsOverlayType(DVDOVERLAY_TYPE_IMAGE)
-      || m_pOverlayContainer->ContainsOverlayType(DVDOVERLAY_TYPE_SSA) )
-        render = OVERLAY_BUF;
-    }
+			if(m_pOverlayContainer->ContainsOverlayType(DVDOVERLAY_TYPE_SPU)
+									|| m_pOverlayContainer->ContainsOverlayType(DVDOVERLAY_TYPE_IMAGE)
+									|| m_pOverlayContainer->ContainsOverlayType(DVDOVERLAY_TYPE_SSA) )
+			render = OVERLAY_BUF;
+		}
 
-    if(render == OVERLAY_BUF)
-    {
-      // rendering spu overlay types directly on video memory costs a lot of processing power.
-      // thus we allocate a temp picture, copy the original to it (needed because the same picture can be used more than once).
-      // then do all the rendering on that temp picture and finaly copy it to video memory.
-      // In almost all cases this is 5 or more times faster!.
+		if(render == OVERLAY_BUF)
+		{
+			// rendering spu overlay types directly on video memory costs a lot of processing power.
+			// thus we allocate a temp picture, copy the original to it (needed because the same picture can be used more than once).
+			// then do all the rendering on that temp picture and finaly copy it to video memory.
+			// In almost all cases this is 5 or more times faster!.
 
-      if(m_pTempOverlayPicture && ( m_pTempOverlayPicture->iWidth  != pSource->iWidth
-                                 || m_pTempOverlayPicture->iHeight != pSource->iHeight))
-      {
-        CDVDCodecUtils::FreePicture(m_pTempOverlayPicture);
-        m_pTempOverlayPicture = NULL;
-      }
+			if(m_pTempOverlayPicture && ( m_pTempOverlayPicture->iWidth  != pSource->iWidth || m_pTempOverlayPicture->iHeight != pSource->iHeight))
+			{
+				CDVDCodecUtils::FreePicture(m_pTempOverlayPicture);
+				m_pTempOverlayPicture = NULL;
+			}
 
-      if(!m_pTempOverlayPicture)
-        m_pTempOverlayPicture = CDVDCodecUtils::AllocatePicture(pSource->iWidth, pSource->iHeight);
-      if(!m_pTempOverlayPicture)
-        return;
+			if(!m_pTempOverlayPicture)
+				m_pTempOverlayPicture = CDVDCodecUtils::AllocatePicture(pSource->iWidth, pSource->iHeight);
+			if(!m_pTempOverlayPicture)
+				return;
 
-      CDVDCodecUtils::CopyPicture(m_pTempOverlayPicture, pSource);
-      memcpy(pSource->data     , m_pTempOverlayPicture->data     , sizeof(pSource->data));
-      memcpy(pSource->iLineSize, m_pTempOverlayPicture->iLineSize, sizeof(pSource->iLineSize));
-    }
-  }
+			CDVDCodecUtils::CopyPicture(m_pTempOverlayPicture, pSource);
+			memcpy(pSource->data     , m_pTempOverlayPicture->data     , sizeof(pSource->data));
+			memcpy(pSource->iLineSize, m_pTempOverlayPicture->iLineSize, sizeof(pSource->iLineSize));
+		}
+	}
 
-  if(render == OVERLAY_AUTO)
-    render = OVERLAY_GPU;
+	if(render == OVERLAY_AUTO)
+		render = OVERLAY_GPU;
 
-  {
-    CSingleLock lock(*m_pOverlayContainer);
+	{
+		CSingleLock lock(*m_pOverlayContainer);
 
-    VecOverlays* pVecOverlays = m_pOverlayContainer->GetOverlays();
-    VecOverlaysIter it = pVecOverlays->begin();
+		VecOverlays* pVecOverlays = m_pOverlayContainer->GetOverlays();
+		VecOverlaysIter it = pVecOverlays->begin();
 
-    //Check all overlays and render those that should be rendered, based on time and forced
-    //Both forced and subs should check timeing, pts == 0 in the stillframe case
-    while (it != pVecOverlays->end())
-    {
-      CDVDOverlay* pOverlay = *it++;
-      if(!pOverlay->bForced && !m_bRenderSubs)
-        continue;
+		//Check all overlays and render those that should be rendered, based on time and forced
+		//Both forced and subs should check timeing, pts == 0 in the stillframe case
+		while (it != pVecOverlays->end())
+		{
+			CDVDOverlay* pOverlay = *it++;
+			if(!pOverlay->bForced && !m_bRenderSubs)
+				continue;
 
-      if(pOverlay->iGroupId != pSource->iGroupId)
-        continue;
+			if(pOverlay->iGroupId != pSource->iGroupId)
+				continue;
 
-      double pts2 = pOverlay->bForced ? pts : pts - m_iSubtitleDelay;
+			double pts2 = pOverlay->bForced ? pts : pts - m_iSubtitleDelay;
 
-      if((pOverlay->iPTSStartTime <= pts2 && (pOverlay->iPTSStopTime > pts2 || pOverlay->iPTSStopTime == 0LL)) || pts == 0)
-      {
-        if (render == OVERLAY_GPU)
-          g_renderManager.AddOverlay(pOverlay, pts2);
+			if((pOverlay->iPTSStartTime <= pts2 && (pOverlay->iPTSStopTime > pts2 || pOverlay->iPTSStopTime == 0LL)) || pts == 0)
+			{
+				if (render == OVERLAY_GPU)
+					g_renderManager.AddOverlay(pOverlay, pts2);
 
-        if (render == OVERLAY_BUF)
-          CDVDOverlayRenderer::Render(pSource, pOverlay, pts2);
-      }
-    }
+				if (render == OVERLAY_BUF)
+					CDVDOverlayRenderer::Render(pSource, pOverlay, pts2);
+			}
+		}
 
-  }
+	}
 }
 #endif
 
 int CDVDPlayerVideo::OutputPicture(const DVDVideoPicture* src, double pts)
 {
-  /* picture buffer is not allowed to be modified in this call */
-  DVDVideoPicture picture(*src);
-  DVDVideoPicture* pPicture = &picture;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	/* picture buffer is not allowed to be modified in this call */
+	DVDVideoPicture picture(*src);
+	DVDVideoPicture* pPicture = &picture;
 
 #ifdef HAS_VIDEO_PLAYBACK
-  double config_framerate = m_bFpsInvalid ? 0.0 : m_fFrameRate;
-  /* check so that our format or aspect has changed. if it has, reconfigure renderer */
-  if (!g_renderManager.IsConfigured()
-   || m_output.width != pPicture->iWidth
-   || m_output.height != pPicture->iHeight
-   || m_output.dwidth != pPicture->iDisplayWidth
-   || m_output.dheight != pPicture->iDisplayHeight
-   || m_output.framerate != config_framerate
-   || m_output.color_format != (unsigned int)pPicture->format
-   || m_output.extended_format != pPicture->extended_format
-   || ( m_output.color_matrix != pPicture->color_matrix && pPicture->color_matrix != 0 ) // don't reconfigure on unspecified
-   || ( m_output.chroma_position != pPicture->chroma_position && pPicture->chroma_position != 0 )
-   || ( m_output.color_primaries != pPicture->color_primaries && pPicture->color_primaries != 0 )
-   || ( m_output.color_transfer != pPicture->color_transfer && pPicture->color_transfer != 0 )
-   || m_output.color_range != pPicture->color_range)
-  {
-    CLog::Log(LOGNOTICE, " fps: %f, pwidth: %i, pheight: %i, dwidth: %i, dheight: %i",
-      config_framerate, pPicture->iWidth, pPicture->iHeight, pPicture->iDisplayWidth, pPicture->iDisplayHeight);
-    unsigned flags = 0;
-    if(pPicture->color_range == 1)
-      flags |= CONF_FLAGS_YUV_FULLRANGE;
+	double config_framerate = m_bFpsInvalid ? 0.0 : m_fFrameRate;
+	/* check so that our format or aspect has changed. if it has, reconfigure renderer */
+	if (!g_renderManager.IsConfigured()
+							|| m_output.width != pPicture->iWidth
+							|| m_output.height != pPicture->iHeight
+							|| m_output.dwidth != pPicture->iDisplayWidth
+							|| m_output.dheight != pPicture->iDisplayHeight
+							|| m_output.framerate != config_framerate
+							|| m_output.color_format != (unsigned int)pPicture->format
+							|| m_output.extended_format != pPicture->extended_format
+							|| ( m_output.color_matrix != pPicture->color_matrix && pPicture->color_matrix != 0 ) // don't reconfigure on unspecified
+							|| ( m_output.chroma_position != pPicture->chroma_position && pPicture->chroma_position != 0 )
+							|| ( m_output.color_primaries != pPicture->color_primaries && pPicture->color_primaries != 0 )
+							|| ( m_output.color_transfer != pPicture->color_transfer && pPicture->color_transfer != 0 )
+							|| m_output.color_range != pPicture->color_range)
+	{
+		CLog::Log(LOGNOTICE, " fps: %f, pwidth: %i, pheight: %i, dwidth: %i, dheight: %i",
+		config_framerate, pPicture->iWidth, pPicture->iHeight, pPicture->iDisplayWidth, pPicture->iDisplayHeight);
+		unsigned flags = 0;
+		if(pPicture->color_range == 1)
+			flags |= CONF_FLAGS_YUV_FULLRANGE;
 
-    switch(pPicture->color_matrix)
-    {
-      case 7: // SMPTE 240M (1987)
-        flags |= CONF_FLAGS_YUVCOEF_240M;
-        break;
-      case 6: // SMPTE 170M
-      case 5: // ITU-R BT.470-2
-      case 4: // FCC
-        flags |= CONF_FLAGS_YUVCOEF_BT601;
-        break;
-      case 1: // ITU-R Rec.709 (1990) -- BT.709
-        flags |= CONF_FLAGS_YUVCOEF_BT709;
-        break;
-      case 3: // RESERVED
-      case 2: // UNSPECIFIED
-      default:
-        if(pPicture->iWidth > 1024 || pPicture->iHeight >= 600)
-          flags |= CONF_FLAGS_YUVCOEF_BT709;
-        else
-          flags |= CONF_FLAGS_YUVCOEF_BT601;
-        break;
-    }
+		switch(pPicture->color_matrix)
+		{
+			case 7: // SMPTE 240M (1987)
+				flags |= CONF_FLAGS_YUVCOEF_240M;
+				break;
+			case 6: // SMPTE 170M
+			case 5: // ITU-R BT.470-2
+			case 4: // FCC
+				flags |= CONF_FLAGS_YUVCOEF_BT601;
+				break;
+			case 1: // ITU-R Rec.709 (1990) -- BT.709
+				flags |= CONF_FLAGS_YUVCOEF_BT709;
+				break;
+			case 3: // RESERVED
+			case 2: // UNSPECIFIED
+			default:
+				if(pPicture->iWidth > 1024 || pPicture->iHeight >= 600)
+					flags |= CONF_FLAGS_YUVCOEF_BT709;
+				else
+					flags |= CONF_FLAGS_YUVCOEF_BT601;
+				break;
+		}
 
-    switch(pPicture->chroma_position)
-    {
-      case 1:
-        flags |= CONF_FLAGS_CHROMA_LEFT;
-        break;
-      case 2:
-        flags |= CONF_FLAGS_CHROMA_CENTER;
-        break;
-      case 3:
-        flags |= CONF_FLAGS_CHROMA_TOPLEFT;
-        break;
-    }
+		switch(pPicture->chroma_position)
+		{
+			case 1:
+				flags |= CONF_FLAGS_CHROMA_LEFT;
+				break;
+			case 2:
+				flags |= CONF_FLAGS_CHROMA_CENTER;
+				break;
+			case 3:
+				flags |= CONF_FLAGS_CHROMA_TOPLEFT;
+				break;
+		}
 
-    switch(pPicture->color_primaries)
-    {
-      case 1:
-        flags |= CONF_FLAGS_COLPRI_BT709;
-        break;
-      case 4:
-        flags |= CONF_FLAGS_COLPRI_BT470M;
-        break;
-      case 5:
-        flags |= CONF_FLAGS_COLPRI_BT470BG;
-        break;
-      case 6:
-        flags |= CONF_FLAGS_COLPRI_170M;
-        break;
-      case 7:
-        flags |= CONF_FLAGS_COLPRI_240M;
-        break;
-    }
+		switch(pPicture->color_primaries)
+		{
+			case 1:
+				flags |= CONF_FLAGS_COLPRI_BT709;
+				break;
+			case 4:
+				flags |= CONF_FLAGS_COLPRI_BT470M;
+				break;
+			case 5:
+				flags |= CONF_FLAGS_COLPRI_BT470BG;
+				break;
+			case 6:
+				flags |= CONF_FLAGS_COLPRI_170M;
+				break;
+			case 7:
+				flags |= CONF_FLAGS_COLPRI_240M;
+				break;
+		}
 
-    switch(pPicture->color_transfer)
-    {
-      case 1:
-        flags |= CONF_FLAGS_TRC_BT709;
-        break;
-      case 4:
-        flags |= CONF_FLAGS_TRC_GAMMA22;
-        break;
-      case 5:
-        flags |= CONF_FLAGS_TRC_GAMMA28;
-        break;
-    }
+		switch(pPicture->color_transfer)
+		{
+			case 1:
+				flags |= CONF_FLAGS_TRC_BT709;
+				break;
+			case 4:
+				flags |= CONF_FLAGS_TRC_GAMMA22;
+				break;
+			case 5:
+				flags |= CONF_FLAGS_TRC_GAMMA28;
+				break;
+		}
 
-    CStdString formatstr;
+		CStdString formatstr;
 
-    switch(pPicture->format)
-    {
-      case DVDVideoPicture::FMT_YUV420P:
-        flags |= CONF_FLAGS_FORMAT_YV12;
-        formatstr = "YV12";
-        break;
-      case DVDVideoPicture::FMT_NV12:
-        flags |= CONF_FLAGS_FORMAT_NV12;
-        formatstr = "NV12";
-        break;
-      case DVDVideoPicture::FMT_UYVY:
-        flags |= CONF_FLAGS_FORMAT_UYVY;
-        formatstr = "UYVY";
-        break;
-      case DVDVideoPicture::FMT_YUY2:
-        flags |= CONF_FLAGS_FORMAT_YUY2;
-        formatstr = "YUY2";
-        break;
-      case DVDVideoPicture::FMT_VDPAU:
-        flags |= CONF_FLAGS_FORMAT_VDPAU;
-        formatstr = "VDPAU";
-        break;
-      case DVDVideoPicture::FMT_DXVA:
-        flags |= CONF_FLAGS_FORMAT_DXVA;
-        formatstr = "DXVA";
-        break;
-      case DVDVideoPicture::FMT_VAAPI:
-        flags |= CONF_FLAGS_FORMAT_VAAPI;
-        formatstr = "VAAPI";
-        break;
-      case DVDVideoPicture::FMT_OMXEGL:
-        flags |= CONF_FLAGS_FORMAT_OMXEGL;
-        break;
-      case DVDVideoPicture::FMT_CVBREF:
-        flags |= CONF_FLAGS_FORMAT_CVBREF;
-        formatstr = "BGRA";
-        break;
-    }
+		switch(pPicture->format)
+		{
+			case DVDVideoPicture::FMT_YUV420P:
+				flags |= CONF_FLAGS_FORMAT_YV12;
+				formatstr = "YV12";
+				break;
+			case DVDVideoPicture::FMT_NV12:
+				flags |= CONF_FLAGS_FORMAT_NV12;
+				formatstr = "NV12";
+				break;
+			case DVDVideoPicture::FMT_UYVY:
+				flags |= CONF_FLAGS_FORMAT_UYVY;
+				formatstr = "UYVY";
+				break;
+			case DVDVideoPicture::FMT_YUY2:
+				flags |= CONF_FLAGS_FORMAT_YUY2;
+				formatstr = "YUY2";
+				break;
+			case DVDVideoPicture::FMT_VDPAU:
+				flags |= CONF_FLAGS_FORMAT_VDPAU;
+				formatstr = "VDPAU";
+				break;
+			case DVDVideoPicture::FMT_DXVA:
+				flags |= CONF_FLAGS_FORMAT_DXVA;
+				formatstr = "DXVA";
+				break;
+			case DVDVideoPicture::FMT_VAAPI:
+				flags |= CONF_FLAGS_FORMAT_VAAPI;
+				formatstr = "VAAPI";
+				break;
+			case DVDVideoPicture::FMT_OMXEGL:
+				flags |= CONF_FLAGS_FORMAT_OMXEGL;
+				break;
+			case DVDVideoPicture::FMT_CVBREF:
+				flags |= CONF_FLAGS_FORMAT_CVBREF;
+				formatstr = "BGRA";
+				break;
+		}
 
-    if(m_bAllowFullscreen)
-    {
-      flags |= CONF_FLAGS_FULLSCREEN;
-      m_bAllowFullscreen = false; // only allow on first configure
-    }
+		if(m_bAllowFullscreen)
+		{
+			flags |= CONF_FLAGS_FULLSCREEN;
+			m_bAllowFullscreen = false; // only allow on first configure
+		}
 
-    CLog::Log(LOGDEBUG,"%s - change configuration. %dx%d. framerate: %4.2f. format: %s",__FUNCTION__,pPicture->iWidth, pPicture->iHeight, config_framerate, formatstr.c_str());
-    if(!g_renderManager.Configure(pPicture->iWidth, pPicture->iHeight, pPicture->iDisplayWidth, pPicture->iDisplayHeight, config_framerate, flags, pPicture->extended_format))
-    {
-      CLog::Log(LOGERROR, "%s - failed to configure renderer", __FUNCTION__);
-      return EOS_ABORT;
-    }
+		CLog::Log(LOGDEBUG,"%s - change configuration. %dx%d. framerate: %4.2f. format: %s",__FUNCTION__,pPicture->iWidth, pPicture->iHeight, config_framerate, formatstr.c_str());
+		if(!g_renderManager.Configure(pPicture->iWidth, pPicture->iHeight, pPicture->iDisplayWidth, pPicture->iDisplayHeight, config_framerate, flags, pPicture->extended_format))
+		{
+			CLog::Log(LOGERROR, "%s - failed to configure renderer", __FUNCTION__);
+			return EOS_ABORT;
+		}
 
-    m_output.width = pPicture->iWidth;
-    m_output.height = pPicture->iHeight;
-    m_output.dwidth = pPicture->iDisplayWidth;
-    m_output.dheight = pPicture->iDisplayHeight;
-    m_output.framerate = config_framerate;
-    m_output.color_format = pPicture->format;
-    m_output.extended_format = pPicture->extended_format;
-    m_output.color_matrix = pPicture->color_matrix;
-    m_output.chroma_position = pPicture->chroma_position;
-    m_output.color_primaries = pPicture->color_primaries;
-    m_output.color_transfer = pPicture->color_transfer;
-    m_output.color_range = pPicture->color_range;
-  }
+		m_output.width = pPicture->iWidth;
+		m_output.height = pPicture->iHeight;
+		m_output.dwidth = pPicture->iDisplayWidth;
+		m_output.dheight = pPicture->iDisplayHeight;
+		m_output.framerate = config_framerate;
+		m_output.color_format = pPicture->format;
+		m_output.extended_format = pPicture->extended_format;
+		m_output.color_matrix = pPicture->color_matrix;
+		m_output.chroma_position = pPicture->chroma_position;
+		m_output.color_primaries = pPicture->color_primaries;
+		m_output.color_transfer = pPicture->color_transfer;
+		m_output.color_range = pPicture->color_range;
+	}
 
-  double maxfps  = 60.0;
-  bool   limited = false;
-  int    result  = 0;
+	double maxfps  = 60.0;
+	bool   limited = false;
+	int    result  = 0;
 
-  if (!g_renderManager.IsStarted()) {
-    CLog::Log(LOGERROR, "%s - renderer not started", __FUNCTION__);
-    return EOS_ABORT;
-  }
-  maxfps = g_renderManager.GetMaximumFPS();
+	if (!g_renderManager.IsStarted()) 
+	{
+		CLog::Log(LOGERROR, "%s - renderer not started", __FUNCTION__);
+		return EOS_ABORT;
+	}
+	maxfps = g_renderManager.GetMaximumFPS();
 
-  // check if our output will limit speed
-  if(m_fFrameRate * abs(m_speed) / DVD_PLAYSPEED_NORMAL > maxfps*0.9)
-    limited = true;
+	// check if our output will limit speed
+	if(m_fFrameRate * abs(m_speed) / DVD_PLAYSPEED_NORMAL > maxfps*0.9)
+		limited = true;
 
-  //correct any pattern in the timestamps
-  m_pullupCorrection.Add(pts);
-  pts += m_pullupCorrection.GetCorrection();
+	//correct any pattern in the timestamps
+	m_pullupCorrection.Add(pts);
+	pts += m_pullupCorrection.GetCorrection();
 
-  //try to calculate the framerate
-  CalcFrameRate();
+	//try to calculate the framerate
+	CalcFrameRate();
 
-  // signal to clock what our framerate is, it may want to adjust it's
-  // speed to better match with our video renderer's output speed
-  double interval;
-  int refreshrate = m_pClock->UpdateFramerate(m_fFrameRate, &interval);
-  if (refreshrate > 0) //refreshrate of -1 means the videoreferenceclock is not running
-  {//when using the videoreferenceclock, a frame is always presented half a vblank interval too late
-    pts -= DVD_TIME_BASE * interval;
-  }
+	// signal to clock what our framerate is, it may want to adjust it's
+	// speed to better match with our video renderer's output speed
+	double interval;
+	int refreshrate = m_pClock->UpdateFramerate(m_fFrameRate, &interval);
+	if (refreshrate > 0) //refreshrate of -1 means the videoreferenceclock is not running
+	{//when using the videoreferenceclock, a frame is always presented half a vblank interval too late
+		pts -= DVD_TIME_BASE * interval;
+	}
 
-  // Correct pts by user set delay and rendering delay
-  pts += m_iVideoDelay - DVD_SEC_TO_TIME(g_renderManager.GetDisplayLatency());
+	// Correct pts by user set delay and rendering delay
+	pts += m_iVideoDelay - DVD_SEC_TO_TIME(g_renderManager.GetDisplayLatency());
 
-  // calculate the time we need to delay this picture before displaying
-  double iSleepTime, iClockSleep, iFrameSleep, iPlayingClock, iCurrentClock, iFrameDuration;
+	// calculate the time we need to delay this picture before displaying
+	double iSleepTime, iClockSleep, iFrameSleep, iPlayingClock, iCurrentClock, iFrameDuration;
 
-  iPlayingClock = m_pClock->GetClock(iCurrentClock, false); // snapshot current clock
-  iClockSleep = pts - iPlayingClock; //sleep calculated by pts to clock comparison
-  iFrameSleep = m_FlipTimeStamp - iCurrentClock; // sleep calculated by duration of frame
-  iFrameDuration = pPicture->iDuration;
+	iPlayingClock = m_pClock->GetClock(iCurrentClock, false); // snapshot current clock
+	iClockSleep = pts - iPlayingClock; //sleep calculated by pts to clock comparison
+	iFrameSleep = m_FlipTimeStamp - iCurrentClock; // sleep calculated by duration of frame
+	iFrameDuration = pPicture->iDuration;
 
-  // correct sleep times based on speed
-  if(m_speed)
-  {
-    iClockSleep = iClockSleep * DVD_PLAYSPEED_NORMAL / m_speed;
-    iFrameSleep = iFrameSleep * DVD_PLAYSPEED_NORMAL / abs(m_speed);
-    iFrameDuration = iFrameDuration * DVD_PLAYSPEED_NORMAL / abs(m_speed);
-  }
-  else
-  {
-    iClockSleep = 0;
-    iFrameSleep = 0;
-  }
+	// correct sleep times based on speed
+	if(m_speed)
+	{
+		iClockSleep = iClockSleep * DVD_PLAYSPEED_NORMAL / m_speed;
+		iFrameSleep = iFrameSleep * DVD_PLAYSPEED_NORMAL / abs(m_speed);
+		iFrameDuration = iFrameDuration * DVD_PLAYSPEED_NORMAL / abs(m_speed);
+	}
+	else
+	{
+		iClockSleep = 0;
+		iFrameSleep = 0;
+	}
 
-  // dropping to a very low framerate is not correct (it should not happen at all)
-  iClockSleep = min(iClockSleep, DVD_MSEC_TO_TIME(500));
-  iFrameSleep = min(iFrameSleep, DVD_MSEC_TO_TIME(500));
+	// dropping to a very low framerate is not correct (it should not happen at all)
+	iClockSleep = min(iClockSleep, DVD_MSEC_TO_TIME(500));
+	iFrameSleep = min(iFrameSleep, DVD_MSEC_TO_TIME(500));
 
-  if( m_stalled )
-    iSleepTime = iFrameSleep;
-  else
-    iSleepTime = iFrameSleep + (iClockSleep - iFrameSleep) / m_autosync;
+	if( m_stalled )
+		iSleepTime = iFrameSleep;
+	else
+		iSleepTime = iFrameSleep + (iClockSleep - iFrameSleep) / m_autosync;
 
 #ifdef PROFILE /* during profiling, try to play as fast as possible */
-  iSleepTime = 0;
+	iSleepTime = 0;
 #endif
 
-  // present the current pts of this frame to user, and include the actual
-  // presentation delay, to allow him to adjust for it
-  if( m_stalled )
-    m_iCurrentPts = DVD_NOPTS_VALUE;
-  else
-    m_iCurrentPts = pts - max(0.0, iSleepTime);
+	// present the current pts of this frame to user, and include the actual
+	// presentation delay, to allow him to adjust for it
+	if( m_stalled )
+		m_iCurrentPts = DVD_NOPTS_VALUE;
+	else
+		m_iCurrentPts = pts - max(0.0, iSleepTime);
 
-  // timestamp when we think next picture should be displayed based on current duration
-  m_FlipTimeStamp  = iCurrentClock;
-  m_FlipTimeStamp += max(0.0, iSleepTime);
-  m_FlipTimeStamp += iFrameDuration;
+	// timestamp when we think next picture should be displayed based on current duration
+	m_FlipTimeStamp  = iCurrentClock;
+	m_FlipTimeStamp += max(0.0, iSleepTime);
+	m_FlipTimeStamp += iFrameDuration;
 
-  if (iSleepTime <= 0 && m_speed)
-    m_iLateFrames++;
-  else
-    m_iLateFrames = 0;
+	if (iSleepTime <= 0 && m_speed)
+		m_iLateFrames++;
+	else
+		m_iLateFrames = 0;
 
-  // ask decoder to drop frames next round, as we are very late
-  if(m_iLateFrames > 10)
-  {
-    if (!(pPicture->iFlags & DVP_FLAG_NOSKIP))
-    {
-      //if we're calculating the framerate,
-      //don't drop frames until we've calculated a stable framerate
-      if (m_bAllowDrop || m_speed != DVD_PLAYSPEED_NORMAL)
-      {
-        result |= EOS_VERYLATE;
-        m_pullupCorrection.Flush(); //dropped frames mess up the pattern, so just flush it
-      }
+	// ask decoder to drop frames next round, as we are very late
+	if(m_iLateFrames > 10)
+	{
+		if (!(pPicture->iFlags & DVP_FLAG_NOSKIP))
+		{
+			//if we're calculating the framerate,
+			//don't drop frames until we've calculated a stable framerate
+			if (m_bAllowDrop || m_speed != DVD_PLAYSPEED_NORMAL)
+			{
+				result |= EOS_VERYLATE;
+				m_pullupCorrection.Flush(); //dropped frames mess up the pattern, so just flush it
+			}
 
-      //if we requested 5 drops in a row and we're still late, drop on output
-      //this keeps a/v sync if the decoder can't drop, or we're still calculating the framerate
-      if (m_iDroppedRequest > 5)
-      {
-        m_iDroppedRequest--; //decrease so we only drop half the frames
-        return result | EOS_DROPPED;
-      }
-      m_iDroppedRequest++;
-    }
-  }
-  else
-  {
-    m_iDroppedRequest = 0;
-  }
+			//if we requested 5 drops in a row and we're still late, drop on output
+			//this keeps a/v sync if the decoder can't drop, or we're still calculating the framerate
+			if (m_iDroppedRequest > 5)
+			{
+				m_iDroppedRequest--; //decrease so we only drop half the frames
+				return result | EOS_DROPPED;
+			}
+			m_iDroppedRequest++;
+		}
+	}
+	else
+	{
+		m_iDroppedRequest = 0;
+	}
 
-  if( m_speed < 0 )
-  {
-    if( iClockSleep < -DVD_MSEC_TO_TIME(200)
-    && !(pPicture->iFlags & DVP_FLAG_NOSKIP) )
-      return result | EOS_DROPPED;
-  }
+	if( m_speed < 0 )
+	{
+		if( iClockSleep < -DVD_MSEC_TO_TIME(200)&& !(pPicture->iFlags & DVP_FLAG_NOSKIP) )
+			return result | EOS_DROPPED;
+	}
 
-  if( (pPicture->iFlags & DVP_FLAG_DROPPED) )
-    return result | EOS_DROPPED;
+	if( (pPicture->iFlags & DVP_FLAG_DROPPED) )
+		return result | EOS_DROPPED;
 
-  if( m_speed != DVD_PLAYSPEED_NORMAL && limited )
-  {
-    // calculate frame dropping pattern to render at this speed
-    // we do that by deciding if this or next frame is closest
-    // to the flip timestamp
-    double current   = fabs(m_dropbase -  m_droptime);
-    double next      = fabs(m_dropbase - (m_droptime + iFrameDuration));
-    double frametime = (double)DVD_TIME_BASE / maxfps;
+	if( m_speed != DVD_PLAYSPEED_NORMAL && limited )
+	{
+		// calculate frame dropping pattern to render at this speed
+		// we do that by deciding if this or next frame is closest
+		// to the flip timestamp
+		double current   = fabs(m_dropbase -  m_droptime);
+		double next      = fabs(m_dropbase - (m_droptime + iFrameDuration));
+		double frametime = (double)DVD_TIME_BASE / maxfps;
 
-    m_droptime += iFrameDuration;
+		m_droptime += iFrameDuration;
 #ifndef PROFILE
-    if( next < current && !(pPicture->iFlags & DVP_FLAG_NOSKIP) )
-      return result | EOS_DROPPED;
+		if( next < current && !(pPicture->iFlags & DVP_FLAG_NOSKIP) )
+			return result | EOS_DROPPED;
 #endif
 
-    while(!m_bStop && m_dropbase < m_droptime)             m_dropbase += frametime;
-    while(!m_bStop && m_dropbase - frametime > m_droptime) m_dropbase -= frametime;
+		while(!m_bStop && m_dropbase < m_droptime)             
+			m_dropbase += frametime;
+		while(!m_bStop && m_dropbase - frametime > m_droptime) 
+			m_dropbase -= frametime;
 
-    m_pullupCorrection.Flush();
-  }
-  else
-  {
-    m_droptime = 0.0f;
-    m_dropbase = 0.0f;
-  }
+		m_pullupCorrection.Flush();
+	}
+	else
+	{
+		m_droptime = 0.0f;
+		m_dropbase = 0.0f;
+	}
 
-  // set fieldsync if picture is interlaced
-  EFIELDSYNC mDisplayField = FS_NONE;
-  if( pPicture->iFlags & DVP_FLAG_INTERLACED )
-  {
-    if( pPicture->iFlags & DVP_FLAG_TOP_FIELD_FIRST )
-      mDisplayField = FS_TOP;
-    else
-      mDisplayField = FS_BOT;
-  }
+	// set fieldsync if picture is interlaced
+	EFIELDSYNC mDisplayField = FS_NONE;
+	if( pPicture->iFlags & DVP_FLAG_INTERLACED )
+	{
+		if( pPicture->iFlags & DVP_FLAG_TOP_FIELD_FIRST )
+			mDisplayField = FS_TOP;
+		else
+			mDisplayField = FS_BOT;
+	}
 
-  ProcessOverlays(pPicture, pts);
-  AutoCrop(pPicture);
+	ProcessOverlays(pPicture, pts);
+	AutoCrop(pPicture);
 
-  int index = g_renderManager.AddVideoPicture(*pPicture);
+	int index = g_renderManager.AddVideoPicture(*pPicture);
 
-  // video device might not be done yet
-  while (index < 0 && !CThread::m_bStop &&
-         CDVDClock::GetAbsoluteClock(false) < iCurrentClock + iSleepTime + DVD_MSEC_TO_TIME(500) )
-  {
-    Sleep(1);
-    index = g_renderManager.AddVideoPicture(*pPicture);
-  }
+	// video device might not be done yet
+	while (index < 0 && !CThread::m_bStop &&CDVDClock::GetAbsoluteClock(false) < iCurrentClock + iSleepTime + DVD_MSEC_TO_TIME(500) )
+	{
+		Sleep(1);
+		index = g_renderManager.AddVideoPicture(*pPicture);
+	}
 
-  if (index < 0)
-    return EOS_DROPPED;
+	if (index < 0)
+		return EOS_DROPPED;
 
-  g_renderManager.FlipPage(CThread::m_bStop, (iCurrentClock + iSleepTime) / DVD_TIME_BASE, -1, mDisplayField);
+	g_renderManager.FlipPage(CThread::m_bStop, (iCurrentClock + iSleepTime) / DVD_TIME_BASE, -1, mDisplayField);
 
-  return result;
+	return result;
 #else
-  // no video renderer, let's mark it as dropped
-  return EOS_DROPPED;
+	// no video renderer, let's mark it as dropped
+	return EOS_DROPPED;
 #endif
 }
 
 void CDVDPlayerVideo::AutoCrop(DVDVideoPicture *pPicture)
 {
-  if ((pPicture->format == DVDVideoPicture::FMT_YUV420P) ||
-     (pPicture->format == DVDVideoPicture::FMT_NV12) ||
-     (pPicture->format == DVDVideoPicture::FMT_YUY2) ||
-     (pPicture->format == DVDVideoPicture::FMT_UYVY))
-  {
-    RECT crop;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if ((pPicture->format == DVDVideoPicture::FMT_YUV420P) ||
+						(pPicture->format == DVDVideoPicture::FMT_NV12) ||
+						(pPicture->format == DVDVideoPicture::FMT_YUY2) ||
+						(pPicture->format == DVDVideoPicture::FMT_UYVY))
+	{
+		RECT crop;
 
-    if (g_settings.m_currentVideoSettings.m_Crop)
-      AutoCrop(pPicture, crop);
-    else
-    { // reset to defaults
-      crop.left   = 0;
-      crop.right  = 0;
-      crop.top    = 0;
-      crop.bottom = 0;
-    }
+		if (g_settings.m_currentVideoSettings.m_Crop)
+			AutoCrop(pPicture, crop);
+		else
+		{ // reset to defaults
+			crop.left   = 0;
+			crop.right  = 0;
+			crop.top    = 0;
+			crop.bottom = 0;
+		}
 
-    m_crop.x1 += ((float)crop.left   - m_crop.x1) * 0.1;
-    m_crop.x2 += ((float)crop.right  - m_crop.x2) * 0.1;
-    m_crop.y1 += ((float)crop.top    - m_crop.y1) * 0.1;
-    m_crop.y2 += ((float)crop.bottom - m_crop.y2) * 0.1;
+		m_crop.x1 += ((float)crop.left   - m_crop.x1) * 0.1;
+		m_crop.x2 += ((float)crop.right  - m_crop.x2) * 0.1;
+		m_crop.y1 += ((float)crop.top    - m_crop.y1) * 0.1;
+		m_crop.y2 += ((float)crop.bottom - m_crop.y2) * 0.1;
 
-    crop.left   = MathUtils::round_int(m_crop.x1);
-    crop.right  = MathUtils::round_int(m_crop.x2);
-    crop.top    = MathUtils::round_int(m_crop.y1);
-    crop.bottom = MathUtils::round_int(m_crop.y2);
+		crop.left   = MathUtils::round_int(m_crop.x1);
+		crop.right  = MathUtils::round_int(m_crop.x2);
+		crop.top    = MathUtils::round_int(m_crop.y1);
+		crop.bottom = MathUtils::round_int(m_crop.y2);
 
-    //compare with hysteresis
+		//compare with hysteresis
 # define HYST(n, o) ((n) > (o) || (n) + 1 < (o))
-    if(HYST(g_settings.m_currentVideoSettings.m_CropLeft  , crop.left)
-    || HYST(g_settings.m_currentVideoSettings.m_CropRight , crop.right)
-    || HYST(g_settings.m_currentVideoSettings.m_CropTop   , crop.top)
-    || HYST(g_settings.m_currentVideoSettings.m_CropBottom, crop.bottom))
-    {
-      g_settings.m_currentVideoSettings.m_CropLeft   = crop.left;
-      g_settings.m_currentVideoSettings.m_CropRight  = crop.right;
-      g_settings.m_currentVideoSettings.m_CropTop    = crop.top;
-      g_settings.m_currentVideoSettings.m_CropBottom = crop.bottom;
-      g_renderManager.SetViewMode(g_settings.m_currentVideoSettings.m_ViewMode);
-    }
+		if(HYST(g_settings.m_currentVideoSettings.m_CropLeft  , crop.left)
+						|| HYST(g_settings.m_currentVideoSettings.m_CropRight , crop.right)
+						|| HYST(g_settings.m_currentVideoSettings.m_CropTop   , crop.top)
+						|| HYST(g_settings.m_currentVideoSettings.m_CropBottom, crop.bottom))
+		{
+			g_settings.m_currentVideoSettings.m_CropLeft   = crop.left;
+			g_settings.m_currentVideoSettings.m_CropRight  = crop.right;
+			g_settings.m_currentVideoSettings.m_CropTop    = crop.top;
+			g_settings.m_currentVideoSettings.m_CropBottom = crop.bottom;
+			g_renderManager.SetViewMode(g_settings.m_currentVideoSettings.m_ViewMode);
+		}
 # undef HYST
-  }
+	}
 }
 
 void CDVDPlayerVideo::AutoCrop(DVDVideoPicture *pPicture, RECT &crop)
 {
-  crop.left   = g_settings.m_currentVideoSettings.m_CropLeft;
-  crop.right  = g_settings.m_currentVideoSettings.m_CropRight;
-  crop.top    = g_settings.m_currentVideoSettings.m_CropTop;
-  crop.bottom = g_settings.m_currentVideoSettings.m_CropBottom;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	crop.left   = g_settings.m_currentVideoSettings.m_CropLeft;
+	crop.right  = g_settings.m_currentVideoSettings.m_CropRight;
+	crop.top    = g_settings.m_currentVideoSettings.m_CropTop;
+	crop.bottom = g_settings.m_currentVideoSettings.m_CropBottom;
 
-  int black  = 16; // what is black in the image
-  int level  = 8;  // how high above this should we detect
-  int multi  = 4;  // what multiple of last line should failing line be to accept
-  BYTE *s;
-  int last, detect, black2;
+	int black  = 16; // what is black in the image
+	int level  = 8;  // how high above this should we detect
+	int multi  = 4;  // what multiple of last line should failing line be to accept
+	BYTE *s;
+	int last, detect, black2;
 
-  // top and bottom levels
-  black2 = black * pPicture->iWidth;
-  detect = level * pPicture->iWidth + black2;
+	// top and bottom levels
+	black2 = black * pPicture->iWidth;
+	detect = level * pPicture->iWidth + black2;
 
-  //YV12 and NV12 have planar Y plane
-  //YUY2 and UYVY have Y packed with U and V
-  int xspacing = 1;
-  int xstart   = 0;
-  if (pPicture->format == DVDVideoPicture::FMT_YUY2)
-    xspacing = 2;
-  else if (pPicture->format == DVDVideoPicture::FMT_UYVY)
-  {
-    xspacing = 2;
-    xstart   = 1;
-  }
+	//YV12 and NV12 have planar Y plane
+	//YUY2 and UYVY have Y packed with U and V
+	int xspacing = 1;
+	int xstart   = 0;
+	if (pPicture->format == DVDVideoPicture::FMT_YUY2)
+		xspacing = 2;
+	else if (pPicture->format == DVDVideoPicture::FMT_UYVY)
+	{
+		xspacing = 2;
+		xstart   = 1;
+	}
 
-  // Crop top
-  s      = pPicture->data[0];
-  last   = black2;
-  for (unsigned int y = 0; y < pPicture->iHeight/2; y++)
-  {
-    int total = 0;
-    for (unsigned int x = xstart; x < pPicture->iWidth * xspacing; x += xspacing)
-      total += s[x];
-    s += pPicture->iLineSize[0];
+	// Crop top
+	s      = pPicture->data[0];
+	last   = black2;
+	for (unsigned int y = 0; y < pPicture->iHeight/2; y++)
+	{
+		int total = 0;
+		for (unsigned int x = xstart; x < pPicture->iWidth * xspacing; x += xspacing)
+			total += s[x];
+		s += pPicture->iLineSize[0];
 
-    if (total > detect)
-    {
-      if (total - black2 > (last - black2) * multi)
-        crop.top = y;
-      break;
-    }
-    last = total;
-  }
+		if (total > detect)
+		{
+			if (total - black2 > (last - black2) * multi)
+				crop.top = y;
+			break;
+		}
+		last = total;
+	}
 
-  // Crop bottom
-  s    = pPicture->data[0] + (pPicture->iHeight-1) * pPicture->iLineSize[0];
-  last = black2;
-  for (unsigned int y = (int)pPicture->iHeight; y > pPicture->iHeight/2; y--)
-  {
-    int total = 0;
-    for (unsigned int x = xstart; x < pPicture->iWidth * xspacing; x += xspacing)
-      total += s[x];
-    s -= pPicture->iLineSize[0];
+	// Crop bottom
+	s    = pPicture->data[0] + (pPicture->iHeight-1) * pPicture->iLineSize[0];
+	last = black2;
+	for (unsigned int y = (int)pPicture->iHeight; y > pPicture->iHeight/2; y--)
+	{
+		int total = 0;
+		for (unsigned int x = xstart; x < pPicture->iWidth * xspacing; x += xspacing)
+			total += s[x];
+		s -= pPicture->iLineSize[0];
 
-    if (total > detect)
-    {
-      if (total - black2 > (last - black2) * multi)
-        crop.bottom = pPicture->iHeight - y;
-      break;
-    }
-    last = total;
-  }
+		if (total > detect)
+		{
+			if (total - black2 > (last - black2) * multi)
+				crop.bottom = pPicture->iHeight - y;
+			break;
+		}
+		last = total;
+	}
 
-  // left and right levels
-  black2 = black * pPicture->iHeight;
-  detect = level * pPicture->iHeight + black2;
+	// left and right levels
+	black2 = black * pPicture->iHeight;
+	detect = level * pPicture->iHeight + black2;
 
 
-  // Crop left
-  s    = pPicture->data[0];
-  last = black2;
-  for (unsigned int x = xstart; x < pPicture->iWidth/2*xspacing; x += xspacing)
-  {
-    int total = 0;
-    for (unsigned int y = 0; y < pPicture->iHeight; y++)
-      total += s[y * pPicture->iLineSize[0]];
-    s++;
-    if (total > detect)
-    {
-      if (total - black2 > (last - black2) * multi)
-        crop.left = x / xspacing;
-      break;
-    }
-    last = total;
-  }
+	// Crop left
+	s    = pPicture->data[0];
+	last = black2;
+	for (unsigned int x = xstart; x < pPicture->iWidth/2*xspacing; x += xspacing)
+	{
+		int total = 0;
+		for (unsigned int y = 0; y < pPicture->iHeight; y++)
+			total += s[y * pPicture->iLineSize[0]];
+		s++;
+		if (total > detect)
+		{
+			if (total - black2 > (last - black2) * multi)
+				crop.left = x / xspacing;
+			break;
+		}
+		last = total;
+	}
 
-  // Crop right
-  s    = pPicture->data[0] + (pPicture->iWidth-1);
-  last = black2;
-  for (unsigned int x = (int)pPicture->iWidth*xspacing-1; x > pPicture->iWidth/2*xspacing; x -= xspacing)
-  {
-    int total = 0;
-    for (unsigned int y = 0; y < pPicture->iHeight; y++)
-      total += s[y * pPicture->iLineSize[0]];
-    s--;
+	// Crop right
+	s    = pPicture->data[0] + (pPicture->iWidth-1);
+	last = black2;
+	for (unsigned int x = (int)pPicture->iWidth*xspacing-1; x > pPicture->iWidth/2*xspacing; x -= xspacing)
+	{
+		int total = 0;
+		for (unsigned int y = 0; y < pPicture->iHeight; y++)
+			total += s[y * pPicture->iLineSize[0]];
+		s--;
 
-    if (total > detect)
-    {
-      if (total - black2 > (last - black2) * multi)
-        crop.right = pPicture->iWidth - (x / xspacing);
-      break;
-    }
-    last = total;
-  }
+		if (total > detect)
+		{
+			if (total - black2 > (last - black2) * multi)
+				crop.right = pPicture->iWidth - (x / xspacing);
+			break;
+		}
+		last = total;
+	}
 
-  // We always crop equally on each side to get zoom
-  // effect intead of moving the image. Aslong as the
-  // max crop isn't much larger than the min crop
-  // use that.
-  int min, max;
+	// We always crop equally on each side to get zoom
+	// effect intead of moving the image. Aslong as the
+	// max crop isn't much larger than the min crop
+	// use that.
+	int min, max;
 
-  min = std::min(crop.left, crop.right);
-  max = std::max(crop.left, crop.right);
-  if(10 * (max - min) / pPicture->iWidth < 1)
-    crop.left = crop.right = max;
-  else
-    crop.left = crop.right = min;
+	min = std::min(crop.left, crop.right);
+	max = std::max(crop.left, crop.right);
+	if(10 * (max - min) / pPicture->iWidth < 1)
+		crop.left = crop.right = max;
+	else
+		crop.left = crop.right = min;
 
-  min = std::min(crop.top, crop.bottom);
-  max = std::max(crop.top, crop.bottom);
-  if(10 * (max - min) / pPicture->iHeight < 1)
-    crop.top = crop.bottom = max;
-  else
-    crop.top = crop.bottom = min;
+	min = std::min(crop.top, crop.bottom);
+	max = std::max(crop.top, crop.bottom);
+	if(10 * (max - min) / pPicture->iHeight < 1)
+		crop.top = crop.bottom = max;
+	else
+		crop.top = crop.bottom = min;
 }
 
 std::string CDVDPlayerVideo::GetPlayerInfo()
-{
-  std::ostringstream s;
-  s << "fr:"     << fixed << setprecision(3) << m_fFrameRate;
-  s << ", vq:"   << setw(2) << min(99,m_messageQueue.GetLevel()) << "%";
-  s << ", dc:"   << m_codecname;
-  s << ", Mb/s:" << fixed << setprecision(2) << (double)GetVideoBitrate() / (1024.0*1024.0);
-  s << ", drop:" << m_iDroppedFrames;
+{/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	std::ostringstream s;
+	s << "fr:"     << fixed << setprecision(3) << m_fFrameRate;
+	s << ", vq:"   << setw(2) << min(99,m_messageQueue.GetLevel()) << "%";
+	s << ", dc:"   << m_codecname;
+	s << ", Mb/s:" << fixed << setprecision(2) << (double)GetVideoBitrate() / (1024.0*1024.0);
+	s << ", drop:" << m_iDroppedFrames;
 
-  int pc = m_pullupCorrection.GetPatternLength();
-  if (pc > 0)
-    s << ", pc:" << pc;
-  else
-    s << ", pc:none";
+	int pc = m_pullupCorrection.GetPatternLength();
+	if (pc > 0)
+		s << ", pc:" << pc;
+	else
+		s << ", pc:none";
 
-  return s.str();
+	return s.str();
 }
 
 int CDVDPlayerVideo::GetVideoBitrate()
 {
-  return (int)m_videoStats.GetBitrate();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return (int)m_videoStats.GetBitrate();
 }
 
 void CDVDPlayerVideo::ResetFrameRateCalc()
 {
-  m_fStableFrameRate = 0.0;
-  m_iFrameRateCount  = 0;
-  m_iFrameRateLength = 1;
-  m_iFrameRateErr    = 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	m_fStableFrameRate = 0.0;
+	m_iFrameRateCount  = 0;
+	m_iFrameRateLength = 1;
+	m_iFrameRateErr    = 0;
 
-  m_bAllowDrop       = (!m_bCalcFrameRate && g_settings.m_currentVideoSettings.m_ScalingMethod != VS_SCALINGMETHOD_AUTO) ||
-                        g_advancedSettings.m_videoFpsDetect == 0;
+	m_bAllowDrop       = (!m_bCalcFrameRate && g_settings.m_currentVideoSettings.m_ScalingMethod != VS_SCALINGMETHOD_AUTO) || g_advancedSettings.m_videoFpsDetect == 0;
 }
 
 #define MAXFRAMERATEDIFF   0.01
@@ -1568,78 +1718,87 @@ void CDVDPlayerVideo::ResetFrameRateCalc()
 
 void CDVDPlayerVideo::CalcFrameRate()
 {
-  if (m_iFrameRateLength >= 128 || g_advancedSettings.m_videoFpsDetect == 0)
-    return; //don't calculate the fps
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (m_iFrameRateLength >= 128 || g_advancedSettings.m_videoFpsDetect == 0)
+		return; //don't calculate the fps
 
-  //only calculate the framerate if sync playback to display is on, adjust refreshrate is on,
-  //or scaling method is set to auto
-  if (!m_bCalcFrameRate && g_settings.m_currentVideoSettings.m_ScalingMethod != VS_SCALINGMETHOD_AUTO)
-  {
-    ResetFrameRateCalc();
-    return;
-  }
+	//only calculate the framerate if sync playback to display is on, adjust refreshrate is on,
+	//or scaling method is set to auto
+	if (!m_bCalcFrameRate && g_settings.m_currentVideoSettings.m_ScalingMethod != VS_SCALINGMETHOD_AUTO)
+	{
+		ResetFrameRateCalc();
+		return;
+	}
 
-  if (!m_pullupCorrection.HasFullBuffer())
-    return; //we can only calculate the frameduration if m_pullupCorrection has a full buffer
+	if (!m_pullupCorrection.HasFullBuffer())
+		return; //we can only calculate the frameduration if m_pullupCorrection has a full buffer
 
-  //see if m_pullupCorrection was able to detect a pattern in the timestamps
-  //and is able to calculate the correct frame duration from it
-  double frameduration = m_pullupCorrection.GetFrameDuration();
+	//see if m_pullupCorrection was able to detect a pattern in the timestamps
+	//and is able to calculate the correct frame duration from it
+	double frameduration = m_pullupCorrection.GetFrameDuration();
 
-  if (frameduration == DVD_NOPTS_VALUE ||
-      (g_advancedSettings.m_videoFpsDetect == 1 && m_pullupCorrection.GetPatternLength() > 1))
-  {
-    //reset the stored framerates if no good framerate was detected
-    m_fStableFrameRate = 0.0;
-    m_iFrameRateCount = 0;
-    m_iFrameRateErr++;
+	if (frameduration == DVD_NOPTS_VALUE ||(g_advancedSettings.m_videoFpsDetect == 1 && m_pullupCorrection.GetPatternLength() > 1))
+	{
+		//reset the stored framerates if no good framerate was detected
+		m_fStableFrameRate = 0.0;
+		m_iFrameRateCount = 0;
+		m_iFrameRateErr++;
 
-    if (m_iFrameRateErr == MAXFRAMESERR && m_iFrameRateLength == 1)
-    {
-      CLog::Log(LOGDEBUG,"%s counted %i frames without being able to calculate the framerate, giving up", __FUNCTION__, m_iFrameRateErr);
-      m_bAllowDrop = true;
-      m_iFrameRateLength = 128;
-    }
-    return;
-  }
+		if (m_iFrameRateErr == MAXFRAMESERR && m_iFrameRateLength == 1)
+		{
+			CLog::Log(LOGDEBUG,"%s counted %i frames without being able to calculate the framerate, giving up", __FUNCTION__, m_iFrameRateErr);
+			m_bAllowDrop = true;
+			m_iFrameRateLength = 128;
+		}
+		return;
+	}
 
-  double framerate = DVD_TIME_BASE / frameduration;
+	double framerate = DVD_TIME_BASE / frameduration;
 
-  //store the current calculated framerate if we don't have any yet
-  if (m_iFrameRateCount == 0)
-  {
-    m_fStableFrameRate = framerate;
-    m_iFrameRateCount++;
-  }
-  //check if the current detected framerate matches with the stored ones
-  else if (fabs(m_fStableFrameRate / m_iFrameRateCount - framerate) <= MAXFRAMERATEDIFF)
-  {
-    m_fStableFrameRate += framerate; //store the calculated framerate
-    m_iFrameRateCount++;
+	//store the current calculated framerate if we don't have any yet
+	if (m_iFrameRateCount == 0)
+	{
+		m_fStableFrameRate = framerate;
+		m_iFrameRateCount++;
+	}
+	//check if the current detected framerate matches with the stored ones
+	else if (fabs(m_fStableFrameRate / m_iFrameRateCount - framerate) <= MAXFRAMERATEDIFF)
+	{
+		m_fStableFrameRate += framerate; //store the calculated framerate
+		m_iFrameRateCount++;
 
-    //if we've measured m_iFrameRateLength seconds of framerates,
-    if (m_iFrameRateCount >= MathUtils::round_int(framerate) * m_iFrameRateLength)
-    {
-      //store the calculated framerate if it differs too much from m_fFrameRate
-      if (fabs(m_fFrameRate - (m_fStableFrameRate / m_iFrameRateCount)) > MAXFRAMERATEDIFF || m_bFpsInvalid)
-      {
-        CLog::Log(LOGDEBUG,"%s framerate was:%f calculated:%f", __FUNCTION__, m_fFrameRate, m_fStableFrameRate / m_iFrameRateCount);
-        m_fFrameRate = m_fStableFrameRate / m_iFrameRateCount;
-        m_bFpsInvalid = false;
-      }
+		//if we've measured m_iFrameRateLength seconds of framerates,
+		if (m_iFrameRateCount >= MathUtils::round_int(framerate) * m_iFrameRateLength)
+		{
+			//store the calculated framerate if it differs too much from m_fFrameRate
+			if (fabs(m_fFrameRate - (m_fStableFrameRate / m_iFrameRateCount)) > MAXFRAMERATEDIFF || m_bFpsInvalid)
+			{
+				CLog::Log(LOGDEBUG,"%s framerate was:%f calculated:%f", __FUNCTION__, m_fFrameRate, m_fStableFrameRate / m_iFrameRateCount);
+				m_fFrameRate = m_fStableFrameRate / m_iFrameRateCount;
+				m_bFpsInvalid = false;
+			}
 
-      //reset the stored framerates
-      m_fStableFrameRate = 0.0;
-      m_iFrameRateCount = 0;
-      m_iFrameRateLength *= 2; //double the length we should measure framerates
+			//reset the stored framerates
+			m_fStableFrameRate = 0.0;
+			m_iFrameRateCount = 0;
+			m_iFrameRateLength *= 2; //double the length we should measure framerates
 
-      //we're allowed to drop frames because we calculated a good framerate
-      m_bAllowDrop = true;
-    }
-  }
-  else //the calculated framerate didn't match, reset the stored ones
-  {
-    m_fStableFrameRate = 0.0;
-    m_iFrameRateCount = 0;
-  }
+			//we're allowed to drop frames because we calculated a good framerate
+			m_bAllowDrop = true;
+		}
+	}
+	else //the calculated framerate didn't match, reset the stored ones
+	{
+		m_fStableFrameRate = 0.0;
+		m_iFrameRateCount = 0;
+	}
 }

@@ -677,94 +677,95 @@ typedef struct AVChapter {
  * version bump.
  * sizeof(AVFormatContext) must not be used outside libav*.
  */
-typedef struct AVFormatContext {
-    const AVClass *av_class; /**< Set by avformat_alloc_context. */
-    /* Can only be iformat or oformat, not both at the same time. */
-    struct AVInputFormat *iformat;
-    struct AVOutputFormat *oformat;
-    void *priv_data;
-    ByteIOContext *pb;
-    unsigned int nb_streams;
+typedef struct AVFormatContext 
+{
+	const AVClass *av_class; /**< Set by avformat_alloc_context. */
+	/* Can only be iformat or oformat, not both at the same time. */
+	struct AVInputFormat *iformat;
+	struct AVOutputFormat *oformat;
+	void *priv_data;
+	ByteIOContext *pb;
+	unsigned int nb_streams;
 #if FF_API_MAX_STREAMS
-    AVStream *streams[MAX_STREAMS];
+	AVStream *streams[MAX_STREAMS];
 #else
-    AVStream **streams;
+	AVStream **streams;
 #endif
-    char filename[1024]; /**< input or output filename */
-    /* stream info */
-    int64_t timestamp;
+	char filename[1024]; /**< input or output filename */
+	/* stream info */
+	int64_t timestamp;
 #if FF_API_OLD_METADATA
-    attribute_deprecated char title[512];
-    attribute_deprecated char author[512];
-    attribute_deprecated char copyright[512];
-    attribute_deprecated char comment[512];
-    attribute_deprecated char album[512];
-    attribute_deprecated int year;  /**< ID3 year, 0 if none */
-    attribute_deprecated int track; /**< track number, 0 if none */
-    attribute_deprecated char genre[32]; /**< ID3 genre */
+	attribute_deprecated char title[512];
+	attribute_deprecated char author[512];
+	attribute_deprecated char copyright[512];
+	attribute_deprecated char comment[512];
+	attribute_deprecated char album[512];
+	attribute_deprecated int year;  /**< ID3 year, 0 if none */
+	attribute_deprecated int track; /**< track number, 0 if none */
+	attribute_deprecated char genre[32]; /**< ID3 genre */
 #endif
 
-    int ctx_flags; /**< Format-specific flags, see AVFMTCTX_xx */
-    /* private data for pts handling (do not modify directly). */
-    /**
-     * This buffer is only needed when packets were already buffered but
-     * not decoded, for example to get the codec parameters in MPEG
-     * streams.
-     */
-    struct AVPacketList *packet_buffer;
+	int ctx_flags; /**< Format-specific flags, see AVFMTCTX_xx */
+	/* private data for pts handling (do not modify directly). */
+	/**
+	* This buffer is only needed when packets were already buffered but
+	* not decoded, for example to get the codec parameters in MPEG
+	* streams.
+	*/
+	struct AVPacketList *packet_buffer;
 
-    /**
-     * Decoding: position of the first frame of the component, in
-     * AV_TIME_BASE fractional seconds. NEVER set this value directly:
-     * It is deduced from the AVStream values.
-     */
-    int64_t start_time;
+	/**
+	* Decoding: position of the first frame of the component, in
+	* AV_TIME_BASE fractional seconds. NEVER set this value directly:
+	* It is deduced from the AVStream values.
+	*/
+	int64_t start_time;
 
-    /**
-     * Decoding: duration of the stream, in AV_TIME_BASE fractional
-     * seconds. Only set this value if you know none of the individual stream
-     * durations and also dont set any of them. This is deduced from the
-     * AVStream values if not set.
-     */
-    int64_t duration;
+	/**
+	* Decoding: duration of the stream, in AV_TIME_BASE fractional
+	* seconds. Only set this value if you know none of the individual stream
+	* durations and also dont set any of them. This is deduced from the
+	* AVStream values if not set.
+	*/
+	int64_t duration;
 
-    /**
-     * decoding: total file size, 0 if unknown
-     */
-    int64_t file_size;
+	/**
+	* decoding: total file size, 0 if unknown
+	*/
+	int64_t file_size;
 
-    /**
-     * Decoding: total stream bitrate in bit/s, 0 if not
-     * available. Never set it directly if the file_size and the
-     * duration are known as FFmpeg can compute it automatically.
-     */
-    int bit_rate;
+	/**
+	* Decoding: total stream bitrate in bit/s, 0 if not
+	* available. Never set it directly if the file_size and the
+	* duration are known as FFmpeg can compute it automatically.
+	*/
+	int bit_rate;
 
-    /* av_read_frame() support */
-    AVStream *cur_st;
+	/* av_read_frame() support */
+	AVStream *cur_st;
 #if FF_API_LAVF_UNUSED
-    const uint8_t *cur_ptr_deprecated;
-    int cur_len_deprecated;
-    AVPacket cur_pkt_deprecated;
+	const uint8_t *cur_ptr_deprecated;
+	int cur_len_deprecated;
+	AVPacket cur_pkt_deprecated;
 #endif
 
-    /* av_seek_frame() support */
-    int64_t data_offset; /**< offset of the first packet */
-    int index_built;
+	/* av_seek_frame() support */
+	int64_t data_offset; /**< offset of the first packet */
+	int index_built;
 
-    int mux_rate;
-    unsigned int packet_size;
-    int preload;
-    int max_delay;
+	int mux_rate;
+	unsigned int packet_size;
+	int preload;
+	int max_delay;
 
 #define AVFMT_NOOUTPUTLOOP -1
 #define AVFMT_INFINITEOUTPUTLOOP 0
-    /**
-     * number of times to loop output in formats that support it
-     */
-    int loop_output;
+	/**
+	* number of times to loop output in formats that support it
+	*/
+	int loop_output;
 
-    int flags;
+	int flags;
 #define AVFMT_FLAG_GENPTS       0x0001 ///< Generate missing pts even if it requires parsing future frames.
 #define AVFMT_FLAG_IGNIDX       0x0002 ///< Ignore index.
 #define AVFMT_FLAG_NONBLOCK     0x0004 ///< Do not block when reading packets from input.
@@ -773,98 +774,98 @@ typedef struct AVFormatContext {
 #define AVFMT_FLAG_NOPARSE      0x0020 ///< Do not use AVParsers, you also must set AVFMT_FLAG_NOFILLIN as the fillin code works on frames and no parsing -> no frames. Also seeking to frames can not work if parsing to find frame boundaries has been disabled
 #define AVFMT_FLAG_RTP_HINT     0x0040 ///< Add RTP hinting to the output file
 
-    int loop_input;
+	int loop_input;
 
-    /**
-     * decoding: size of data to probe; encoding: unused.
-     */
-    unsigned int probesize;
+	/**
+	* decoding: size of data to probe; encoding: unused.
+	*/
+	unsigned int probesize;
 
-    /**
-     * Maximum time (in AV_TIME_BASE units) during which the input should
-     * be analyzed in av_find_stream_info().
-     */
-    int max_analyze_duration;
+	/**
+	* Maximum time (in AV_TIME_BASE units) during which the input should
+	* be analyzed in av_find_stream_info().
+	*/
+	int max_analyze_duration;
 
-    const uint8_t *key;
-    int keylen;
+	const uint8_t *key;
+	int keylen;
 
-    unsigned int nb_programs;
-    AVProgram **programs;
+	unsigned int nb_programs;
+	AVProgram **programs;
 
-    /**
-     * Forced video codec_id.
-     * Demuxing: Set by user.
-     */
-    enum CodecID video_codec_id;
+	/**
+	* Forced video codec_id.
+	* Demuxing: Set by user.
+	*/
+	enum CodecID video_codec_id;
 
-    /**
-     * Forced audio codec_id.
-     * Demuxing: Set by user.
-     */
-    enum CodecID audio_codec_id;
+	/**
+	* Forced audio codec_id.
+	* Demuxing: Set by user.
+	*/
+	enum CodecID audio_codec_id;
 
-    /**
-     * Forced subtitle codec_id.
-     * Demuxing: Set by user.
-     */
-    enum CodecID subtitle_codec_id;
+	/**
+	* Forced subtitle codec_id.
+	* Demuxing: Set by user.
+	*/
+	enum CodecID subtitle_codec_id;
 
-    /**
-     * Maximum amount of memory in bytes to use for the index of each stream.
-     * If the index exceeds this size, entries will be discarded as
-     * needed to maintain a smaller size. This can lead to slower or less
-     * accurate seeking (depends on demuxer).
-     * Demuxers for which a full in-memory index is mandatory will ignore
-     * this.
-     * muxing  : unused
-     * demuxing: set by user
-     */
-    unsigned int max_index_size;
+	/**
+	* Maximum amount of memory in bytes to use for the index of each stream.
+	* If the index exceeds this size, entries will be discarded as
+	* needed to maintain a smaller size. This can lead to slower or less
+	* accurate seeking (depends on demuxer).
+	* Demuxers for which a full in-memory index is mandatory will ignore
+	* this.
+	* muxing  : unused
+	* demuxing: set by user
+	*/
+	unsigned int max_index_size;
 
-    /**
-     * Maximum amount of memory in bytes to use for buffering frames
-     * obtained from realtime capture devices.
-     */
-    unsigned int max_picture_buffer;
+	/**
+	* Maximum amount of memory in bytes to use for buffering frames
+	* obtained from realtime capture devices.
+	*/
+	unsigned int max_picture_buffer;
 
-    unsigned int nb_chapters;
-    AVChapter **chapters;
+	unsigned int nb_chapters;
+	AVChapter **chapters;
 
-    /**
-     * Flags to enable debugging.
-     */
-    int debug;
+	/**
+	* Flags to enable debugging.
+	*/
+	int debug;
 #define FF_FDEBUG_TS        0x0001
 
-    /**
-     * Raw packets from the demuxer, prior to parsing and decoding.
-     * This buffer is used for buffering packets until the codec can
-     * be identified, as parsing cannot be done without knowing the
-     * codec.
-     */
-    struct AVPacketList *raw_packet_buffer;
-    struct AVPacketList *raw_packet_buffer_end;
+	/**
+	* Raw packets from the demuxer, prior to parsing and decoding.
+	* This buffer is used for buffering packets until the codec can
+	* be identified, as parsing cannot be done without knowing the
+	* codec.
+	*/
+	struct AVPacketList *raw_packet_buffer;
+	struct AVPacketList *raw_packet_buffer_end;
 
-    struct AVPacketList *packet_buffer_end;
+	struct AVPacketList *packet_buffer_end;
 
-    AVMetadata *metadata;
+	AVMetadata *metadata;
 
-    /**
-     * Remaining size available for raw_packet_buffer, in bytes.
-     * NOT PART OF PUBLIC API
-     */
+	/**
+	* Remaining size available for raw_packet_buffer, in bytes.
+	* NOT PART OF PUBLIC API
+	*/
 #define RAW_PACKET_BUFFER_SIZE 2500000
-    int raw_packet_buffer_remaining_size;
+	int raw_packet_buffer_remaining_size;
 
-    /**
-     * Start time of the stream in real world time, in microseconds
-     * since the unix epoch (00:00 1st January 1970). That is, pts=0
-     * in the stream was captured at this real world time.
-     * - encoding: Set by user.
-     * - decoding: Unused.
-     */
-    int64_t start_time_realtime;
+	/**
+	* Start time of the stream in real world time, in microseconds
+	* since the unix epoch (00:00 1st January 1970). That is, pts=0
+	* in the stream was captured at this real world time.
+	* - encoding: Set by user.
+	* - decoding: Unused.
+	*/
+	int64_t start_time_realtime;
 } AVFormatContext;
 
 typedef struct AVPacketList {

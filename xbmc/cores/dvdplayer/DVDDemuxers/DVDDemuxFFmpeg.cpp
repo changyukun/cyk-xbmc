@@ -279,7 +279,8 @@ static int dvd_file_read(void *h, uint8_t* buf, int size)
 		1、
 		
 	说明:
-		1、
+		1、此函数会被ffmpeg 调用，传入的参数h 实质就是m_pInput 的内容，见open 方
+			法中对m_dllAvFormat->av_alloc_put_byte() 的调用，其中参数m_pInput 就是此参数h
 */
 	if(interrupt_cb())
 		return -1;
@@ -303,7 +304,8 @@ static offset_t dvd_file_seek(void *h, offset_t pos, int whence)
 		1、
 		
 	说明:
-		1、
+		1、此函数会被ffmpeg 调用，传入的参数h 实质就是m_pInput 的内容，见open 方
+			法中对m_dllAvFormat->av_alloc_put_byte() 的调用，其中参数m_pInput 就是此参数h
 */
 	if(interrupt_cb())
 		return -1;
@@ -463,7 +465,9 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 		/* 分配一个ffmpeg 缓冲空间*/
 		unsigned char* buffer = (unsigned char*)m_dllAvUtil.av_malloc(FFMPEG_FILE_BUFFER_SIZE);
 
-		/* 将文件的读、定位、buffer、输入流句柄等传入到avformat 模块中*/
+		/* 
+			将文件的读、定位、buffer、输入流句柄等传入到avformat 模块中，并返回相关的描述结构m_ioContext
+		*/
 		m_ioContext = m_dllAvFormat.av_alloc_put_byte(buffer, FFMPEG_FILE_BUFFER_SIZE, 0, m_pInput, dvd_file_read, NULL, dvd_file_seek);
 
 		m_ioContext->max_packet_size = m_pInput->GetBlockSize();
@@ -588,14 +592,21 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 		}
 
 
+		/* 调用ffmpeg 打开demuxer */
 		// open the demuxer
-		if (m_dllAvFormat.av_open_input_stream(&m_pFormatContext, m_ioContext, strFile.c_str(), iformat, NULL) < 0)
+		if (m_dllAvFormat.av_open_input_stream(&m_pFormatContext, m_ioContext, strFile.c_str(), iformat, NULL) < 0) 
 		{
 			CLog::Log(LOGERROR, "%s - Error, could not open file %s", __FUNCTION__, strFile.c_str());
 			Dispose();
 			return false;
 		}
 	}
+
+	/*
+		初步理解:
+		程序通过上面调用m_dllAvFormat->av_open_input_stream 的时候已经将文件的相
+		关信息分析后存放在m_pFormatContext 所指向的内容中了
+	*/
 
 	// analyse very short to speed up mjpeg playback start
 	if (iformat && (strcmp(iformat->name, "mjpeg") == 0) && m_ioContext->is_streamed)
@@ -679,7 +690,7 @@ void CDVDDemuxFFmpeg::Dispose()
 		1、
 		
 	说明:
-		1、
+		1、清除流信息，即m_streams 数组的内容，并卸载掉ffmpeg 的库
 */
 	g_demuxer = this;
 
@@ -947,7 +958,7 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 					}
 
 					if (!pPacket)
-					bReturnEmpty = true;
+						bReturnEmpty = true;
 				}
 				else
 					pPacket = CDVDDemuxUtils::AllocateDemuxPacket(pkt.size);
@@ -1298,7 +1309,7 @@ void CDVDDemuxFFmpeg::AddStream(int iId)
 	AVStream* pStream = m_pFormatContext->streams[iId];
 	if (pStream)
 	{
-		CDemuxStream* old = m_streams[iId];
+		CDemuxStream* old = m_streams[iId]; /* 保存原有的流信息*/
 
 		switch (pStream->codec->codec_type)
 		{
@@ -1443,10 +1454,11 @@ void CDVDDemuxFFmpeg::AddStream(int iId)
 		// delete old stream after new is created
 		// since dvdplayer uses the pointer to know
 		// if something changed in the demuxer
-		if (old)
+		if (old) /* 如果原来此数组单元有指向某个流的信息内存，就将其释放( 包括扩展数据一同释放) */
 		{
-			if( old->ExtraData ) delete[] (BYTE*)(old->ExtraData);
-				delete old;
+			if( old->ExtraData ) 
+				delete[] (BYTE*)(old->ExtraData);
+			delete old;
 		}
 
 		// generic stuff
