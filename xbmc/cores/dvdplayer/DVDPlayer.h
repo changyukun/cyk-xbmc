@@ -319,7 +319,7 @@ protected:
   CCurrentStream m_CurrentSubtitle;
   CCurrentStream m_CurrentTeletext;
 
-  CSelectionStreams m_SelectionStreams;
+  CSelectionStreams m_SelectionStreams; /* 在方法OpenDemuxStream 中调用m_SelectionStreams->Update() 获得到的值*/
 
   int m_playSpeed;
   struct SSpeedState

@@ -566,7 +566,7 @@ void CDVDPlayerVideo::Process()
 			picture.iFlags &= ~DVP_FLAG_ALLOCATED;
 		}
 
-		if (pMsg->IsType(CDVDMsg::DEMUXER_PACKET))
+		if (pMsg->IsType(CDVDMsg::DEMUXER_PACKET)) /* 处理数据包*/
 		{
 			DemuxPacket* pPacket = ((CDVDMsgDemuxerPacket*)pMsg)->GetPacket();
 			bool bPacketDrop     = ((CDVDMsgDemuxerPacket*)pMsg)->GetPacketDrop();

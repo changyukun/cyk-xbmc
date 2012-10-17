@@ -41,157 +41,155 @@ class CDVDOverlayCodecCC;
 class CDVDPlayerVideo : public CThread
 {
 public:
-  CDVDPlayerVideo( CDVDClock* pClock
-                 , CDVDOverlayContainer* pOverlayContainer
-                 , CDVDMessageQueue& parent);
-  virtual ~CDVDPlayerVideo();
+	CDVDPlayerVideo( CDVDClock* pClock, CDVDOverlayContainer* pOverlayContainer, CDVDMessageQueue& parent);
+	virtual ~CDVDPlayerVideo();
 
-  bool OpenStream(CDVDStreamInfo &hint);
-  void OpenStream(CDVDStreamInfo &hint, CDVDVideoCodec* codec);
-  void CloseStream(bool bWaitForBuffers);
+	bool OpenStream(CDVDStreamInfo &hint);
+	void OpenStream(CDVDStreamInfo &hint, CDVDVideoCodec* codec);
+	void CloseStream(bool bWaitForBuffers);
 
-  void StepFrame();
-  void Flush();
+	void StepFrame();
+	void Flush();
 
-  // waits until all available data has been rendered
-  // just waiting for packetqueue should be enough for video
-  void WaitForBuffers()                             { m_messageQueue.WaitUntilEmpty(); }
-  bool AcceptsData()                                { return !m_messageQueue.IsFull(); }
-  void SendMessage(CDVDMsg* pMsg, int priority = 0) { m_messageQueue.Put(pMsg, priority); }
+	// waits until all available data has been rendered
+	// just waiting for packetqueue should be enough for video
+	void WaitForBuffers()	{ m_messageQueue.WaitUntilEmpty(); }
+	bool AcceptsData() 	{ return !m_messageQueue.IsFull(); }
+	void SendMessage(CDVDMsg* pMsg, int priority = 0) { m_messageQueue.Put(pMsg, priority); }
 
 #ifdef HAS_VIDEO_PLAYBACK
-  void Update(bool bPauseDrawing)                   { g_renderManager.Update(bPauseDrawing); }
+	void Update(bool bPauseDrawing) 	{ g_renderManager.Update(bPauseDrawing); }
 #else
-  void Update(bool bPauseDrawing)                   { }
+	void Update(bool bPauseDrawing) 	 { }
 #endif
 
-  void EnableSubtitle(bool bEnable)                 { m_bRenderSubs = bEnable; }
-  bool IsSubtitleEnabled()                          { return m_bRenderSubs; }
+	void EnableSubtitle(bool bEnable)	{ m_bRenderSubs = bEnable; }
+	bool IsSubtitleEnabled()	{ return m_bRenderSubs; }
 
-  void EnableFullscreen(bool bEnable)               { m_bAllowFullscreen = bEnable; }
+	void EnableFullscreen(bool bEnable) 	{ m_bAllowFullscreen = bEnable; }
 
 #ifdef HAS_VIDEO_PLAYBACK
-  void GetVideoRect(CRect& SrcRect, CRect& DestRect)  { g_renderManager.GetVideoRect(SrcRect, DestRect); }
-  float GetAspectRatio()                            { return g_renderManager.GetAspectRatio(); }
+	void GetVideoRect(CRect& SrcRect, CRect& DestRect)  { g_renderManager.GetVideoRect(SrcRect, DestRect); }
+	float GetAspectRatio() 	{ return g_renderManager.GetAspectRatio(); }
 #endif
 
-  double GetDelay()                                { return m_iVideoDelay; }
-  void SetDelay(double delay)                      { m_iVideoDelay = delay; }
+	double GetDelay() 	{ return m_iVideoDelay; }
+	void SetDelay(double delay) 	{ m_iVideoDelay = delay; }
 
-  double GetSubtitleDelay()                                { return m_iSubtitleDelay; }
-  void SetSubtitleDelay(double delay)                      { m_iSubtitleDelay = delay; }
+	double GetSubtitleDelay() 	 { return m_iSubtitleDelay; }
+	void SetSubtitleDelay(double delay)	{ m_iSubtitleDelay = delay; }
 
-  bool IsStalled()                                  { return m_stalled; }
-  int GetNrOfDroppedFrames()                        { return m_iDroppedFrames; }
+	bool IsStalled() 	{ return m_stalled; }
+	int GetNrOfDroppedFrames() 	{ return m_iDroppedFrames; }
 
-  bool InitializedOutputDevice();
+	bool InitializedOutputDevice();
 
-  double GetCurrentPts()                           { return m_iCurrentPts; }
-  int    GetPullupCorrection()                     { return m_pullupCorrection.GetPatternLength(); }
+	double GetCurrentPts() 	 { return m_iCurrentPts; }
+	int    GetPullupCorrection() { return m_pullupCorrection.GetPatternLength(); }
 
-  double GetOutputDelay(); /* returns the expected delay, from that a packet is put in queue */
-  std::string GetPlayerInfo();
-  int GetVideoBitrate();
+	double GetOutputDelay(); /* returns the expected delay, from that a packet is put in queue */
+	std::string GetPlayerInfo();
+	int GetVideoBitrate();
 
-  void SetSpeed(int iSpeed);
+	void SetSpeed(int iSpeed);
 
-  // classes
-  CDVDMessageQueue m_messageQueue;
-  CDVDMessageQueue& m_messageParent;
+	// classes
+	CDVDMessageQueue m_messageQueue;
+	CDVDMessageQueue& m_messageParent;
 
-  CDVDOverlayContainer* m_pOverlayContainer;
+	CDVDOverlayContainer* m_pOverlayContainer;
 
-  CDVDClock* m_pClock;
+	CDVDClock* m_pClock;
 
 protected:
-  virtual void OnStartup();
-  virtual void OnExit();
-  virtual void Process();
+	virtual void OnStartup();
+	virtual void OnExit();
+	virtual void Process();
 
 #define EOS_ABORT 1
 #define EOS_DROPPED 2
 #define EOS_VERYLATE 4
 
-  void AutoCrop(DVDVideoPicture* pPicture);
-  void AutoCrop(DVDVideoPicture *pPicture, RECT &crop);
-  CRect m_crop;
+	void AutoCrop(DVDVideoPicture* pPicture);
+	void AutoCrop(DVDVideoPicture *pPicture, RECT &crop);
+	CRect m_crop;
 
-  int OutputPicture(const DVDVideoPicture* src, double pts);
+	int OutputPicture(const DVDVideoPicture* src, double pts);
 #ifdef HAS_VIDEO_PLAYBACK
-  void ProcessOverlays(DVDVideoPicture* pSource, double pts);
+	void ProcessOverlays(DVDVideoPicture* pSource, double pts);
 #endif
-  void ProcessVideoUserData(DVDVideoUserData* pVideoUserData, double pts);
+	void ProcessVideoUserData(DVDVideoUserData* pVideoUserData, double pts);
 
-  double m_iCurrentPts; // last pts displayed
-  double m_iVideoDelay;
-  double m_iSubtitleDelay;
-  double m_FlipTimeStamp; // time stamp of last flippage. used to play at a forced framerate
+	double m_iCurrentPts; // last pts displayed
+	double m_iVideoDelay;
+	double m_iSubtitleDelay;
+	double m_FlipTimeStamp; // time stamp of last flippage. used to play at a forced framerate
 
-  int m_iLateFrames;
-  int m_iDroppedFrames;
-  int m_iDroppedRequest;
+	int m_iLateFrames;
+	int m_iDroppedFrames;
+	int m_iDroppedRequest;
 
-  void   ResetFrameRateCalc();
-  void   CalcFrameRate();
+	void   ResetFrameRateCalc();
+	void   CalcFrameRate();
 
-  double m_fFrameRate;       //framerate of the video currently playing
-  bool   m_bCalcFrameRate;  //if we should calculate the framerate from the timestamps
-  double m_fStableFrameRate; //place to store calculated framerates
-  int    m_iFrameRateCount;  //how many calculated framerates we stored in m_fStableFrameRate
-  bool   m_bAllowDrop;       //we can't drop frames until we've calculated the framerate
-  int    m_iFrameRateErr;    //how many frames we couldn't calculate the framerate, we give up after a while
-  int    m_iFrameRateLength; //how many seconds we should measure the framerate
-                             //this is increased exponentially from CDVDPlayerVideo::CalcFrameRate()
+	double m_fFrameRate;       //framerate of the video currently playing
+	bool   m_bCalcFrameRate;  //if we should calculate the framerate from the timestamps
+	double m_fStableFrameRate; //place to store calculated framerates
+	int    m_iFrameRateCount;  //how many calculated framerates we stored in m_fStableFrameRate
+	bool   m_bAllowDrop;       //we can't drop frames until we've calculated the framerate
+	int    m_iFrameRateErr;    //how many frames we couldn't calculate the framerate, we give up after a while
+	int    m_iFrameRateLength; //how many seconds we should measure the framerate
+	         //this is increased exponentially from CDVDPlayerVideo::CalcFrameRate()
 
-  bool   m_bFpsInvalid;      // needed to ignore fps (e.g. dvd stills)
+	bool   m_bFpsInvalid;      // needed to ignore fps (e.g. dvd stills)
 
-  struct SOutputConfiguration
-  {
-    unsigned int width;
-    unsigned int height;
-    unsigned int dwidth;
-    unsigned int dheight;
-    unsigned int color_format;
-    unsigned int extended_format;
-    unsigned int color_matrix : 4;
-    unsigned int color_range  : 1;
-    unsigned int chroma_position;
-    unsigned int color_primaries;
-    unsigned int color_transfer;
-    double       framerate;
-  } m_output; //holds currently configured output
+	struct SOutputConfiguration
+	{
+		unsigned int width;
+		unsigned int height;
+		unsigned int dwidth;
+		unsigned int dheight;
+		unsigned int color_format;
+		unsigned int extended_format;
+		unsigned int color_matrix : 4;
+		unsigned int color_range  : 1;
+		unsigned int chroma_position;
+		unsigned int color_primaries;
+		unsigned int color_transfer;
+		double       framerate;
+	} m_output; //holds currently configured output
 
-  bool m_bAllowFullscreen;
-  bool m_bRenderSubs;
+	bool m_bAllowFullscreen;
+	bool m_bRenderSubs;
 
-  float m_fForcedAspectRatio;
+	float m_fForcedAspectRatio;
 
-  int m_iNrOfPicturesNotToSkip;
-  int m_speed;
+	int m_iNrOfPicturesNotToSkip;
+	int m_speed;
 
-  double m_droptime;
-  double m_dropbase;
+	double m_droptime;
+	double m_dropbase;
 
-  bool m_stalled;
-  bool m_started;
-  std::string m_codecname;
+	bool m_stalled;
+	bool m_started;
+	std::string m_codecname;
 
-  /* autosync decides on how much of clock we should use when deciding sleep time */
-  /* the value is the same as 63% timeconstant, ie that the step response of */
-  /* iSleepTime will be at 63% of iClockSleep after autosync frames */
-  unsigned int m_autosync;
+	/* autosync decides on how much of clock we should use when deciding sleep time */
+	/* the value is the same as 63% timeconstant, ie that the step response of */
+	/* iSleepTime will be at 63% of iClockSleep after autosync frames */
+	unsigned int m_autosync;
 
-  BitstreamStats m_videoStats;
+	BitstreamStats m_videoStats;
 
-  // classes
-  CDVDStreamInfo m_hints;
-  CDVDVideoCodec* m_pVideoCodec;
-  CDVDOverlayCodecCC* m_pOverlayCodecCC;
+	// classes
+	CDVDStreamInfo m_hints;
+	CDVDVideoCodec* m_pVideoCodec;
+	CDVDOverlayCodecCC* m_pOverlayCodecCC;
 
-  DVDVideoPicture* m_pTempOverlayPicture;
+	DVDVideoPicture* m_pTempOverlayPicture;
 
-  CPullupCorrection m_pullupCorrection;
+	CPullupCorrection m_pullupCorrection;
 
-  std::list<DVDMessageListItem> m_packets;
+	std::list<DVDMessageListItem> m_packets;
 };
 

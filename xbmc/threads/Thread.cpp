@@ -51,65 +51,104 @@ static XbmcThreads::ThreadLocal<CThread> currentThread;
 
 CThread::CThread(const char* ThreadName) : m_StopEvent(true,true)
 {
-  m_bStop = false;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	m_bStop = false;
 
-  m_bAutoDelete = false;
-  m_ThreadHandle = NULL;
-  m_ThreadId = 0;
-  m_iLastTime = 0;
-  m_iLastUsage = 0;
-  m_fLastUsage = 0.0f;
+	m_bAutoDelete = false;
+	m_ThreadHandle = NULL;
+	m_ThreadId = 0;
+	m_iLastTime = 0;
+	m_iLastUsage = 0;
+	m_fLastUsage = 0.0f;
 
-  m_pRunnable=NULL;
+	m_pRunnable=NULL;
 
-  if (ThreadName)
-    m_ThreadName = ThreadName;
+	if (ThreadName)
+		m_ThreadName = ThreadName;
 }
 
 CThread::CThread(IRunnable* pRunnable, const char* ThreadName) : m_StopEvent(true,true)
 {
-  m_bStop = false;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	m_bStop = false;
 
-  m_bAutoDelete = false;
-  m_ThreadHandle = NULL;
-  m_ThreadId = 0;
-  m_iLastTime = 0;
-  m_iLastUsage = 0;
-  m_fLastUsage = 0.0f;
+	m_bAutoDelete = false;
+	m_ThreadHandle = NULL;
+	m_ThreadId = 0;
+	m_iLastTime = 0;
+	m_iLastUsage = 0;
+	m_fLastUsage = 0.0f;
 
-  m_pRunnable=pRunnable;
+	m_pRunnable=pRunnable; /* 构造函数中指定一个类似于线程的循环函数*/
 
-  if (ThreadName)
-    m_ThreadName = ThreadName;
+	if (ThreadName)
+		m_ThreadName = ThreadName;
 }
 
 CThread::~CThread()
 {
-  if (m_ThreadHandle != NULL)
-  {
-    CloseHandle(m_ThreadHandle);
-  }
-  m_ThreadHandle = NULL;
-
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (m_ThreadHandle != NULL)
+	{
+		CloseHandle(m_ThreadHandle);
+	}
+	m_ThreadHandle = NULL;
 }
 
 #ifndef _WIN32
 void CThread::term_handler (int signum)
 {
-  CLog::Log(LOGERROR,"thread 0x%lx (%lu) got signal %d. calling OnException and terminating thread abnormally.", (long unsigned int)pthread_self(), (long unsigned int)pthread_self(), signum);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CLog::Log(LOGERROR,"thread 0x%lx (%lu) got signal %d. calling OnException and terminating thread abnormally.", (long unsigned int)pthread_self(), (long unsigned int)pthread_self(), signum);
 
-  CThread* curThread = currentThread.get();
-  if (curThread)
-  {
-    curThread->m_bStop = TRUE;
-    curThread->m_StopEvent.Set();
+	CThread* curThread = currentThread.get();
+	if (curThread)
+	{
+		curThread->m_bStop = TRUE;
+		curThread->m_StopEvent.Set();
 
-    curThread->OnException();
-    if( curThread->IsAutoDelete() )
-      delete curThread;
-  }
+		curThread->OnException();
+		if( curThread->IsAutoDelete() )
+			delete curThread;
+	}
 
-  pthread_exit(NULL);
+	pthread_exit(NULL);
 }
 
 int CThread::staticThread(void* data)
@@ -279,156 +318,266 @@ void CThread::Create(bool bAutoDelete, unsigned stacksize)
 
 bool CThread::IsAutoDelete() const
 {
-  return m_bAutoDelete;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return m_bAutoDelete;
 }
 
 void CThread::StopThread(bool bWait /*= true*/)
 {
-  m_bStop = true;
-  m_StopEvent.Set();
-  if (m_ThreadHandle && bWait)
-  {
-    WaitForThreadExit(INFINITE);
-    CloseHandle(m_ThreadHandle);
-    m_ThreadHandle = NULL;
-  }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	m_bStop = true;
+	m_StopEvent.Set();
+	if (m_ThreadHandle && bWait)
+	{
+		WaitForThreadExit(INFINITE);
+		CloseHandle(m_ThreadHandle);
+		m_ThreadHandle = NULL;
+	}
 }
 
 ThreadIdentifier CThread::ThreadId() const
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #ifdef _LINUX
-  if (m_ThreadHandle && m_ThreadHandle->m_threadValid)
-    return m_ThreadHandle->m_hThread;
-  else
-    return 0;
+	if (m_ThreadHandle && m_ThreadHandle->m_threadValid)
+		return m_ThreadHandle->m_hThread;
+	else
+		return 0;
 #else
-  return m_ThreadId;
+	return m_ThreadId;
 #endif
 }
 
 
 CThread::operator HANDLE()
 {
-  return m_ThreadHandle;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return m_ThreadHandle;
 }
 
 CThread::operator HANDLE() const
 {
-  return m_ThreadHandle;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return m_ThreadHandle;
 }
 
 bool CThread::SetPriority(const int iPriority)
 // Set thread priority
 // Return true for success
 {
-  bool rtn = false;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	bool rtn = false;
 
-  if (m_ThreadHandle)
-  {
-    rtn = SetThreadPriority( m_ThreadHandle, iPriority ) == TRUE;
-  }
+	if (m_ThreadHandle)
+	{
+		rtn = SetThreadPriority( m_ThreadHandle, iPriority ) == TRUE;
+	}
 
-  return(rtn);
+	return(rtn);
 }
 
 void CThread::SetPrioritySched_RR(void)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #ifdef __APPLE__
-  // Changing to SCHED_RR is safe under OSX, you don't need elevated privileges and the
-  // OSX scheduler will monitor SCHED_RR threads and drop to SCHED_OTHER if it detects
-  // the thread running away. OSX automatically does this with the CoreAudio audio
-  // device handler thread.
-  int32_t result;
-  thread_extended_policy_data_t theFixedPolicy;
+	// Changing to SCHED_RR is safe under OSX, you don't need elevated privileges and the
+	// OSX scheduler will monitor SCHED_RR threads and drop to SCHED_OTHER if it detects
+	// the thread running away. OSX automatically does this with the CoreAudio audio
+	// device handler thread.
+	int32_t result;
+	thread_extended_policy_data_t theFixedPolicy;
 
-  // make thread fixed, set to 'true' for a non-fixed thread
-  theFixedPolicy.timeshare = false;
-  result = thread_policy_set(pthread_mach_thread_np(ThreadId()), THREAD_EXTENDED_POLICY,
-    (thread_policy_t)&theFixedPolicy, THREAD_EXTENDED_POLICY_COUNT);
+	// make thread fixed, set to 'true' for a non-fixed thread
+	theFixedPolicy.timeshare = false;
+	result = thread_policy_set(pthread_mach_thread_np(ThreadId()), THREAD_EXTENDED_POLICY,
+	(thread_policy_t)&theFixedPolicy, THREAD_EXTENDED_POLICY_COUNT);
 
-  int policy;
-  struct sched_param param;
-  result = pthread_getschedparam(ThreadId(), &policy, &param );
-  // change from default SCHED_OTHER to SCHED_RR
-  policy = SCHED_RR;
-  result = pthread_setschedparam(ThreadId(), policy, &param );
+	int policy;
+	struct sched_param param;
+	result = pthread_getschedparam(ThreadId(), &policy, &param );
+	// change from default SCHED_OTHER to SCHED_RR
+	policy = SCHED_RR;
+	result = pthread_setschedparam(ThreadId(), policy, &param );
 #endif
 }
 
 int CThread::GetMinPriority(void)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #if 0
-//#if defined(__APPLE__)
-  struct sched_param sched;
-  int rtn, policy;
+	//#if defined(__APPLE__)
+	struct sched_param sched;
+	int rtn, policy;
 
-  rtn = pthread_getschedparam(ThreadId(), &policy, &sched);
-  int min = sched_get_priority_min(policy);
+	rtn = pthread_getschedparam(ThreadId(), &policy, &sched);
+	int min = sched_get_priority_min(policy);
 
-  return(min);
+	return(min);
 #else
-  return(THREAD_PRIORITY_IDLE);
+  	return(THREAD_PRIORITY_IDLE);
 #endif
 }
 
 int CThread::GetMaxPriority(void)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #if 0
-//#if defined(__APPLE__)
-  struct sched_param sched;
-  int rtn, policy;
+	//#if defined(__APPLE__)
+	struct sched_param sched;
+	int rtn, policy;
 
-  rtn = pthread_getschedparam(ThreadId(), &policy, &sched);
-  int max = sched_get_priority_max(policy);
+	rtn = pthread_getschedparam(ThreadId(), &policy, &sched);
+	int max = sched_get_priority_max(policy);
 
-  return(max);
+	return(max);
 #else
-  return(THREAD_PRIORITY_HIGHEST);
+  	return(THREAD_PRIORITY_HIGHEST);
 #endif
 }
 
 int CThread::GetNormalPriority(void)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #if 0
-//#if defined(__APPLE__)
-  struct sched_param sched;
-  int rtn, policy;
+	//#if defined(__APPLE__)
+	struct sched_param sched;
+	int rtn, policy;
 
-  rtn = pthread_getschedparam(ThreadId(), &policy, &sched);
-  int min = sched_get_priority_min(policy);
-  int max = sched_get_priority_max(policy);
+	rtn = pthread_getschedparam(ThreadId(), &policy, &sched);
+	int min = sched_get_priority_min(policy);
+	int max = sched_get_priority_max(policy);
 
-  return( min + ((max-min) / 2)  );
+	return( min + ((max-min) / 2)  );
 #else
-  return(THREAD_PRIORITY_NORMAL);
+	return(THREAD_PRIORITY_NORMAL);
 #endif
 }
 
 
 void CThread::SetDebugCallStackName( const char *name )
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #ifdef _WIN32
-  const unsigned int MS_VC_EXCEPTION = 0x406d1388;
-  struct THREADNAME_INFO
-  {
-    DWORD dwType;     // must be 0x1000
-    LPCSTR szName;    // pointer to name (in same addr space)
-    DWORD dwThreadID; // thread ID (-1 caller thread)
-    DWORD dwFlags;    // reserved for future use, most be zero
-  } info;
+	const unsigned int MS_VC_EXCEPTION = 0x406d1388;
+	struct THREADNAME_INFO
+	{
+		DWORD dwType;     // must be 0x1000
+		LPCSTR szName;    // pointer to name (in same addr space)
+		DWORD dwThreadID; // thread ID (-1 caller thread)
+		DWORD dwFlags;    // reserved for future use, most be zero
+	} info;
 
-  info.dwType = 0x1000;
-  info.szName = name;
-  info.dwThreadID = m_ThreadId;
-  info.dwFlags = 0;
+	info.dwType = 0x1000;
+	info.szName = name;
+	info.dwThreadID = m_ThreadId;
+	info.dwFlags = 0;
 
-  try
-  {
-    RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR *)&info);
-  }
-  catch(...)
-  {
-  }
+	try
+	{
+		RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR *)&info);
+	}
+	catch(...)
+	{
+	}
 #endif
 }
 
@@ -436,58 +585,79 @@ void CThread::SetDebugCallStackName( const char *name )
 // and attempt to clean it.
 std::string CThread::GetTypeName(void)
 {
-  std::string name = typeid(*this).name();
- 
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	std::string name = typeid(*this).name();
+
 #if defined(_MSC_VER)
-  // Visual Studio 2010 returns the name as "class CThread" etc
-  if (name.substr(0, 6) == "class ")
-    name = name.substr(6, name.length() - 6);
+	// Visual Studio 2010 returns the name as "class CThread" etc
+	if (name.substr(0, 6) == "class ")
+		name = name.substr(6, name.length() - 6);
 #elif defined(__GNUC__) && !defined(__clang__)
-  // gcc provides __cxa_demangle to demangle the name
-  char* demangled = NULL;
-  int   status;
+	// gcc provides __cxa_demangle to demangle the name
+	char* demangled = NULL;
+	int   status;
 
-  demangled = __cxa_demangle(name.c_str(), NULL, 0, &status);
-  if (status == 0)
-    name = demangled;
-  else
-    CLog::Log(LOGDEBUG,"%s, __cxa_demangle(%s) failed with status %d", __FUNCTION__, name.c_str(), status);
+	demangled = __cxa_demangle(name.c_str(), NULL, 0, &status);
+	if (status == 0)
+		name = demangled;
+	else
+		CLog::Log(LOGDEBUG,"%s, __cxa_demangle(%s) failed with status %d", __FUNCTION__, name.c_str(), status);
 
-  if (demangled)
-    free(demangled);
+	if (demangled)
+		free(demangled);
 #endif
 
-  return name;
+	return name;
 }
 
 bool CThread::WaitForThreadExit(unsigned int milliseconds)
 // Waits for thread to exit, timeout in given number of msec.
 // Returns true when thread ended
 {
-  if (!m_ThreadHandle) return true;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (!m_ThreadHandle)
+		return true;
 
 #ifndef _LINUX
-  // boost priority of thread we are waiting on to same as caller
-  int callee = GetThreadPriority(m_ThreadHandle);
-  int caller = GetThreadPriority(GetCurrentThread());
-  if(caller > callee)
-    SetThreadPriority(m_ThreadHandle, caller);
+	// boost priority of thread we are waiting on to same as caller
+	int callee = GetThreadPriority(m_ThreadHandle);
+	int caller = GetThreadPriority(GetCurrentThread());
+	if(caller > callee)
+		SetThreadPriority(m_ThreadHandle, caller);
 
-  if (::WaitForSingleObject(m_ThreadHandle, milliseconds) != WAIT_TIMEOUT)
-    return true;
+	if (::WaitForSingleObject(m_ThreadHandle, milliseconds) != WAIT_TIMEOUT)
+		return true;
 
-  // restore thread priority if thread hasn't exited
-  if(caller > callee)
-    SetThreadPriority(m_ThreadHandle, callee);
+	// restore thread priority if thread hasn't exited
+	if(caller > callee)
+		SetThreadPriority(m_ThreadHandle, callee);
 #else
-  if (!(m_ThreadHandle->m_threadValid) || pthread_join(m_ThreadHandle->m_hThread, NULL) == 0)
-  {
-    m_ThreadHandle->m_threadValid = false;
-    return true;
-  }
+	if (!(m_ThreadHandle->m_threadValid) || pthread_join(m_ThreadHandle->m_hThread, NULL) == 0)
+	{
+		m_ThreadHandle->m_threadValid = false;
+		return true;
+	}
 #endif
 
-  return false;
+	return false;
 }
 
 HANDLE CThread::ThreadHandle()
@@ -523,60 +693,111 @@ void CThread::Process()
 
 float CThread::GetRelativeUsage()
 {
-  unsigned __int64 iTime = XbmcThreads::SystemClockMillis();
-  iTime *= 10000; // convert into 100ns tics
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	unsigned __int64 iTime = XbmcThreads::SystemClockMillis();
+	iTime *= 10000; // convert into 100ns tics
 
-  // only update every 1 second
-  if( iTime < m_iLastTime + 1000*10000 ) return m_fLastUsage;
+	// only update every 1 second
+	if( iTime < m_iLastTime + 1000*10000 )
+		return m_fLastUsage;
 
-  FILETIME CreationTime, ExitTime, UserTime, KernelTime;
-  if( GetThreadTimes( m_ThreadHandle, &CreationTime, &ExitTime, &KernelTime, &UserTime ) )
-  {
-    unsigned __int64 iUsage = 0;
-    iUsage += (((unsigned __int64)UserTime.dwHighDateTime) << 32) + ((unsigned __int64)UserTime.dwLowDateTime);
-    iUsage += (((unsigned __int64)KernelTime.dwHighDateTime) << 32) + ((unsigned __int64)KernelTime.dwLowDateTime);
+	FILETIME CreationTime, ExitTime, UserTime, KernelTime;
+	if( GetThreadTimes( m_ThreadHandle, &CreationTime, &ExitTime, &KernelTime, &UserTime ) )
+	{
+		unsigned __int64 iUsage = 0;
+		iUsage += (((unsigned __int64)UserTime.dwHighDateTime) << 32) + ((unsigned __int64)UserTime.dwLowDateTime);
+		iUsage += (((unsigned __int64)KernelTime.dwHighDateTime) << 32) + ((unsigned __int64)KernelTime.dwLowDateTime);
 
-    if(m_iLastUsage > 0 && m_iLastTime > 0)
-      m_fLastUsage = (float)( iUsage - m_iLastUsage ) / (float)( iTime - m_iLastTime );
+		if(m_iLastUsage > 0 && m_iLastTime > 0)
+			m_fLastUsage = (float)( iUsage - m_iLastUsage ) / (float)( iTime - m_iLastTime );
 
-    m_iLastUsage = iUsage;
-    m_iLastTime = iTime;
+		m_iLastUsage = iUsage;
+		m_iLastTime = iTime;
 
-    return m_fLastUsage;
-  }
-  return 0.0f;
+		return m_fLastUsage;
+	}
+	return 0.0f;
 }
 
 bool CThread::IsCurrentThread() const
 {
-  return IsCurrentThread(ThreadId());
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return IsCurrentThread(ThreadId());
 }
 
 
 ThreadIdentifier CThread::GetCurrentThreadId()
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #ifdef _LINUX
-  return pthread_self();
+	return pthread_self();
 #else
-  return ::GetCurrentThreadId();
+	return ::GetCurrentThreadId();
 #endif
 }
 
 bool CThread::IsCurrentThread(const ThreadIdentifier tid)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #ifdef _LINUX
-  return pthread_equal(pthread_self(), tid);
+	return pthread_equal(pthread_self(), tid);
 #else
-  return (::GetCurrentThreadId() == tid);
+	return (::GetCurrentThreadId() == tid);
 #endif
 }
 
 void CThread::Sleep(unsigned int milliseconds)
 {
-  if(milliseconds > 10 && IsCurrentThread())
-    m_StopEvent.WaitMSec(milliseconds);
-  else
-    ::Sleep(milliseconds);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if(milliseconds > 10 && IsCurrentThread())
+		m_StopEvent.WaitMSec(milliseconds);
+	else
+		::Sleep(milliseconds);
 }
 
 

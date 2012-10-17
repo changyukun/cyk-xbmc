@@ -160,7 +160,7 @@ bool CSelectionStreams::Get(StreamType type, CDemuxStream::EFlags flag, Selectio
 		1、
 		
 	说明:
-		1、
+		1、在容器m_Streams  中获取第一个与传入的参数都匹配的元素
 */
 	CSingleLock lock(m_section);
 	for(int i=0;i<(int)m_Streams.size();i++)
@@ -187,7 +187,8 @@ int CSelectionStreams::IndexOf(StreamType type, int source, int id) const
 		1、
 		
 	说明:
-		1、
+		1、在容器m_Streams  中获取类型为type  中的与source 相匹配的那个单元的序号，注意此序号
+			不是所有元素中的序号，只是类型为type 中的序号(  从1  开始)
 */
 	CSingleLock lock(m_section);
 	int count = -1;
@@ -802,16 +803,16 @@ void CDVDPlayer::OpenDefaultStreams()
 
 	if(!valid && m_SelectionStreams.Get(STREAM_VIDEO, CDemuxStream::FLAG_DEFAULT, st))
 	{
-		if(OpenVideoStream(st.id, st.source))
+		if(OpenVideoStream(st.id, st.source))/* 启动视频解码器*/
 			valid = true;
 		else
 			CLog::Log(LOGWARNING, "%s - failed to open default stream (%d)", __FUNCTION__, st.id);
 	}
 
-	for(int i = 0;i<count && !valid;i++)
+	for(int i = 0;i<count && !valid;i++)/* 默认的第一个没打开，就打开后续的流，打开一个成功就跳出此循环*/
 	{
 		SelectionStream& s = m_SelectionStreams.Get(STREAM_VIDEO, i);
-		if(OpenVideoStream(s.id, s.source))
+		if(OpenVideoStream(s.id, s.source))/* 启动视频解码器*/
 			valid = true;
 	}
 	
@@ -826,7 +827,7 @@ void CDVDPlayer::OpenDefaultStreams()
 		if(g_settings.m_currentVideoSettings.m_AudioStream >= 0 && g_settings.m_currentVideoSettings.m_AudioStream < count)
 		{
 			SelectionStream& s = m_SelectionStreams.Get(STREAM_AUDIO, g_settings.m_currentVideoSettings.m_AudioStream);
-			if(OpenAudioStream(s.id, s.source))
+			if(OpenAudioStream(s.id, s.source))/* 启动音频解码器*/
 				valid = true;
 			else
 				CLog::Log(LOGWARNING, "%s - failed to restore selected audio stream (%d)", __FUNCTION__, g_settings.m_currentVideoSettings.m_AudioStream);
@@ -834,7 +835,7 @@ void CDVDPlayer::OpenDefaultStreams()
 
 		if(!valid && m_SelectionStreams.Get(STREAM_AUDIO, CDemuxStream::FLAG_DEFAULT, st))
 		{
-			if(OpenAudioStream(st.id, st.source))
+			if(OpenAudioStream(st.id, st.source))/* 启动音频解码器*/
 				valid = true;
 			else
 				CLog::Log(LOGWARNING, "%s - failed to open default stream (%d)", __FUNCTION__, st.id);
@@ -869,7 +870,7 @@ void CDVDPlayer::OpenDefaultStreams()
 			if(max_stream_id >= 0)
 			{
 				SelectionStream& s = m_SelectionStreams.Get(STREAM_AUDIO, max_stream_id);
-				if(OpenAudioStream(s.id, s.source))
+				if(OpenAudioStream(s.id, s.source))/* 启动音频解码器*/
 				{
 					valid = true;
 					CLog::Log(LOGDEBUG, "%s - using automatically selected audio stream (%d) based on codec '%s' and maximum number of channels '%d'", __FUNCTION__, s.id, max_codec.c_str(), max_channels);
@@ -882,7 +883,7 @@ void CDVDPlayer::OpenDefaultStreams()
 		for(int i = 0; i<count && !valid; i++)
 		{
 			SelectionStream& s = m_SelectionStreams.Get(STREAM_AUDIO, i);
-			if(OpenAudioStream(s.id, s.source))
+			if(OpenAudioStream(s.id, s.source))/* 启动音频解码器*/
 				valid = true;
 		}
 		
@@ -897,7 +898,7 @@ void CDVDPlayer::OpenDefaultStreams()
 	// if subs are disabled, check for forced
 	if(!valid && !g_settings.m_currentVideoSettings.m_SubtitleOn && m_SelectionStreams.Get(STREAM_SUBTITLE, CDemuxStream::FLAG_FORCED, st))
 	{
-		if(OpenSubtitleStream(st.id, st.source))
+		if(OpenSubtitleStream(st.id, st.source))/* 启动字幕解码器*/
 		{
 			valid = true;
 			force = true;
@@ -910,7 +911,7 @@ void CDVDPlayer::OpenDefaultStreams()
 	if(!valid&& g_settings.m_currentVideoSettings.m_SubtitleStream >= 0&& g_settings.m_currentVideoSettings.m_SubtitleStream < count)
 	{
 		SelectionStream& s = m_SelectionStreams.Get(STREAM_SUBTITLE, g_settings.m_currentVideoSettings.m_SubtitleStream);
-		if(OpenSubtitleStream(s.id, s.source))
+		if(OpenSubtitleStream(s.id, s.source))/* 启动字幕解码器*/
 			valid = true;
 		else
 			CLog::Log(LOGWARNING, "%s - failed to restore selected subtitle stream (%d)", __FUNCTION__, g_settings.m_currentVideoSettings.m_SubtitleStream);
@@ -927,7 +928,7 @@ void CDVDPlayer::OpenDefaultStreams()
 	// select default
 	if(!valid && m_SelectionStreams.Get(STREAM_SUBTITLE, CDemuxStream::FLAG_DEFAULT, st))
 	{
-		if(OpenSubtitleStream(st.id, st.source))
+		if(OpenSubtitleStream(st.id, st.source))/* 启动字幕解码器*/
 			valid = true;
 		else
 			CLog::Log(LOGWARNING, "%s - failed to open default/forced stream (%d)", __FUNCTION__, st.id);
@@ -937,7 +938,7 @@ void CDVDPlayer::OpenDefaultStreams()
 	for(int i = 0;i<count && !valid; i++)
 	{
 		SelectionStream& s = m_SelectionStreams.Get(STREAM_SUBTITLE, i);
-		if(OpenSubtitleStream(s.id, s.source))
+		if(OpenSubtitleStream(s.id, s.source))/* 启动字幕解码器*/
 			valid = true;
 	}
 	if(!valid)
@@ -1185,7 +1186,7 @@ void CDVDPlayer::Process()
 	// allow renderer to switch to fullscreen if requested
 	m_dvdPlayerVideo.EnableFullscreen(m_PlayerOptions.fullscreen);/* 打开视频全屏模式，根据选项m_PlayerOptions.fullscreen  的需求，是否允许全屏幕*/
 
-	OpenDefaultStreams();
+	OpenDefaultStreams(); /* changyukun AAA--1--BBB  间接创建启动视频解码器线程，见函数内部源码分析*/
 
 	// look for any EDL files
 	m_Edl.Clear();
@@ -1233,7 +1234,7 @@ void CDVDPlayer::Process()
 		}
 	}
 	
-	if(starttime > 0)
+	if(starttime > 0)/* 起始时间不为0，则调用demuxer 进行seek  定位*/
 	{
 		double startpts = DVD_NOPTS_VALUE;
 		if(m_pDemuxer)
@@ -1388,10 +1389,10 @@ void CDVDPlayer::Process()
 
 			// make sure we tell all players to finish it's data
 			if(m_CurrentAudio.inited)
-				m_dvdPlayerAudio.SendMessage   (new CDVDMsg(CDVDMsg::GENERAL_EOF));
+				m_dvdPlayerAudio.SendMessage(new CDVDMsg(CDVDMsg::GENERAL_EOF));
 			
 			if(m_CurrentVideo.inited)
-				m_dvdPlayerVideo.SendMessage   (new CDVDMsg(CDVDMsg::GENERAL_EOF));
+				m_dvdPlayerVideo.SendMessage(new CDVDMsg(CDVDMsg::GENERAL_EOF));
 			
 			if(m_CurrentSubtitle.inited)
 				m_dvdPlayerSubtitle.SendMessage(new CDVDMsg(CDVDMsg::GENERAL_EOF));
@@ -1558,7 +1559,8 @@ void CDVDPlayer::ProcessVideoData(CDemuxStream* pStream, DemuxPacket* pPacket)
 		1、
 		
 	说明:
-		1、
+		1、此函数的最后会发送一个数据包的消息，此消息就会被视频解码器的线程处理
+			即在函数CDVDPlayerVideo::Process()  中处理
 */
 	if (m_CurrentVideo.stream != (void*)pStream)
 	{
@@ -1587,7 +1589,7 @@ void CDVDPlayer::ProcessVideoData(CDemuxStream* pStream, DemuxPacket* pPacket)
 	if (CheckSceneSkip(m_CurrentVideo))
 		drop = true;
 
-	m_dvdPlayerVideo.SendMessage(new CDVDMsgDemuxerPacket(pPacket, drop));
+	m_dvdPlayerVideo.SendMessage(new CDVDMsgDemuxerPacket(pPacket, drop));/* 发送数据包到视频解码器*/
 }
 
 void CDVDPlayer::ProcessSubData(CDemuxStream* pStream, DemuxPacket* pPacket)
