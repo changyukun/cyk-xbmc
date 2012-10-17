@@ -147,94 +147,95 @@ class CDVDVideoCodec
 {
 public:
 
-  CDVDVideoCodec() {}
-  virtual ~CDVDVideoCodec() {}
+	CDVDVideoCodec() {}
+	virtual ~CDVDVideoCodec() {}
 
-  /*
-   * Open the decoder, returns true on success
-   */
-  virtual bool Open(CDVDStreamInfo &hints, CDVDCodecOptions &options) = 0;
+	/*
+	* Open the decoder, returns true on success
+	*/
+	virtual bool Open(CDVDStreamInfo &hints, CDVDCodecOptions &options) = 0;
 
-  /*
-   * Dispose, Free all resources
-   */
-  virtual void Dispose() = 0;
+	/*
+	* Dispose, Free all resources
+	*/
+	virtual void Dispose() = 0;
 
-  /*
-   * returns one or a combination of VC_ messages
-   * pData and iSize can be NULL, this means we should flush the rest of the data.
-   */
-  virtual int Decode(BYTE* pData, int iSize, double dts, double pts) = 0;
+	/*
+	* returns one or a combination of VC_ messages
+	* pData and iSize can be NULL, this means we should flush the rest of the data.
+	*/
+	virtual int Decode(BYTE* pData, int iSize, double dts, double pts) = 0;
 
- /*
-   * Reset the decoder.
-   * Should be the same as calling Dispose and Open after each other
-   */
-  virtual void Reset() = 0;
+	/*
+	* Reset the decoder.
+	* Should be the same as calling Dispose and Open after each other
+	*/
+	virtual void Reset() = 0;
 
-  /*
-   * returns true if successfull
-   * the data is valid until the next Decode call
-   */
-  virtual bool GetPicture(DVDVideoPicture* pDvdVideoPicture) = 0;
-
-
-  /*
-   * returns true if successfull
-   * the data is cleared to zero
-   */ 
-  virtual bool ClearPicture(DVDVideoPicture* pDvdVideoPicture)
-  {
-    memset(pDvdVideoPicture, 0, sizeof(DVDVideoPicture));
-    return true;
-  }
-
-  /*
-   * returns true if successfull
-   * the data is valid until the next Decode call
-   * userdata can be anything, for now we use it for closed captioning
-   */
-  virtual bool GetUserData(DVDVideoUserData* pDvdVideoUserData)
-  {
-    pDvdVideoUserData->data = NULL;
-    pDvdVideoUserData->size = 0;
-    return false;
-  }
-
-  /*
-   * will be called by video player indicating if a frame will eventually be dropped
-   * codec can then skip actually decoding the data, just consume the data set picture headers
-   */
-  virtual void SetDropState(bool bDrop) = 0;
+	/*
+	* returns true if successfull
+	* the data is valid until the next Decode call
+	*/
+	virtual bool GetPicture(DVDVideoPicture* pDvdVideoPicture) = 0;
 
 
-  enum EFilterFlags {
-    FILTER_NONE                =  0x0,
-    FILTER_DEINTERLACE_YADIF   =  0x1,  /* use first deinterlace mode */
-    FILTER_DEINTERLACE_ANY     =  0xf,  /* use any deinterlace mode */
-    FILTER_DEINTERLACE_FLAGGED = 0x10,  /* only deinterlace flagged frames */
-    FILTER_DEINTERLACE_HALFED  = 0x20,  /* do half rate deinterlacing */
-  };
+	/*
+	* returns true if successfull
+	* the data is cleared to zero
+	*/ 
+	virtual bool ClearPicture(DVDVideoPicture* pDvdVideoPicture)
+	{
+		memset(pDvdVideoPicture, 0, sizeof(DVDVideoPicture));
+		return true;
+	}
 
-  /*
-   * set the type of filters that should be applied at decoding stage if possible
-   */
-  virtual unsigned int SetFilters(unsigned int filters) { return 0u; }
+	/*
+	* returns true if successfull
+	* the data is valid until the next Decode call
+	* userdata can be anything, for now we use it for closed captioning
+	*/
+	virtual bool GetUserData(DVDVideoUserData* pDvdVideoUserData)
+	{
+		pDvdVideoUserData->data = NULL;
+		pDvdVideoUserData->size = 0;
+		return false;
+	}
 
-  /*
-   *
-   * should return codecs name
-   */
-  virtual const char* GetName() = 0;
+	/*
+	* will be called by video player indicating if a frame will eventually be dropped
+	* codec can then skip actually decoding the data, just consume the data set picture headers
+	*/
+	virtual void SetDropState(bool bDrop) = 0;
 
-  /*
-   *
-   * How many packets should player remember, so codec
-   * can recover should something cause it to flush
-   * outside of players control
-   */
-  virtual unsigned GetConvergeCount()
-  {
-    return 0;
-  }
+
+	enum EFilterFlags 
+	{
+		FILTER_NONE                =  0x0,
+		FILTER_DEINTERLACE_YADIF   =  0x1,  /* use first deinterlace mode */
+		FILTER_DEINTERLACE_ANY     =  0xf,  /* use any deinterlace mode */
+		FILTER_DEINTERLACE_FLAGGED = 0x10,  /* only deinterlace flagged frames */
+		FILTER_DEINTERLACE_HALFED  = 0x20,  /* do half rate deinterlacing */
+	};
+
+	/*
+	* set the type of filters that should be applied at decoding stage if possible
+	*/
+	virtual unsigned int SetFilters(unsigned int filters) { return 0u; }
+
+	/*
+	*
+	* should return codecs name
+	*/
+	virtual const char* GetName() = 0;
+
+	/*
+	*
+	* How many packets should player remember, so codec
+	* can recover should something cause it to flush
+	* outside of players control
+	*/
+	virtual unsigned GetConvergeCount()
+	{
+		return 0;
+	}
 };

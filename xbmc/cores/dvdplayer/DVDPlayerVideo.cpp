@@ -236,7 +236,8 @@ bool CDVDPlayerVideo::OpenStream( CDVDStreamInfo &hint )
 		1、
 		
 	说明:
-		1、
+		1、此函数内通过调用CDVDFactoryCodec::CreateVideoCodec()  创建了真正的解码器，保存
+			在m_pVideoCodec 成员中
 */
 	unsigned int surfaces = 0;
 #ifdef HAS_VIDEO_PLAYBACK
@@ -244,7 +245,7 @@ bool CDVDPlayerVideo::OpenStream( CDVDStreamInfo &hint )
 #endif
 
 	CLog::Log(LOGNOTICE, "Creating video codec with codec id: %i", hint.codec);
-	CDVDVideoCodec* codec = CDVDFactoryCodec::CreateVideoCodec(hint, surfaces);
+	CDVDVideoCodec* codec = CDVDFactoryCodec::CreateVideoCodec(hint, surfaces); /* 创建一个解码器实例*/
 	if(!codec)
 	{
 		CLog::Log(LOGERROR, "Unsupported video codec");
@@ -263,7 +264,7 @@ bool CDVDPlayerVideo::OpenStream( CDVDStreamInfo &hint )
 		m_messageQueue.Put(new CDVDMsgVideoCodecChange(hint, codec), 0);
 	else
 	{
-		OpenStream(hint, codec);
+		OpenStream(hint, codec);/* 打开流媒体，同时保存创建的解码器实例*/
 		CLog::Log(LOGNOTICE, "Creating video thread");
 		m_messageQueue.Init();
 		Create(); /* changyukun AAA--3--AAA  间接创建启动视频解码器线程，即线程函数CDVDPlayerVideo::Process() */
@@ -313,7 +314,7 @@ void CDVDPlayerVideo::OpenStream(CDVDStreamInfo &hint, CDVDVideoCodec* codec)
 	if (m_pVideoCodec)
 		delete m_pVideoCodec;
 
-	m_pVideoCodec = codec;
+	m_pVideoCodec = codec; /* 保存用于解码的解码器实例*/
 	m_hints   = hint;
 	m_stalled = m_messageQueue.GetPacketCount(CDVDMsg::DEMUXER_PACKET) == 0;
 	m_started = false;
@@ -685,8 +686,9 @@ void CDVDPlayerVideo::Process()
 				{
 
 					// try to retrieve the picture (should never fail!), unless there is a demuxer bug ofcours
-					m_pVideoCodec->ClearPicture(&picture);
-					if (m_pVideoCodec->GetPicture(&picture))
+					m_pVideoCodec->ClearPicture(&picture);/* 相当于清除变量picture 的原有值，即赋值0  */
+					
+					if (m_pVideoCodec->GetPicture(&picture))/* 从底层解码器中获取解码出来的图片*/
 					{
 						sPostProcessType.clear();
 
@@ -765,7 +767,7 @@ void CDVDPlayerVideo::Process()
 							picture.iDuration *= picture.iRepeatPicture + 1;
 
 #if 1
-						int iResult = OutputPicture(&picture, pts);
+						int iResult = OutputPicture(&picture, pts); /* 将解码图片显示出去。。。*/
 #elif 0
 						// testing NV12 rendering functions
 						DVDVideoPicture* pTempNV12Picture = CDVDCodecUtils::ConvertToNV12Picture(&picture);

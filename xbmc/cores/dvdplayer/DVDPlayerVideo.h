@@ -183,7 +183,7 @@ protected:
 
 	// classes
 	CDVDStreamInfo m_hints;
-	CDVDVideoCodec* m_pVideoCodec;
+	CDVDVideoCodec* m_pVideoCodec; /* 在方法CDVDPlayerVideo::OpenStream  中创建的实例*/
 	CDVDOverlayCodecCC* m_pOverlayCodecCC;
 
 	DVDVideoPicture* m_pTempOverlayPicture;
