@@ -159,7 +159,7 @@ public:
 CDVDPlayerAudio::CDVDPlayerAudio(CDVDClock* pClock, CDVDMessageQueue& parent)
 : CThread("CDVDPlayerAudio")
 , m_messageQueue("audio")
-, m_messageParent(parent)
+, m_messageParent(parent)/* 传入一个父消息队列*/
 , m_dvdAudio((bool&)m_bStop)
 {
 /*
@@ -528,7 +528,7 @@ int CDVDPlayerAudio::DecodeFrame(DVDAudioFrame &audioframe, bool bDropPacket)
 		else if (pMsg->IsType(CDVDMsg::PLAYER_STARTED))
 		{
 			if(m_started)
-				m_messageParent.Put(new CDVDMsgInt(CDVDMsg::PLAYER_STARTED, DVDPLAYER_AUDIO));
+				m_messageParent.Put(new CDVDMsgInt(CDVDMsg::PLAYER_STARTED, DVDPLAYER_AUDIO));/* 向父消息队列发送消息，即CDVDPlayer->m_messenger 消息队列，此消息队列是在CDVDPlayer::HandleMessages() 方法中处理的*/
 		}
 		else if (pMsg->IsType(CDVDMsg::GENERAL_EOF))
 		{
@@ -736,7 +736,7 @@ void CDVDPlayerAudio::Process()
 		if(m_started == false)
 		{
 			m_started = true;
-			m_messageParent.Put(new CDVDMsgInt(CDVDMsg::PLAYER_STARTED, DVDPLAYER_AUDIO));
+			m_messageParent.Put(new CDVDMsgInt(CDVDMsg::PLAYER_STARTED, DVDPLAYER_AUDIO)); /* 向父消息队列发送消息，即CDVDPlayer->m_messenger 消息队列，此消息队列是在CDVDPlayer::HandleMessages() 方法中处理的*/
 		}
 
 		if( m_ptsOutput.Current() == DVD_NOPTS_VALUE )

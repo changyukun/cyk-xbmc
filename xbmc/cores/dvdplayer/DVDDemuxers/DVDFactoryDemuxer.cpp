@@ -83,9 +83,9 @@ CDVDDemux* CDVDFactoryDemuxer::CreateDemuxer(CDVDInputStream* pInputStream)
 
 	CLog::Log(LOGDEBUG,"==========>>> cyk CDVDFactoryDemuxer::CreateDemuxer 2");
 
-	auto_ptr<CDVDDemuxFFmpeg> demuxer(new CDVDDemuxFFmpeg());
+	auto_ptr<CDVDDemuxFFmpeg> demuxer(new CDVDDemuxFFmpeg());/* 创建一个demuxer */
 
-	if(demuxer->Open(pInputStream))
+	if(demuxer->Open(pInputStream)) /* 打开一个demuxer */
 		return demuxer.release();
 	else
 		return NULL;

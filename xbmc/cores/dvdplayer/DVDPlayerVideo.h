@@ -95,7 +95,9 @@ public:
 
 	// classes
 	CDVDMessageQueue m_messageQueue;
-	CDVDMessageQueue& m_messageParent;
+	CDVDMessageQueue& m_messageParent; /* 此值被赋值为CDVDPlayer->m_messenger [ 见构造函数CDVDPlayer::CDVDPlayer() 传递过来的]，在
+											构造函数CDVDPlayerVideo::CDVDPlayerVideo() 赋值的，这个消息队列是在CDVDPlayer::HandleMessages() 方
+											法中处理的*/
 
 	CDVDOverlayContainer* m_pOverlayContainer;
 

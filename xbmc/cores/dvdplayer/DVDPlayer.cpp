@@ -189,6 +189,7 @@ int CSelectionStreams::IndexOf(StreamType type, int source, int id) const
 	说明:
 		1、在容器m_Streams  中获取类型为type  中的与source 相匹配的那个单元的序号，注意此序号
 			不是所有元素中的序号，只是类型为type 中的序号(  从1  开始)
+			如果参数id 小于0，则返回类型为type 的总数
 */
 	CSingleLock lock(m_section);
 	int count = -1;
@@ -769,7 +770,7 @@ bool CDVDPlayer::OpenDemuxStream()
 
 	m_SelectionStreams.Clear(STREAM_NONE, STREAM_SOURCE_DEMUX);
 	m_SelectionStreams.Clear(STREAM_NONE, STREAM_SOURCE_NAV);
-	m_SelectionStreams.Update(m_pInputStream, m_pDemuxer);
+	m_SelectionStreams.Update(m_pInputStream, m_pDemuxer); /* 见函数里面分析*/
 
 	int64_t len = m_pInputStream->GetLength();
 	int64_t tim = m_pDemuxer->GetStreamLength();
@@ -1266,6 +1267,8 @@ void CDVDPlayer::Process()
 
 	SetCaching(CACHESTATE_FLUSH);
 
+
+	/* 进入dvdplayer  主循环*/
 	while (!m_bAbortRequest)
 	{
 		// handle messages send to this thread, like seek or demuxer reset requests
@@ -1314,6 +1317,7 @@ void CDVDPlayer::Process()
 		UpdateApplication(1000);
 
 		// if the queues are full, no need to read more
+		/* 视频解码器、或者音频解码器的接收数据包的队列满了，即不能接收数据了，就sleep 10 秒钟*/
 		if ((!m_dvdPlayerAudio.AcceptsData() && m_CurrentAudio.id >= 0) ||  (!m_dvdPlayerVideo.AcceptsData() && m_CurrentVideo.id >= 0))
 		{
 			Sleep(10);
@@ -1326,20 +1330,24 @@ void CDVDPlayer::Process()
 
 		DemuxPacket* pPacket = NULL;
 		CDemuxStream *pStream = NULL;
-		
-		ReadPacket(pPacket, pStream); /* changyukun --->  读取数据包*/
+
+
+		/* ------------------------- changyukun --->  读取数据包*/
+		ReadPacket(pPacket, pStream); 
 		
 		if (pPacket && !pStream)
 		{
 			/* probably a empty packet, just free it and move on */
-			CDVDDemuxUtils::FreeDemuxPacket(pPacket);
+			CDVDDemuxUtils::FreeDemuxPacket(pPacket);/* 可能是个空包，扔掉*/
 			continue;
 		}
 
+
+		/* ------------------------- changyukun --->  没有读取回来数据包*/
 		if (!pPacket)
 		{
 			// when paused, demuxer could be be returning empty
-			if (m_playSpeed == DVD_PLAYSPEED_PAUSE)
+			if (m_playSpeed == DVD_PLAYSPEED_PAUSE)/* 暂停状态*/
 				continue;
 
 			// if there is another stream available, let
@@ -1350,7 +1358,7 @@ void CDVDPlayer::Process()
 				continue;
 			}
 
-			if (m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD))
+			if (m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD))/* dvd 文件*/
 			{
 				CDVDInputStreamNavigator* pStream = static_cast<CDVDInputStreamNavigator*>(m_pInputStream);
 
@@ -1400,14 +1408,15 @@ void CDVDPlayer::Process()
 			if(m_CurrentTeletext.inited)
 				m_dvdPlayerTeletext.SendMessage(new CDVDMsg(CDVDMsg::GENERAL_EOF));
 			
-			m_CurrentAudio.inited    = false;
-			m_CurrentVideo.inited    = false;
-			m_CurrentSubtitle.inited = false;
-			m_CurrentTeletext.inited = false;
-			m_CurrentAudio.started    = false;
-			m_CurrentVideo.started    = false;
-			m_CurrentSubtitle.started = false;
-			m_CurrentTeletext.started = false;
+			m_CurrentAudio.inited    	= false;
+			m_CurrentVideo.inited    	= false;
+			m_CurrentSubtitle.inited 	= false;
+			m_CurrentTeletext.inited 	= false;
+			
+			m_CurrentAudio.started    	= false;
+			m_CurrentVideo.started    	= false;
+			m_CurrentSubtitle.started 	= false;
+			m_CurrentTeletext.started 	= false;
 
 			// if we are caching, start playing it again
 			SetCaching(CACHESTATE_DONE);
@@ -1429,19 +1438,22 @@ void CDVDPlayer::Process()
 		m_errorCount = 0;
 
 		// check so that none of our streams has become invalid
-		if (!IsValidStream(m_CurrentAudio)    && m_dvdPlayerAudio.IsStalled())    CloseAudioStream(true);
-		if (!IsValidStream(m_CurrentVideo)    && m_dvdPlayerVideo.IsStalled())    CloseVideoStream(true);
-		if (!IsValidStream(m_CurrentSubtitle) && m_dvdPlayerSubtitle.IsStalled()) CloseSubtitleStream(true);
-		if (!IsValidStream(m_CurrentTeletext))                                    CloseTeletextStream(true);
+		if (!IsValidStream(m_CurrentAudio) && m_dvdPlayerAudio.IsStalled())    		CloseAudioStream(true);
+		if (!IsValidStream(m_CurrentVideo) && m_dvdPlayerVideo.IsStalled())    		CloseVideoStream(true);
+		if (!IsValidStream(m_CurrentSubtitle) && m_dvdPlayerSubtitle.IsStalled()) 		CloseSubtitleStream(true);
+		if (!IsValidStream(m_CurrentTeletext))                                    				CloseTeletextStream(true);
 
 		// see if we can find something better to play
-		if (IsBetterStream(m_CurrentAudio,    pStream)) OpenAudioStream   (pStream->iId, pStream->source);/* changyukun BBB--1--BBB  间接创建启动音频解码器线程*/
-		if (IsBetterStream(m_CurrentVideo,    pStream)) OpenVideoStream   (pStream->iId, pStream->source);/* changyukun AAA--1--AAA  间接创建启动视频解码器线程*/
-		if (IsBetterStream(m_CurrentSubtitle, pStream)) OpenSubtitleStream(pStream->iId, pStream->source);
-		if (IsBetterStream(m_CurrentTeletext, pStream)) OpenTeletextStream(pStream->iId, pStream->source);
+		if (IsBetterStream(m_CurrentAudio,    pStream)) 	OpenAudioStream(pStream->iId, pStream->source);/* changyukun BBB--1--BBB  间接创建启动音频解码器线程*/
+		if (IsBetterStream(m_CurrentVideo,    pStream)) 	OpenVideoStream(pStream->iId, pStream->source);/* changyukun AAA--1--AAA  间接创建启动视频解码器线程*/
+		if (IsBetterStream(m_CurrentSubtitle, pStream)) 	OpenSubtitleStream(pStream->iId, pStream->source);
+		if (IsBetterStream(m_CurrentTeletext, pStream)) 	OpenTeletextStream(pStream->iId, pStream->source);
 
+
+
+		/* ------------------------- changyukun --->  处理数据包*/
 		// process the packet
-		ProcessPacket(pStream, pPacket); /* changyukun --->  处理数据包*/
+		ProcessPacket(pStream, pPacket); 
 
 		// check if in a cut or commercial break that should be automatically skipped
 		CheckAutoSceneSkip();
@@ -1471,9 +1483,9 @@ void CDVDPlayer::ProcessPacket(CDemuxStream* pStream, DemuxPacket* pPacket)
 	try
 	{
 		if (pPacket->iStreamId == m_CurrentAudio.id && pStream->source == m_CurrentAudio.source && pStream->type == STREAM_AUDIO)
-			ProcessAudioData(pStream, pPacket);
+			ProcessAudioData(pStream, pPacket); /* 音频包处理*/
 		else if (pPacket->iStreamId == m_CurrentVideo.id && pStream->source == m_CurrentVideo.source && pStream->type == STREAM_VIDEO)
-			ProcessVideoData(pStream, pPacket); /* changyukun ---> */
+			ProcessVideoData(pStream, pPacket); /* 视频包处理*/
 		else if (pPacket->iStreamId == m_CurrentSubtitle.id && pStream->source == m_CurrentSubtitle.source && pStream->type == STREAM_SUBTITLE)
 			ProcessSubData(pStream, pPacket);
 		else if (pPacket->iStreamId == m_CurrentTeletext.id && pStream->source == m_CurrentTeletext.source && pStream->type == STREAM_TELETEXT)
@@ -3642,7 +3654,7 @@ bool CDVDPlayer::OpenVideoStream(int iStream, int source)
 	
 	pStream->SetDiscard(AVDISCARD_NONE);
 
-	CDVDStreamInfo hint(*pStream, true);
+	CDVDStreamInfo hint(*pStream, true);/* 根据stream 生成streaminfo 的实体*/
 
 	if( m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD) )
 	{
@@ -3657,7 +3669,7 @@ bool CDVDPlayer::OpenVideoStream(int iStream, int source)
 		hint.stills   = static_cast<CDVDInputStreamNavigator*>(m_pInputStream)->IsInMenu();
 	}
 
-	if(m_CurrentVideo.id < 0|| m_CurrentVideo.hint != hint)
+	if(m_CurrentVideo.id < 0 || m_CurrentVideo.hint != hint)
 	{
 		if (!m_dvdPlayerVideo.OpenStream(hint)) /* changyukun AAA--2--AAA  间接创建启动视频解码器线程*/
 		{
@@ -3889,7 +3901,7 @@ bool CDVDPlayer::CloseVideoStream(bool bWaitForBuffers)
 {
 /*
 	参数:
-		1、
+		1、bWaitForBuffers : 是否需要等待buffer 处理完成
 		
 	返回:
 		1、

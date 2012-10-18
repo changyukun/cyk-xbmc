@@ -147,7 +147,7 @@ CDVDPlayerVideo::CDVDPlayerVideo( CDVDClock* pClock
                                 , CDVDMessageQueue& parent)
 : CThread("CDVDPlayerVideo")
 , m_messageQueue("video")
-, m_messageParent(parent)
+, m_messageParent(parent) /* 传入一个父消息队列*/
 {
 /*
 	参数:
@@ -557,7 +557,7 @@ void CDVDPlayerVideo::Process()
 		else if (pMsg->IsType(CDVDMsg::PLAYER_STARTED))
 		{
 			if(m_started)
-				m_messageParent.Put(new CDVDMsgInt(CDVDMsg::PLAYER_STARTED, DVDPLAYER_VIDEO));
+				m_messageParent.Put(new CDVDMsgInt(CDVDMsg::PLAYER_STARTED, DVDPLAYER_VIDEO)); /* 向父消息队列发送消息，即CDVDPlayer->m_messenger 消息队列，此消息队列是在CDVDPlayer::HandleMessages() 方法中处理的*/
 		}
 		else if (pMsg->IsType(CDVDMsg::GENERAL_STREAMCHANGE))
 		{
@@ -787,7 +787,7 @@ void CDVDPlayerVideo::Process()
 						{
 							m_codecname = m_pVideoCodec->GetName();
 							m_started = true;
-							m_messageParent.Put(new CDVDMsgInt(CDVDMsg::PLAYER_STARTED, DVDPLAYER_VIDEO));
+							m_messageParent.Put(new CDVDMsgInt(CDVDMsg::PLAYER_STARTED, DVDPLAYER_VIDEO)); /* 向父消息队列发送消息，即CDVDPlayer->m_messenger 消息队列，此消息队列是在CDVDPlayer::HandleMessages() 方法中处理的*/
 						}
 
 						// guess next frame pts. iDuration is always valid
