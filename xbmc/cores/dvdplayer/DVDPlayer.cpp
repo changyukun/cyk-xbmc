@@ -770,13 +770,24 @@ bool CDVDPlayer::OpenDemuxStream()
 
 	m_SelectionStreams.Clear(STREAM_NONE, STREAM_SOURCE_DEMUX);
 	m_SelectionStreams.Clear(STREAM_NONE, STREAM_SOURCE_NAV);
-	m_SelectionStreams.Update(m_pInputStream, m_pDemuxer); /* 见函数里面分析*/
+	m_SelectionStreams.Update(m_pInputStream, m_pDemuxer); /* 见函数里面分析,  实现了对m_SelectionStreams 的赋值*/
 
+	/*
+		获取文件的总长度，一个分段文件的长度
+	*/
 	int64_t len = m_pInputStream->GetLength();
-	int64_t tim = m_pDemuxer->GetStreamLength();
+
+	/* 
+		此处获得到的是这个流播放的总时间，毫秒为单位的，如果是分段的流，这就是
+		正在播放的那个分段的总时间，不是所有分段合并在一起的总时间，播放完一个
+		分段之后此函数CDVDPlayer::OpenDemuxStream() 会在播放下一个分段的时候被再调用一次
+	*/
+	int64_t tim = m_pDemuxer->GetStreamLength(); 
+
+	
 	
 	if(len > 0 && tim > 0)
-		m_pInputStream->SetReadRate(len * 1000 / tim);
+		m_pInputStream->SetReadRate(len * 1000 / tim); /* 根据文件的长度、播放的时间计算文件的读取速率*/
 
 	return true;
 }
@@ -1125,7 +1136,7 @@ bool CDVDPlayer::IsBetterStream(CCurrentStream& current, CDemuxStream* stream)
 	}
 	else
 	{
-		if(stream->source == current.source&& stream->iId    == current.id)
+		if(stream->source==current.source && stream->iId==current.id)
 			return false;
 
 		if(stream->disabled)
@@ -1590,8 +1601,8 @@ void CDVDPlayer::ProcessVideoData(CDemuxStream* pStream, DemuxPacket* pPacket)
 
 	if( pPacket->iSize != 4) //don't check the EOF_SEQUENCE of stillframes
 	{
-		CheckContinuity(m_CurrentVideo, pPacket);
-		UpdateTimestamps(m_CurrentVideo, pPacket);
+		CheckContinuity(m_CurrentVideo, pPacket);	/* 见函数分析*/
+		UpdateTimestamps(m_CurrentVideo, pPacket);	/* 见函数分析*/
 	}
 
 	bool drop = false;
@@ -1880,7 +1891,7 @@ bool CDVDPlayer::CheckPlayerInit(CCurrentStream& current, unsigned int source)
 	说明:
 		1、
 */
-	if(current.startpts != DVD_NOPTS_VALUE && current.dts      != DVD_NOPTS_VALUE)
+	if(current.startpts != DVD_NOPTS_VALUE && current.dts != DVD_NOPTS_VALUE)
 	{
 		if((current.startpts - current.dts) > DVD_SEC_TO_TIME(20))
 		{
@@ -1963,7 +1974,10 @@ void CDVDPlayer::UpdateTimestamps(CCurrentStream& current, DemuxPacket* pPacket)
 		1、
 		
 	说明:
-		1、
+		1、此函数实现了获取参数pPacket  包中的dts  值到参数current  中，获取的原则:
+			如果包中有dts ，则获取包中的dts  的值；
+			如果包中没有dts ，但有pts ，则获取包中的pts  的值
+			如果包中dts 、pts 都没有，则保持current 中的原值不变
 */
 	double dts = current.dts;
 	/* update stored values */
@@ -1978,18 +1992,20 @@ void CDVDPlayer::CheckContinuity(CCurrentStream& current, DemuxPacket* pPacket)
 {
 /*
 	参数:
-		1、
+		1、current
+		1、pPacket
 		
 	返回:
 		1、
 		
 	说明:
-		1、
+		1、其中参数current 中的dts 时间应该是上一个包的时间
+			参数pPacket 中的dts 时间才是当前包的时间
 */
-	if (m_playSpeed < DVD_PLAYSPEED_PAUSE)
+	if (m_playSpeed < DVD_PLAYSPEED_PAUSE) /* 暂停状态直接返回*/
 		return;
 
-	if( pPacket->dts == DVD_NOPTS_VALUE )
+	if( pPacket->dts == DVD_NOPTS_VALUE ) /* 包中没有dts  值直接返回*/
 		return;
 
 #if 0
@@ -1998,38 +2014,41 @@ void CDVDPlayer::CheckContinuity(CCurrentStream& current, DemuxPacket* pPacket)
 	// and a better fix for this behaviour would be to 
 	// correct the timestamps with some offset
 
-	if (current.type == STREAM_VIDEO
-	&& m_CurrentAudio.dts != DVD_NOPTS_VALUE
-	&& m_CurrentVideo.dts != DVD_NOPTS_VALUE)
+	if (current.type == STREAM_VIDEO && m_CurrentAudio.dts != DVD_NOPTS_VALUE && m_CurrentVideo.dts != DVD_NOPTS_VALUE)
 	{
-	/* check for looping stillframes on non dvd's, dvd's will be detected by long duration check later */
-	if( m_pInputStream && !m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD))
-	{
-	/* special case for looping stillframes THX test discs*/
-	/* only affect playback when not from dvd */
-	if( (m_CurrentAudio.dts > m_CurrentVideo.dts + DVD_MSEC_TO_TIME(200))
-	&& (m_CurrentVideo.dts == pPacket->dts) )
-	{
-	CLog::Log(LOGDEBUG, "CDVDPlayer::CheckContinuity - Detected looping stillframe");
-	SynchronizePlayers(SYNCSOURCE_VIDEO);
-	return;
-	}
-	}
+		/* check for looping stillframes on non dvd's, dvd's will be detected by long duration check later */
+		if( m_pInputStream && !m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD))
+		{
+			/* special case for looping stillframes THX test discs*/
+			/* only affect playback when not from dvd */
+			if( (m_CurrentAudio.dts > m_CurrentVideo.dts + DVD_MSEC_TO_TIME(200))&& (m_CurrentVideo.dts == pPacket->dts) )
+			{
+				CLog::Log(LOGDEBUG, "CDVDPlayer::CheckContinuity - Detected looping stillframe");
+				SynchronizePlayers(SYNCSOURCE_VIDEO);
+				return;
+			}
+		}
 
-	/* if we haven't received video for a while, but we have been */
-	/* getting audio much more recently, make sure video wait's  */
-	/* this occurs especially on thx test disc */
-	if( (pPacket->dts > m_CurrentVideo.dts + DVD_MSEC_TO_TIME(200))
-	&& (pPacket->dts < m_CurrentAudio.dts + DVD_MSEC_TO_TIME(50)) )
-	{
-	CLog::Log(LOGDEBUG, "CDVDPlayer::CheckContinuity - Potential long duration frame");
-	SynchronizePlayers(SYNCSOURCE_VIDEO);
-	return;
-	}
+		/* if we haven't received video for a while, but we have been */
+		/* getting audio much more recently, make sure video wait's  */
+		/* this occurs especially on thx test disc */
+		if( (pPacket->dts > m_CurrentVideo.dts + DVD_MSEC_TO_TIME(200))&& (pPacket->dts < m_CurrentAudio.dts + DVD_MSEC_TO_TIME(50)) )
+		{
+			CLog::Log(LOGDEBUG, "CDVDPlayer::CheckContinuity - Potential long duration frame");
+			SynchronizePlayers(SYNCSOURCE_VIDEO);
+			return;
+		}
 	}
 #endif
 
 	double mindts, maxdts;
+
+	/*
+		注意这里dts  最大最下值获取的原则:
+		如果音频的没有dts ，则就用视频的dts
+		如果视频的没有dts ，则就用音频的dts
+		如果两个都有，则用其中最小的作为最小值，其中最大的最为最大值
+	*/
 	if(m_CurrentAudio.dts == DVD_NOPTS_VALUE)
 		maxdts = mindts = m_CurrentVideo.dts;
 	else if(m_CurrentVideo.dts == DVD_NOPTS_VALUE)
@@ -2041,9 +2060,12 @@ void CDVDPlayer::CheckContinuity(CCurrentStream& current, DemuxPacket* pPacket)
 	}
 
 	/* if we don't have max and min, we can't do anything more */
+	
+	/* 最大或者最小dts 无效，无法进行后续的判断，则返回*/
 	if( mindts == DVD_NOPTS_VALUE || maxdts == DVD_NOPTS_VALUE )
 		return;
 
+	/* 相当于要播放前面已经播放过的*/
 	if( pPacket->dts < mindts - DVD_MSEC_TO_TIME(100) && current.inited)
 	{
 		/* if video player is rendering a stillframe, we need to make sure */
@@ -2051,6 +2073,7 @@ void CDVDPlayer::CheckContinuity(CCurrentStream& current, DemuxPacket* pPacket)
 		/* displayed too early */
 
 		CLog::Log(LOGWARNING, "CDVDPlayer::CheckContinuity - resync backword :%d, prev:%f, curr:%f, diff:%f" , current.type, current.dts, pPacket->dts, pPacket->dts - current.dts);
+
 		if (m_dvdPlayerVideo.IsStalled() && m_CurrentVideo.dts != DVD_NOPTS_VALUE)
 			SynchronizePlayers(SYNCSOURCE_VIDEO);
 		else if (m_dvdPlayerAudio.IsStalled() && m_CurrentAudio.dts != DVD_NOPTS_VALUE)
@@ -2063,6 +2086,7 @@ void CDVDPlayer::CheckContinuity(CCurrentStream& current, DemuxPacket* pPacket)
 	}
 
 	/* stream jump forward */
+	/* 相当于要播放后续的*/
 	if( pPacket->dts > maxdts + DVD_MSEC_TO_TIME(1000) && current.inited)
 	{
 		CLog::Log(LOGWARNING, "CDVDPlayer::CheckContinuity - resync forward :%d, prev:%f, curr:%f, diff:%f" , current.type, current.dts, pPacket->dts, pPacket->dts - current.dts);

@@ -57,79 +57,78 @@ class CStreamInfo;
 class CCurrentStream
 {
 public:
-  int              id;     // demuxerid of current playing stream
-  int              source;
-  double           dts;    // last dts from demuxer, used to find disncontinuities
-  CDVDStreamInfo   hint;   // stream hints, used to notice stream changes
-  void*            stream; // pointer or integer, identifying stream playing. if it changes stream changed
-  bool             inited;
-  bool             started; // has the player started
-  const StreamType type;
-  // stuff to handle starting after seek
-  double   startpts;
-  CDVDMsg* startsync;
+	int              id;     // demuxerid of current playing stream
+	int              source;
+	double           dts;    // last dts from demuxer, used to find disncontinuities
+	CDVDStreamInfo   hint;   // stream hints, used to notice stream changes
+	void*            stream; // pointer or integer, identifying stream playing. if it changes stream changed
+	bool             inited;
+	bool             started; // has the player started
+	const StreamType type;
+	// stuff to handle starting after seek
+	double   startpts;
+	CDVDMsg* startsync;
 
-  CCurrentStream(StreamType t)
-    : type(t)
-  {
-    startsync = NULL;
-    Clear();
-  }
+	CCurrentStream(StreamType t) : type(t)
+	{
+		startsync = NULL;
+		Clear();
+	}
 
-  void Clear()
-  {
-    id     = -1;
-    source = STREAM_SOURCE_NONE;
-    dts    = DVD_NOPTS_VALUE;
-    hint.Clear();
-    stream = NULL;
-    inited = false;
-    started = false;
-    if(startsync)
-      startsync->Release();
-    startsync = NULL;
-    startpts  = DVD_NOPTS_VALUE;
-  }
+	void Clear()
+	{
+		id     = -1;
+		source = STREAM_SOURCE_NONE;
+		dts    = DVD_NOPTS_VALUE;
+		hint.Clear();
+		stream = NULL;
+		inited = false;
+		started = false;
+		if(startsync)
+			startsync->Release();
+		startsync = NULL;
+		startpts  = DVD_NOPTS_VALUE;
+	}
 };
 
 typedef struct
 {
-  StreamType   type;
-  std::string  filename;
-  std::string  filename2;  // for vobsub subtitles, 2 files are necessary (idx/sub) 
-  std::string  language;
-  std::string  name;
-  CDemuxStream::EFlags flags;
-  int          source;
-  int          id;
-  std::string  codec;
-  int          channels;
+	StreamType   type;
+	std::string  filename;
+	std::string  filename2;  // for vobsub subtitles, 2 files are necessary (idx/sub) 
+	std::string  language;
+	std::string  name;
+	CDemuxStream::EFlags flags;
+	int          source;
+	int          id;
+	std::string  codec;
+	int          channels;
 } SelectionStream;
 
 class CSelectionStreams
 {
-  CCriticalSection m_section;
-  SelectionStream  m_invalid;
+	CCriticalSection m_section;
+	SelectionStream  m_invalid;
 public:
-  CSelectionStreams()
-  {
-    m_invalid.id = -1;
-    m_invalid.source = STREAM_SOURCE_NONE;
-    m_invalid.type = STREAM_NONE;
-  }
-  std::vector<SelectionStream> m_Streams;
+	CSelectionStreams()
+	{
+		m_invalid.id = -1;
+		m_invalid.source = STREAM_SOURCE_NONE;
+		m_invalid.type = STREAM_NONE;
+	}
+	std::vector<SelectionStream> m_Streams;
 
-  int              IndexOf (StreamType type, int source, int id) const;
-  int              IndexOf (StreamType type, CDVDPlayer& p) const;
-  int              Count   (StreamType type) const { return IndexOf(type, STREAM_SOURCE_NONE, -1) + 1; }
-  SelectionStream& Get     (StreamType type, int index);
-  bool             Get     (StreamType type, CDemuxStream::EFlags flag, SelectionStream& out);
+	int              IndexOf (StreamType type, int source, int id) const;
+	int              IndexOf (StreamType type, CDVDPlayer& p) const;
+	int              Count   (StreamType type) const { return IndexOf(type, STREAM_SOURCE_NONE, -1) + 1; }
+	SelectionStream& Get     (StreamType type, int index);
+	bool             Get     (StreamType type, CDemuxStream::EFlags flag, SelectionStream& out);
 
-  void             Clear   (StreamType type, StreamSource source);
-  int              Source  (StreamSource source, std::string filename);
+	void             Clear   (StreamType type, StreamSource source);
+	int              Source  (StreamSource source, std::string filename);
 
-  void             Update  (SelectionStream& s);
-  void             Update  (CDVDInputStream* input, CDVDDemux* demuxer);
+	void             Update  (SelectionStream& s);
+	void             Update  (CDVDInputStream* input, CDVDDemux* demuxer);
 };
 
 
