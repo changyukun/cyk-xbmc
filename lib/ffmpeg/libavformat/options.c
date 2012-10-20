@@ -72,21 +72,42 @@ static const AVClass av_format_context_class = { "AVFormatContext", format_to_na
 
 static void avformat_get_context_defaults(AVFormatContext *s)
 {
-    memset(s, 0, sizeof(AVFormatContext));
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	memset(s, 0, sizeof(AVFormatContext));
 
-    s->av_class = &av_format_context_class;
+	s->av_class = &av_format_context_class;
 
-    av_opt_set_defaults(s);
+	av_opt_set_defaults(s);
 }
 
 AVFormatContext *avformat_alloc_context(void)
 {
-    AVFormatContext *ic;
-    ic = av_malloc(sizeof(AVFormatContext));
-    if (!ic) return ic;
-    avformat_get_context_defaults(ic);
-    ic->av_class = &av_format_context_class;
-    return ic;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	AVFormatContext *ic;
+	ic = av_malloc(sizeof(AVFormatContext));
+	if (!ic) 
+		return ic;
+	avformat_get_context_defaults(ic);
+	ic->av_class = &av_format_context_class;
+	return ic;
 }
 
 #if FF_API_ALLOC_FORMAT_CONTEXT

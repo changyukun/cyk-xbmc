@@ -380,7 +380,7 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 {
 /*
 	参数:
-		1、pInput	: 传入的为输入的实例，通常为在CDVDPlayer::OpenInputStream() 方法中实例的
+		1、pInput	: 传入的为输入的实例，通常为在CDVDPlayer::OpenInputStream() 方法中实例的; 如: CDVDInputStreamFile 类的实例
 		
 	返回:
 		1、
@@ -407,7 +407,8 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 
 	
 	// register codecs
-	m_dllAvFormat.av_register_all();
+	m_dllAvFormat.av_register_all();/* 见ffmpeg 中av_register_all 的定义*/
+	
 	m_dllAvFormat.url_set_interrupt_cb(interrupt_cb);
 
 	// could be used for interupting ffmpeg while opening a file (eg internet streams)
@@ -424,7 +425,7 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 
 		/* check if we can get a hint from content */
 		if( content.compare("video/x-vobsub") == 0 )
-			iformat = m_dllAvFormat.av_find_input_format("mpeg");
+			iformat = m_dllAvFormat.av_find_input_format("mpeg"); /* 见函数av_register_all  对所有input 的注册*/
 		else if( content.compare("video/x-dvd-mpeg") == 0 )
 			iformat = m_dllAvFormat.av_find_input_format("mpeg");
 		else if( content.compare("video/x-mpegts") == 0 )
@@ -1084,7 +1085,7 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 	return pPacket;
 }
 
-bool CDVDDemuxFFmpeg::SeekTime(int time, bool backwords, double *startpts)
+bool CDVDDemuxFFmpeg::SeekTime(int time, bool backwords, double* startpts)
 {
 /*
 	参数:
@@ -1118,7 +1119,7 @@ bool CDVDDemuxFFmpeg::SeekTime(int time, bool backwords, double *startpts)
 		return true;
 	}
 
-	if(!m_pInput->Seek(0, SEEK_POSSIBLE)&& !m_pInput->IsStreamType(DVDSTREAM_TYPE_FFMPEG))
+	if(!m_pInput->Seek(0, SEEK_POSSIBLE) && !m_pInput->IsStreamType(DVDSTREAM_TYPE_FFMPEG))
 	{
 		CLog::Log(LOGDEBUG, "%s - input stream reports it is not seekable", __FUNCTION__);
 		return false;

@@ -406,52 +406,84 @@ int av_opt_show2(void *obj, void *av_log_obj, int req_flags, int rej_flags)
  */
 void av_opt_set_defaults2(void *s, int mask, int flags)
 {
-    const AVOption *opt = NULL;
-    while ((opt = av_next_option(s, opt)) != NULL) {
-        if ((opt->flags & mask) != flags)
-            continue;
-        switch (opt->type) {
-            case FF_OPT_TYPE_CONST:
-                /* Nothing to be done here */
-            break;
-            case FF_OPT_TYPE_FLAGS:
-            case FF_OPT_TYPE_INT: {
-                int val;
-                val = opt->default_val;
-                av_set_int(s, opt->name, val);
-            }
-            break;
-            case FF_OPT_TYPE_INT64:
-                if ((double)(opt->default_val+0.6) == opt->default_val)
-                    av_log(s, AV_LOG_DEBUG, "loss of precision in default of %s\n", opt->name);
-                av_set_int(s, opt->name, opt->default_val);
-            break;
-            case FF_OPT_TYPE_DOUBLE:
-            case FF_OPT_TYPE_FLOAT: {
-                double val;
-                val = opt->default_val;
-                av_set_double(s, opt->name, val);
-            }
-            break;
-            case FF_OPT_TYPE_RATIONAL: {
-                AVRational val;
-                val = av_d2q(opt->default_val, INT_MAX);
-                av_set_q(s, opt->name, val);
-            }
-            break;
-            case FF_OPT_TYPE_STRING:
-            case FF_OPT_TYPE_BINARY:
-                /* Cannot set default for string as default_val is of type * double */
-            break;
-            default:
-                av_log(s, AV_LOG_DEBUG, "AVOption type %d of option %s not implemented yet\n", opt->type, opt->name);
-        }
-    }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	const AVOption *opt = NULL;
+	while ((opt = av_next_option(s, opt)) != NULL) 
+	{
+		if ((opt->flags & mask) != flags)
+			continue;
+		
+		switch (opt->type) 
+		{
+			case FF_OPT_TYPE_CONST:
+				/* Nothing to be done here */
+				break;
+				
+			case FF_OPT_TYPE_FLAGS:
+			case FF_OPT_TYPE_INT: 
+				{
+					int val;
+					val = opt->default_val;
+					av_set_int(s, opt->name, val);
+				}
+				break;
+				
+			case FF_OPT_TYPE_INT64:
+				if ((double)(opt->default_val+0.6) == opt->default_val)
+					av_log(s, AV_LOG_DEBUG, "loss of precision in default of %s\n", opt->name);
+				av_set_int(s, opt->name, opt->default_val);
+				break;
+				
+			case FF_OPT_TYPE_DOUBLE:
+			case FF_OPT_TYPE_FLOAT: 
+				{
+					double val;
+					val = opt->default_val;
+					av_set_double(s, opt->name, val);
+				}
+				break;
+				
+			case FF_OPT_TYPE_RATIONAL: 
+				{
+					AVRational val;
+					val = av_d2q(opt->default_val, INT_MAX);
+					av_set_q(s, opt->name, val);
+				}
+				break;
+				
+			case FF_OPT_TYPE_STRING:
+			case FF_OPT_TYPE_BINARY:
+				/* Cannot set default for string as default_val is of type * double */
+				break;
+				
+			default:
+				av_log(s, AV_LOG_DEBUG, "AVOption type %d of option %s not implemented yet\n", opt->type, opt->name);
+		}
+	}
 }
 
 void av_opt_set_defaults(void *s)
 {
-    av_opt_set_defaults2(s, 0, 0);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+    	av_opt_set_defaults2(s, 0, 0);
 }
 
 /**

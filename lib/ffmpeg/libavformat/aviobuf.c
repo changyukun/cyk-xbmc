@@ -40,18 +40,25 @@ static void fill_buffer(ByteIOContext *s);
 static int url_resetbuf(ByteIOContext *s, int flags);
 #endif
 
-int init_put_byte(ByteIOContext *s,
-                  unsigned char *buffer,
-                  int buffer_size,
-                  int write_flag,
-                  void *opaque,
-                  int (*read_packet)(void *opaque, uint8_t *buf, int buf_size),
-                  int (*write_packet)(void *opaque, uint8_t *buf, int buf_size),
-                  int64_t (*seek)(void *opaque, int64_t offset, int whence))
+int init_put_byte( ByteIOContext *s,
+		                  unsigned char *buffer,
+		                  int buffer_size,
+		                  int write_flag,
+		                  void *opaque,
+		                  int (*read_packet)(void *opaque, uint8_t *buf, int buf_size),
+		                  int (*write_packet)(void *opaque, uint8_t *buf, int buf_size),
+		                  int64_t (*seek)(void *opaque, int64_t offset, int whence))
 {
 /*
 	参数:
-		1、
+		0、s			: 传入一个ByteIOContext 的数据结构，用于返回信息，即此函数内部会对此数据结构进行填充
+		1、buffer		: 传入buffer 地址空间
+		2、buffer_size	: 传入buffer 的大小
+		3、write_flag	: 传入写标记
+		4、opaque		: 传入参数( 通常为输入流的实例，也就是后面三个文件操作函数的第一个参数)
+		5、read_packet	: 文件读包操作函数
+		6、write_packet	: 文件写包操作函数
+		7、seek		: 文件定位函数
 		
 	返回:
 		1、
@@ -84,18 +91,23 @@ int init_put_byte(ByteIOContext *s,
 	return 0;
 }
 
-ByteIOContext *av_alloc_put_byte(
-                  unsigned char *buffer,
-                  int buffer_size,
-                  int write_flag,
-                  void *opaque,
-                  int (*read_packet)(void *opaque, uint8_t *buf, int buf_size),
-                  int (*write_packet)(void *opaque, uint8_t *buf, int buf_size),
-                  int64_t (*seek)(void *opaque, int64_t offset, int whence))
+ByteIOContext *av_alloc_put_byte(unsigned char *buffer,
+						                  int buffer_size,
+						                  int write_flag,
+						                  void *opaque,
+						                  int (*read_packet)(void *opaque, uint8_t *buf, int buf_size),
+						                  int (*write_packet)(void *opaque, uint8_t *buf, int buf_size),
+						                  int64_t (*seek)(void *opaque, int64_t offset, int whence))
 {
 /*
 	参数:
-		1、
+		1、buffer		: 传入buffer 地址空间
+		2、buffer_size	: 传入buffer 的大小
+		3、write_flag	: 传入写标记
+		4、opaque		: 传入参数( 通常为输入流的实例，也就是后面三个文件操作函数的第一个参数)
+		5、read_packet	: 文件读包操作函数
+		6、write_packet	: 文件写包操作函数
+		7、seek		: 文件定位函数
 		
 	返回:
 		1、
@@ -103,8 +115,11 @@ ByteIOContext *av_alloc_put_byte(
 	说明:
 		1、
 */
-	ByteIOContext *s = av_mallocz(sizeof(ByteIOContext));
+	ByteIOContext *s = av_mallocz(sizeof(ByteIOContext));/* 分配一个ByteIOContext 的数据空间*/
+
+	/* 见函数内部分析*/
 	init_put_byte(s, buffer, buffer_size, write_flag, opaque, read_packet, write_packet, seek);
+	
 	return s;
 }
 

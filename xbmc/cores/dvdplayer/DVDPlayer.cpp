@@ -4268,8 +4268,8 @@ bool CDVDPlayer::OnAction(const CAction &action)
 #define THREAD_ACTION(action) \
 	do { \
 	if (!IsCurrentThread()) { \
-	m_messenger.Put(new CDVDMsgType<CAction>(CDVDMsg::GENERAL_GUI_ACTION, action)); \
-	return true; \
+		m_messenger.Put(new CDVDMsgType<CAction>(CDVDMsg::GENERAL_GUI_ACTION, action)); \
+		return true; \
 	} \
 	} while(false)
 

@@ -684,7 +684,7 @@ typedef struct AVFormatContext
 	struct AVInputFormat *iformat;
 	struct AVOutputFormat *oformat;
 	void *priv_data;
-	ByteIOContext *pb;
+	ByteIOContext *pb; /* 见函数av_open_input_stream 中对此域成员的赋值，通常此值被赋为一个由函数av_alloc_put_byte 返回的数据结构( 将文件的读、定位等函数整合在一起) */
 	unsigned int nb_streams;
 #if FF_API_MAX_STREAMS
 	AVStream *streams[MAX_STREAMS];

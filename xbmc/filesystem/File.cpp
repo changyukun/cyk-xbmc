@@ -286,6 +286,7 @@ bool CFile::Open(const CStdString& strFileName, unsigned int flags)
 		if (m_flags & READ_CACHED)
 		{
 			CLog::Log(LOGDEBUG,"==========>>> cyk   CFile::Open-->CFileCache()");
+			
 			m_pFile = new CFileCache();/* 创建一个CFileCache 的实例*/
 			return m_pFile->Open(url);/* 打开cache 类的实例，实质真正的从文件读取数据向cache 中写入的线程也是在这里创建并执行的*/
 		}

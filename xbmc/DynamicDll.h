@@ -498,20 +498,20 @@ public: \
 class DllDynamic
 {
 public:
-  DllDynamic();
-  DllDynamic(const CStdString& strDllName);
-  virtual ~DllDynamic();
-  virtual bool Load();
-  virtual void Unload();
-  virtual bool IsLoaded() { return m_dll!=NULL; }
-  bool CanLoad();
-  bool EnableDelayedUnload(bool bOnOff);
-  bool SetFile(const CStdString& strDllName);
+	DllDynamic();
+	DllDynamic(const CStdString& strDllName);
+	virtual ~DllDynamic();
+	virtual bool Load();
+	virtual void Unload();
+	virtual bool IsLoaded() { return m_dll!=NULL; }
+	bool CanLoad();
+	bool EnableDelayedUnload(bool bOnOff);
+	bool SetFile(const CStdString& strDllName);
 
-protected:
-  virtual bool ResolveExports()=0;
-  virtual bool LoadSymbols() { return false; }
-  bool  m_DelayUnload;
-  LibraryLoader* m_dll;
-  CStdString m_strDllName;
+	protected:
+	virtual bool ResolveExports()=0;
+	virtual bool LoadSymbols() { return false; }
+	bool  m_DelayUnload;
+	LibraryLoader* m_dll;
+	CStdString m_strDllName;
 };
