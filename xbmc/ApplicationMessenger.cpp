@@ -332,6 +332,7 @@ case TMSG_POWERDOWN:
             else
             {
               g_playlistPlayer.Add(playlist, (*list));
+			  CLog::Log(LOGDEBUG,"==========>>> cyk PlayFile 0---1");
               g_playlistPlayer.Play(pMsg->dwParam1);
             }
           }
@@ -550,9 +551,15 @@ case TMSG_POWERDOWN:
 
     case TMSG_PLAYLISTPLAYER_PLAY:
       if (pMsg->dwParam1 != (DWORD) -1)
+      	{
+      	CLog::Log(LOGDEBUG,"==========>>> cyk PlayFile 0---2");
         g_playlistPlayer.Play(pMsg->dwParam1);
+      	}
       else
+      	{
+      	CLog::Log(LOGDEBUG,"==========>>> cyk PlayFile 0---3");
         g_playlistPlayer.Play();
+      	}
       break;
 
     case TMSG_PLAYLISTPLAYER_PLAY_SONG_ID:
@@ -562,14 +569,19 @@ case TMSG_POWERDOWN:
         *result = g_playlistPlayer.PlaySongId(pMsg->dwParam1);
       }
       else
+      	{
+      	CLog::Log(LOGDEBUG,"==========>>> cyk PlayFile 0---4");
         g_playlistPlayer.Play();
+      	}
       break;
 
     case TMSG_PLAYLISTPLAYER_NEXT:
+		CLog::Log(LOGDEBUG,"==========>>> cyk PlayFile 0---5");
       g_playlistPlayer.PlayNext();
       break;
 
     case TMSG_PLAYLISTPLAYER_PREV:
+		CLog::Log(LOGDEBUG,"==========>>> cyk PlayFile 0---6");
       g_playlistPlayer.PlayPrevious();
       break;
 

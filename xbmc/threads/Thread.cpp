@@ -245,7 +245,7 @@ DWORD WINAPI CThread::staticThread(LPVOID* data)
 
 	try
 	{
-		pThread->OnExit();
+		pThread->OnExit(); /*  调用实例的那个OnExit  方法*/
 	}
 #ifndef _LINUX
 	catch (const access_violation &e)

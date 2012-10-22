@@ -328,6 +328,8 @@ bool CPlayListPlayer::Play(int iSong, bool bAutoPlay /* = false */, bool bPlayPr
 	说明:
 		1、
 */
+	CLog::Log(LOGDEBUG,"==========>>> cyk PlayFile 0");
+
 	if (m_iCurrentPlayList == PLAYLIST_NONE)
 		return false;
 
@@ -355,7 +357,7 @@ bool CPlayListPlayer::Play(int iSong, bool bAutoPlay /* = false */, bool bPlayPr
 	m_bPlaybackStarted = false;
 
 	unsigned int playAttempt = XbmcThreads::SystemClockMillis();
-	if (!g_application.PlayFile(*item, bAutoPlay))
+	if (!g_application.PlayFile(*item, bAutoPlay)) /* 调用播放接口进行播放*/
 	{
 		CLog::Log(LOGERROR,"Playlist Player: skipping unplayable item: %i, path [%s]", m_iCurrentSong, item->GetPath().c_str());
 		playlist.SetUnPlayable(m_iCurrentSong);

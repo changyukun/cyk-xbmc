@@ -4156,7 +4156,10 @@ bool CApplication::PlayFile(const CFileItem& item, bool bRestart)
 		1、
 		
 	说明:
-		1、
+		1、此函数会被多次调用，即使一个电影是有多个分段组成的，则没播放一个分段之后就会调用
+			一次此函数进行下一个分段的播放的
+
+		2、见函数CPlayListPlayer::Play() 中对此函数的调用
 */
 	CLog::Log(LOGDEBUG,"==========>>> cyk PlayFile 1");
 	
@@ -4176,7 +4179,7 @@ bool CApplication::PlayFile(const CFileItem& item, bool bRestart)
 		m_currentStack->Clear();
 
 		if (item.IsVideo())
-		CUtil::ClearSubtitles();
+			CUtil::ClearSubtitles();
 	}
 
 	if (item.IsDiscStub())
@@ -6196,37 +6199,47 @@ void CApplication::CheckPlayingProgress()
 
 bool CApplication::ProcessAndStartPlaylist(const CStdString& strPlayList, CPlayList& playlist, int iPlaylist, int track)
 {
-  CLog::Log(LOGDEBUG,"CApplication::ProcessAndStartPlaylist(%s, %i)",strPlayList.c_str(), iPlaylist);
+/*
+	参数:
+		1、
 
-  // initial exit conditions
-  // no songs in playlist just return
-  if (playlist.size() == 0)
-    return false;
+	返回:
+		1、
 
-  // illegal playlist
-  if (iPlaylist < PLAYLIST_MUSIC || iPlaylist > PLAYLIST_VIDEO)
-    return false;
+	说明:
+		1、
+*/
+	CLog::Log(LOGDEBUG,"CApplication::ProcessAndStartPlaylist(%s, %i)",strPlayList.c_str(), iPlaylist);
 
-  // setup correct playlist
-  g_playlistPlayer.ClearPlaylist(iPlaylist);
+	// initial exit conditions
+	// no songs in playlist just return
+	if (playlist.size() == 0)
+		return false;
 
-  // if the playlist contains an internet stream, this file will be used
-  // to generate a thumbnail for musicplayer.cover
-  g_application.m_strPlayListFile = strPlayList;
+	// illegal playlist
+	if (iPlaylist < PLAYLIST_MUSIC || iPlaylist > PLAYLIST_VIDEO)
+		return false;
 
-  // add the items to the playlist player
-  g_playlistPlayer.Add(iPlaylist, playlist);
+	// setup correct playlist
+	g_playlistPlayer.ClearPlaylist(iPlaylist);
 
-  // if we have a playlist
-  if (g_playlistPlayer.GetPlaylist(iPlaylist).size())
-  {
-    // start playing it
-    g_playlistPlayer.SetCurrentPlaylist(iPlaylist);
-    g_playlistPlayer.Reset();
-    g_playlistPlayer.Play(track);
-    return true;
-  }
-  return false;
+	// if the playlist contains an internet stream, this file will be used
+	// to generate a thumbnail for musicplayer.cover
+	g_application.m_strPlayListFile = strPlayList;
+
+	// add the items to the playlist player
+	g_playlistPlayer.Add(iPlaylist, playlist);
+
+	// if we have a playlist
+	if (g_playlistPlayer.GetPlaylist(iPlaylist).size())
+	{
+		// start playing it
+		g_playlistPlayer.SetCurrentPlaylist(iPlaylist);
+		g_playlistPlayer.Reset();
+		g_playlistPlayer.Play(track);
+		return true;
+	}
+	return false;
 }
 
 void CApplication::SaveCurrentFileSettings()

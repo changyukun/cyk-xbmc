@@ -326,7 +326,7 @@ void CFileCache::Process()
 		}
 
 		int iRead = m_source.Read(buffer.get(), chunksize);
-		if (iRead == 0)
+		if (iRead == 0)/* 视频源文件已经读取完毕，如果一个视频分段已经读取完毕*/
 		{
 			CLog::Log(LOGINFO, "CFileCache::Process - Hit eof.");
 			m_pCache->EndOfInput();

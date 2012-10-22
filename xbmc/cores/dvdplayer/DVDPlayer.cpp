@@ -470,7 +470,16 @@ bool CDVDPlayer::OpenFile(const CFileItem& file, const CPlayerOptions &options)
 
 		// if playing a file close it first
 		// this has to be changed so we won't have to close it.
-		
+
+
+		/*
+			一个视频由多个分段组成的，则每播放一个分段就会调用一次此函
+			数，而每次调用此函数就会将上一分段使用的视频线程销毁，然后
+			创建一个新的线程。
+			
+			此处如果播放器线程已经创建了，则先销毁已经创建的线程，然后
+			重新创建一个线程。
+		*/
 		if(ThreadHandle()) /* 这里的ThreadHandle 应该是调用CThread::ThreadHandle 函数，因为类CDVDPlayer 继承了类CThread */
 			CloseFile();
 
