@@ -432,7 +432,7 @@ bool CApplication::OnEvent(XBMC_Event& newEvent)
 		1、
 		
 	说明:
-		1、
+		1、此函数会在MessagePump()  中得到调用，即通过g_application.OnEvent 的调用
 */
 	switch(newEvent.type)
 	{
@@ -2764,502 +2764,560 @@ bool CApplication::OnAppCommand(const CAction &action)
 
 bool CApplication::OnAction(const CAction &action)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #ifdef HAS_HTTPAPI
-  // Let's tell the outside world about this action, ignoring mouse moves
-  if (g_settings.m_HttpApiBroadcastLevel>=2 && action.GetID() != ACTION_MOUSE_MOVE)
-  {
-    CStdString tmp;
-    tmp.Format("%i",action.GetID());
-    getApplicationMessenger().HttpApi("broadcastlevel; OnAction:"+tmp+";2");
-  }
+	// Let's tell the outside world about this action, ignoring mouse moves
+	if (g_settings.m_HttpApiBroadcastLevel>=2 && action.GetID() != ACTION_MOUSE_MOVE)
+	{
+		CStdString tmp;
+		tmp.Format("%i",action.GetID());
+		getApplicationMessenger().HttpApi("broadcastlevel; OnAction:"+tmp+";2");
+	}
 #endif
 
-  // special case for switching between GUI & fullscreen mode.
-  if (action.GetID() == ACTION_SHOW_GUI)
-  { // Switch to fullscreen mode if we can
-    if (SwitchToFullScreen())
-    {
-      m_navigationTimer.StartZero();
-      return true;
-    }
-  }
+	// special case for switching between GUI & fullscreen mode.
+	if (action.GetID() == ACTION_SHOW_GUI)
+	{ // Switch to fullscreen mode if we can
+		if (SwitchToFullScreen())
+		{
+			m_navigationTimer.StartZero();
+			return true;
+		}
+	}
 
-  if (action.GetID() == ACTION_TOGGLE_FULLSCREEN)
-  {
-    g_graphicsContext.ToggleFullScreenRoot();
-    return true;
-  }
+	if (action.GetID() == ACTION_TOGGLE_FULLSCREEN)
+	{
+		g_graphicsContext.ToggleFullScreenRoot();
+		return true;
+	}
 
-  if (action.IsMouse())
-    g_Mouse.SetActive(true);
+	if (action.IsMouse())
+		g_Mouse.SetActive(true);
 
-  // The action PLAYPAUSE behaves as ACTION_PAUSE if we are currently
-  // playing or ACTION_PLAYER_PLAY if we are not playing.
-  if (action.GetID() == ACTION_PLAYER_PLAYPAUSE)
-  {
-    if (IsPlaying())
-      return OnAction(CAction(ACTION_PAUSE));
-    else
-      return OnAction(CAction(ACTION_PLAYER_PLAY));
-  }
+	// The action PLAYPAUSE behaves as ACTION_PAUSE if we are currently
+	// playing or ACTION_PLAYER_PLAY if we are not playing.
+	if (action.GetID() == ACTION_PLAYER_PLAYPAUSE)
+	{
+		if (IsPlaying())
+			return OnAction(CAction(ACTION_PAUSE));
+		else
+			return OnAction(CAction(ACTION_PLAYER_PLAY));
+	}
 
-  //if the action would start or stop inertial scrolling
-  //by gesture - bypass the normal OnAction handler of current window
-  if( !m_pInertialScrollingHandler->CheckForInertialScrolling(&action) )
-  {
-    // in normal case
-    // just pass the action to the current window and let it handle it
-    if (g_windowManager.OnAction(action))
-    {
-      m_navigationTimer.StartZero();
-      return true;
-    }
-  } 
+	//if the action would start or stop inertial scrolling
+	//by gesture - bypass the normal OnAction handler of current window
+	if( !m_pInertialScrollingHandler->CheckForInertialScrolling(&action) )
+	{
+		// in normal case
+		// just pass the action to the current window and let it handle it
+		if (g_windowManager.OnAction(action))
+		{
+			m_navigationTimer.StartZero();
+			return true;
+		}
+	} 
 
-  // handle extra global presses
+	// handle extra global presses
 
-  // screenshot : take a screenshot :)
-  if (action.GetID() == ACTION_TAKE_SCREENSHOT)
-  {
-    CUtil::TakeScreenshot();
-    return true;
-  }
-  // built in functions : execute the built-in
-  if (action.GetID() == ACTION_BUILT_IN_FUNCTION)
-  {
-    CBuiltins::Execute(action.GetName());
-    m_navigationTimer.StartZero();
-    return true;
-  }
+	// screenshot : take a screenshot :)
+	if (action.GetID() == ACTION_TAKE_SCREENSHOT)
+	{
+		CUtil::TakeScreenshot();
+		return true;
+	}
+	// built in functions : execute the built-in
+	if (action.GetID() == ACTION_BUILT_IN_FUNCTION)
+	{
+		CBuiltins::Execute(action.GetName());
+		m_navigationTimer.StartZero();
+		return true;
+	}
 
-  // reload keymaps
-  if (action.GetID() == ACTION_RELOAD_KEYMAPS)
-  {
-    CButtonTranslator::GetInstance().Clear();
-    CButtonTranslator::GetInstance().Load();
-  }
+	// reload keymaps
+	if (action.GetID() == ACTION_RELOAD_KEYMAPS)
+	{
+		CButtonTranslator::GetInstance().Clear();
+		CButtonTranslator::GetInstance().Load();
+	}
 
-  // show info : Shows the current video or song information
-  if (action.GetID() == ACTION_SHOW_INFO)
-  {
-    g_infoManager.ToggleShowInfo();
-    return true;
-  }
+	// show info : Shows the current video or song information
+	if (action.GetID() == ACTION_SHOW_INFO)
+	{
+		g_infoManager.ToggleShowInfo();
+		return true;
+	}
 
-  // codec info : Shows the current song, video or picture codec information
-  if (action.GetID() == ACTION_SHOW_CODEC)
-  {
-    g_infoManager.ToggleShowCodec();
-    return true;
-  }
+	// codec info : Shows the current song, video or picture codec information
+	if (action.GetID() == ACTION_SHOW_CODEC)
+	{
+		g_infoManager.ToggleShowCodec();
+		return true;
+	}
 
-  if ((action.GetID() == ACTION_INCREASE_RATING || action.GetID() == ACTION_DECREASE_RATING) && IsPlayingAudio())
-  {
-    const CMusicInfoTag *tag = g_infoManager.GetCurrentSongTag();
-    if (tag)
-    {
-      *m_itemCurrentFile->GetMusicInfoTag() = *tag;
-      char rating = tag->GetRating();
-      bool needsUpdate(false);
-      if (rating > '0' && action.GetID() == ACTION_DECREASE_RATING)
-      {
-        m_itemCurrentFile->GetMusicInfoTag()->SetRating(rating - 1);
-        needsUpdate = true;
-      }
-      else if (rating < '5' && action.GetID() == ACTION_INCREASE_RATING)
-      {
-        m_itemCurrentFile->GetMusicInfoTag()->SetRating(rating + 1);
-        needsUpdate = true;
-      }
-      if (needsUpdate)
-      {
-        CMusicDatabase db;
-        if (db.Open())      // OpenForWrite() ?
-        {
-          db.SetSongRating(m_itemCurrentFile->GetPath(), m_itemCurrentFile->GetMusicInfoTag()->GetRating());
-          db.Close();
-        }
-        // send a message to all windows to tell them to update the fileitem (eg playlistplayer, media windows)
-        CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_ITEM, 0, m_itemCurrentFile);
-        g_windowManager.SendMessage(msg);
-      }
-    }
-    return true;
-  }
+	if ((action.GetID() == ACTION_INCREASE_RATING || action.GetID() == ACTION_DECREASE_RATING) && IsPlayingAudio())
+	{
+		const CMusicInfoTag *tag = g_infoManager.GetCurrentSongTag();
+		if (tag)
+		{
+			*m_itemCurrentFile->GetMusicInfoTag() = *tag;
+			char rating = tag->GetRating();
+			bool needsUpdate(false);
+			if (rating > '0' && action.GetID() == ACTION_DECREASE_RATING)
+			{
+				m_itemCurrentFile->GetMusicInfoTag()->SetRating(rating - 1);
+				needsUpdate = true;
+			}
+			else if (rating < '5' && action.GetID() == ACTION_INCREASE_RATING)
+			{
+				m_itemCurrentFile->GetMusicInfoTag()->SetRating(rating + 1);
+				needsUpdate = true;
+			}
+			
+			if (needsUpdate)
+			{
+				CMusicDatabase db;
+				if (db.Open())      // OpenForWrite() ?
+				{
+					db.SetSongRating(m_itemCurrentFile->GetPath(), m_itemCurrentFile->GetMusicInfoTag()->GetRating());
+					db.Close();
+				}
+				// send a message to all windows to tell them to update the fileitem (eg playlistplayer, media windows)
+				CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_ITEM, 0, m_itemCurrentFile);
+				g_windowManager.SendMessage(msg);
+			}
+		}
+		return true;
+	}
 
-  // stop : stops playing current audio song
-  if (action.GetID() == ACTION_STOP)
-  {
-    StopPlaying();
-    return true;
-  }
+	// stop : stops playing current audio song
+	if (action.GetID() == ACTION_STOP)
+	{
+		StopPlaying();
+		return true;
+	}
 
-  // previous : play previous song from playlist
-  if (action.GetID() == ACTION_PREV_ITEM)
-  {
-    // first check whether we're within 3 seconds of the start of the track
-    // if not, we just revert to the start of the track
-    if (m_pPlayer && m_pPlayer->CanSeek() && GetTime() > 3)
-    {
-      SeekTime(0);
-      SetPlaySpeed(1);
-    }
-    else
-    {
-      g_playlistPlayer.PlayPrevious();
-    }
-    return true;
-  }
+	// previous : play previous song from playlist
+	if (action.GetID() == ACTION_PREV_ITEM)
+	{
+		// first check whether we're within 3 seconds of the start of the track
+		// if not, we just revert to the start of the track
+		if (m_pPlayer && m_pPlayer->CanSeek() && GetTime() > 3)
+		{
+			SeekTime(0);
+			SetPlaySpeed(1);
+		}
+		else
+		{
+			g_playlistPlayer.PlayPrevious();
+		}
+		return true;
+	}
 
-  // next : play next song from playlist
-  if (action.GetID() == ACTION_NEXT_ITEM)
-  {
-    if (IsPlaying() && m_pPlayer->SkipNext())
-      return true;
+	// next : play next song from playlist
+	if (action.GetID() == ACTION_NEXT_ITEM)
+	{
+		if (IsPlaying() && m_pPlayer->SkipNext())
+			return true;
 
-    g_playlistPlayer.PlayNext();
+		g_playlistPlayer.PlayNext();
 
-    return true;
-  }
+		return true;
+	}
 
-  if ( IsPlaying())
-  {
-    // pause : pauses current audio song
-    if (action.GetID() == ACTION_PAUSE && m_iPlaySpeed == 1)
-    {
-      m_pPlayer->Pause();
+	if ( IsPlaying())
+	{
+		// pause : pauses current audio song
+		if (action.GetID() == ACTION_PAUSE && m_iPlaySpeed == 1)
+		{
+			m_pPlayer->Pause();
 #ifdef HAS_KARAOKE
-      m_pKaraokeMgr->SetPaused( m_pPlayer->IsPaused() );
+			m_pKaraokeMgr->SetPaused( m_pPlayer->IsPaused() );
 #endif
-      if (!m_pPlayer->IsPaused())
-      { // unpaused - set the playspeed back to normal
-        SetPlaySpeed(1);
-      }
-      g_audioManager.Enable(m_pPlayer->IsPaused() && !g_audioContext.IsPassthroughActive());
-      return true;
-    }
-    if (!m_pPlayer->IsPaused())
-    {
-      // if we do a FF/RW in my music then map PLAY action togo back to normal speed
-      // if we are playing at normal speed, then allow play to pause
-      if (action.GetID() == ACTION_PLAYER_PLAY || action.GetID() == ACTION_PAUSE)
-      {
-        if (m_iPlaySpeed != 1)
-        {
-          SetPlaySpeed(1);
-        }
-        else
-        {
-          m_pPlayer->Pause();
-        }
-        return true;
-      }
-      if (action.GetID() == ACTION_PLAYER_FORWARD || action.GetID() == ACTION_PLAYER_REWIND)
-      {
-        int iPlaySpeed = m_iPlaySpeed;
-        if (action.GetID() == ACTION_PLAYER_REWIND && iPlaySpeed == 1) // Enables Rewinding
-          iPlaySpeed *= -2;
-        else if (action.GetID() == ACTION_PLAYER_REWIND && iPlaySpeed > 1) //goes down a notch if you're FFing
-          iPlaySpeed /= 2;
-        else if (action.GetID() == ACTION_PLAYER_FORWARD && iPlaySpeed < 1) //goes up a notch if you're RWing
-          iPlaySpeed /= 2;
-        else
-          iPlaySpeed *= 2;
+			if (!m_pPlayer->IsPaused())
+			{ // unpaused - set the playspeed back to normal
+				SetPlaySpeed(1);
+			}
+			g_audioManager.Enable(m_pPlayer->IsPaused() && !g_audioContext.IsPassthroughActive());
+			return true;
+		}
+		
+		if (!m_pPlayer->IsPaused())
+		{
+			// if we do a FF/RW in my music then map PLAY action togo back to normal speed
+			// if we are playing at normal speed, then allow play to pause
+			if (action.GetID() == ACTION_PLAYER_PLAY || action.GetID() == ACTION_PAUSE)
+			{
+				if (m_iPlaySpeed != 1)
+				{
+					SetPlaySpeed(1);
+				}
+				else
+				{
+					m_pPlayer->Pause();
+				}
+				return true;
+			}
+			
+			if (action.GetID() == ACTION_PLAYER_FORWARD || action.GetID() == ACTION_PLAYER_REWIND)
+			{
+				int iPlaySpeed = m_iPlaySpeed;
+				if (action.GetID() == ACTION_PLAYER_REWIND && iPlaySpeed == 1) // Enables Rewinding
+					iPlaySpeed *= -2;
+				else if (action.GetID() == ACTION_PLAYER_REWIND && iPlaySpeed > 1) //goes down a notch if you're FFing
+					iPlaySpeed /= 2;
+				else if (action.GetID() == ACTION_PLAYER_FORWARD && iPlaySpeed < 1) //goes up a notch if you're RWing
+					iPlaySpeed /= 2;
+				else
+					iPlaySpeed *= 2;
 
-        if (action.GetID() == ACTION_PLAYER_FORWARD && iPlaySpeed == -1) //sets iSpeed back to 1 if -1 (didn't plan for a -1)
-          iPlaySpeed = 1;
-        if (iPlaySpeed > 32 || iPlaySpeed < -32)
-          iPlaySpeed = 1;
+				if (action.GetID() == ACTION_PLAYER_FORWARD && iPlaySpeed == -1) //sets iSpeed back to 1 if -1 (didn't plan for a -1)
+					iPlaySpeed = 1;
+				if (iPlaySpeed > 32 || iPlaySpeed < -32)
+					iPlaySpeed = 1;
 
-        SetPlaySpeed(iPlaySpeed);
-        return true;
-      }
-      else if ((action.GetAmount() || GetPlaySpeed() != 1) && (action.GetID() == ACTION_ANALOG_REWIND || action.GetID() == ACTION_ANALOG_FORWARD))
-      {
-        // calculate the speed based on the amount the button is held down
-        int iPower = (int)(action.GetAmount() * MAX_FFWD_SPEED + 0.5f);
-        // returns 0 -> MAX_FFWD_SPEED
-        int iSpeed = 1 << iPower;
-        if (iSpeed != 1 && action.GetID() == ACTION_ANALOG_REWIND)
-          iSpeed = -iSpeed;
-        g_application.SetPlaySpeed(iSpeed);
-        if (iSpeed == 1)
-          CLog::Log(LOGDEBUG,"Resetting playspeed");
-        return true;
-      }
-    }
-    // allow play to unpause
-    else
-    {
-      if (action.GetID() == ACTION_PLAYER_PLAY)
-      {
-        // unpause, and set the playspeed back to normal
-        m_pPlayer->Pause();
-        g_audioManager.Enable(m_pPlayer->IsPaused() && !g_audioContext.IsPassthroughActive());
+				SetPlaySpeed(iPlaySpeed);
+				return true;
+			}
+			else if ((action.GetAmount() || GetPlaySpeed() != 1) && (action.GetID() == ACTION_ANALOG_REWIND || action.GetID() == ACTION_ANALOG_FORWARD))
+			{
+				// calculate the speed based on the amount the button is held down
+				int iPower = (int)(action.GetAmount() * MAX_FFWD_SPEED + 0.5f);
+				// returns 0 -> MAX_FFWD_SPEED
+				int iSpeed = 1 << iPower;
+				if (iSpeed != 1 && action.GetID() == ACTION_ANALOG_REWIND)
+					iSpeed = -iSpeed;
+				
+				g_application.SetPlaySpeed(iSpeed);
+				
+				if (iSpeed == 1)
+					CLog::Log(LOGDEBUG,"Resetting playspeed");
+				return true;
+			}
+		}
+		// allow play to unpause
+		else
+		{
+			if (action.GetID() == ACTION_PLAYER_PLAY)
+			{
+				// unpause, and set the playspeed back to normal
+				m_pPlayer->Pause();
+				g_audioManager.Enable(m_pPlayer->IsPaused() && !g_audioContext.IsPassthroughActive());
 
-        g_application.SetPlaySpeed(1);
-        return true;
-      }
-    }
-  }
-  if (action.GetID() == ACTION_MUTE)
-  {
-    ToggleMute();
-    return true;
-  }
+				g_application.SetPlaySpeed(1);
+				return true;
+			}
+		}
+	}
+	
+	if (action.GetID() == ACTION_MUTE)
+	{
+		ToggleMute();
+		return true;
+	}
 
-  if (action.GetID() == ACTION_TOGGLE_DIGITAL_ANALOG)
-  {
-    switch(g_guiSettings.GetInt("audiooutput.mode"))
-    {
-      case AUDIO_ANALOG: g_guiSettings.SetInt("audiooutput.mode", AUDIO_IEC958); break;
-      case AUDIO_IEC958: g_guiSettings.SetInt("audiooutput.mode", AUDIO_HDMI  ); break;
-      case AUDIO_HDMI  : g_guiSettings.SetInt("audiooutput.mode", AUDIO_ANALOG); break;
-    }
+	if (action.GetID() == ACTION_TOGGLE_DIGITAL_ANALOG)
+	{
+		switch(g_guiSettings.GetInt("audiooutput.mode"))
+		{
+			case AUDIO_ANALOG: g_guiSettings.SetInt("audiooutput.mode", AUDIO_IEC958); break;
+			case AUDIO_IEC958: g_guiSettings.SetInt("audiooutput.mode", AUDIO_HDMI  ); break;
+			case AUDIO_HDMI  : g_guiSettings.SetInt("audiooutput.mode", AUDIO_ANALOG); break;
+		}
 
-    g_application.Restart();
-    if (g_windowManager.GetActiveWindow() == WINDOW_SETTINGS_SYSTEM)
-    {
-      CGUIMessage msg(GUI_MSG_WINDOW_INIT, 0,0,WINDOW_INVALID,g_windowManager.GetActiveWindow());
-      g_windowManager.SendMessage(msg);
-    }
-    return true;
-  }
+		g_application.Restart();
+		if (g_windowManager.GetActiveWindow() == WINDOW_SETTINGS_SYSTEM)
+		{
+			CGUIMessage msg(GUI_MSG_WINDOW_INIT, 0,0,WINDOW_INVALID,g_windowManager.GetActiveWindow());
+			g_windowManager.SendMessage(msg);
+		}
+		return true;
+	}
 
-  // Check for global volume control
-  if (action.GetAmount() && (action.GetID() == ACTION_VOLUME_UP || action.GetID() == ACTION_VOLUME_DOWN))
-  {
-    if (!m_pPlayer || !m_pPlayer->IsPassthrough())
-    {
-      // increase or decrease the volume
-      int volume;
-      if (g_settings.m_bMute)
-      {
-        volume = (int)((float)g_settings.m_iPreMuteVolumeLevel * 0.01f * (VOLUME_MAXIMUM - VOLUME_MINIMUM) + VOLUME_MINIMUM);
-        UnMute();
-      }
-      else
-        volume = g_settings.m_nVolumeLevel + g_settings.m_dynamicRangeCompressionLevel;
+	// Check for global volume control
+	if (action.GetAmount() && (action.GetID() == ACTION_VOLUME_UP || action.GetID() == ACTION_VOLUME_DOWN))
+	{
+		if (!m_pPlayer || !m_pPlayer->IsPassthrough())
+		{
+			// increase or decrease the volume
+			int volume;
+			if (g_settings.m_bMute)
+			{
+				volume = (int)((float)g_settings.m_iPreMuteVolumeLevel * 0.01f * (VOLUME_MAXIMUM - VOLUME_MINIMUM) + VOLUME_MINIMUM);
+				UnMute();
+			}
+			else
+				volume = g_settings.m_nVolumeLevel + g_settings.m_dynamicRangeCompressionLevel;
 
-      // calculate speed so that a full press will equal 1 second from min to max
-      float speed = float(VOLUME_MAXIMUM - VOLUME_MINIMUM);
-      if (action.GetRepeat())
-        speed *= action.GetRepeat();
-      else
-        speed /= 50; //50 fps
+			// calculate speed so that a full press will equal 1 second from min to max
+			float speed = float(VOLUME_MAXIMUM - VOLUME_MINIMUM);
+			if (action.GetRepeat())
+				speed *= action.GetRepeat();
+			else
+				speed /= 50; //50 fps
 
-      if (action.GetID() == ACTION_VOLUME_UP)
-        volume += (int)((float)fabs(action.GetAmount()) * action.GetAmount() * speed);
-      else
-        volume -= (int)((float)fabs(action.GetAmount()) * action.GetAmount() * speed);
+			if (action.GetID() == ACTION_VOLUME_UP)
+				volume += (int)((float)fabs(action.GetAmount()) * action.GetAmount() * speed);
+			else
+				volume -= (int)((float)fabs(action.GetAmount()) * action.GetAmount() * speed);
 
-      SetVolume(volume, false);
-    }
-    // show visual feedback of volume change...
-    ShowVolumeBar(&action);
-    return true;
-  }
-  // Check for global seek control
-  if (IsPlaying() && action.GetAmount() && (action.GetID() == ACTION_ANALOG_SEEK_FORWARD || action.GetID() == ACTION_ANALOG_SEEK_BACK))
-  {
-    if (!m_pPlayer->CanSeek()) return false;
-    CGUIWindow *seekBar = g_windowManager.GetWindow(WINDOW_DIALOG_SEEK_BAR);
-    if (seekBar)
-      seekBar->OnAction(action);
-    return true;
-  }
-  if (action.GetID() == ACTION_GUIPROFILE_BEGIN)
-  {
-    CGUIControlProfiler::Instance().SetOutputFile(_P("special://home/guiprofiler.xml"));
-    CGUIControlProfiler::Instance().Start();
-    return true;
-  }
-  if (action.GetID() == ACTION_SHOW_PLAYLIST)
-  {
-    int iPlaylist = g_playlistPlayer.GetCurrentPlaylist();
-    if (iPlaylist == PLAYLIST_VIDEO)
-      g_windowManager.ActivateWindow(WINDOW_VIDEO_PLAYLIST);
-    else if (iPlaylist == PLAYLIST_MUSIC)
-      g_windowManager.ActivateWindow(WINDOW_MUSIC_PLAYLIST);
-    return true;
-  }
-  return false;
+			SetVolume(volume, false);
+		}
+		// show visual feedback of volume change...
+		ShowVolumeBar(&action);
+		return true;
+	}
+	
+	// Check for global seek control
+	if (IsPlaying() && action.GetAmount() && (action.GetID() == ACTION_ANALOG_SEEK_FORWARD || action.GetID() == ACTION_ANALOG_SEEK_BACK))
+	{
+		if (!m_pPlayer->CanSeek()) return false;
+			CGUIWindow *seekBar = g_windowManager.GetWindow(WINDOW_DIALOG_SEEK_BAR);
+			
+		if (seekBar)
+			seekBar->OnAction(action);
+		
+		return true;
+	}
+	
+	if (action.GetID() == ACTION_GUIPROFILE_BEGIN)
+	{
+		CGUIControlProfiler::Instance().SetOutputFile(_P("special://home/guiprofiler.xml"));
+		CGUIControlProfiler::Instance().Start();
+		return true;
+	}
+	
+	if (action.GetID() == ACTION_SHOW_PLAYLIST)
+	{
+		int iPlaylist = g_playlistPlayer.GetCurrentPlaylist();
+		if (iPlaylist == PLAYLIST_VIDEO)
+			g_windowManager.ActivateWindow(WINDOW_VIDEO_PLAYLIST);
+		else if (iPlaylist == PLAYLIST_MUSIC)
+			g_windowManager.ActivateWindow(WINDOW_MUSIC_PLAYLIST);
+		
+		return true;
+	}
+	return false;
 }
 
 void CApplication::UpdateLCD()
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #ifdef HAS_LCD
-  static unsigned int lTickCount = 0;
+	static unsigned int lTickCount = 0;
 
-  if (!g_lcd || !g_guiSettings.GetBool("videoscreen.haslcd"))
-    return ;
-  unsigned int lTimeOut = 1000;
-  if ( m_iPlaySpeed != 1)
-    lTimeOut = 0;
-  if ( (XbmcThreads::SystemClockMillis() - lTickCount) >= lTimeOut)
-  {
-    if (g_application.NavigationIdleTime() < 5)
-      g_lcd->Render(ILCD::LCD_MODE_NAVIGATION);
-    else if (IsPlayingVideo())
-      g_lcd->Render(ILCD::LCD_MODE_VIDEO);
-    else if (IsPlayingAudio())
-      g_lcd->Render(ILCD::LCD_MODE_MUSIC);
-    else if (IsInScreenSaver())
-      g_lcd->Render(ILCD::LCD_MODE_SCREENSAVER);
-    else
-      g_lcd->Render(ILCD::LCD_MODE_GENERAL);
+	if (!g_lcd || !g_guiSettings.GetBool("videoscreen.haslcd"))
+		return ;
+	unsigned int lTimeOut = 1000;
+	if ( m_iPlaySpeed != 1)
+		lTimeOut = 0;
+	if ( (XbmcThreads::SystemClockMillis() - lTickCount) >= lTimeOut)
+	{
+		if (g_application.NavigationIdleTime() < 5)
+			g_lcd->Render(ILCD::LCD_MODE_NAVIGATION);
+		else if (IsPlayingVideo())
+			g_lcd->Render(ILCD::LCD_MODE_VIDEO);
+		else if (IsPlayingAudio())
+			g_lcd->Render(ILCD::LCD_MODE_MUSIC);
+		else if (IsInScreenSaver())
+			g_lcd->Render(ILCD::LCD_MODE_SCREENSAVER);
+		else
+			g_lcd->Render(ILCD::LCD_MODE_GENERAL);
 
-    // reset tick count
-    lTickCount = XbmcThreads::SystemClockMillis();
-  }
+		// reset tick count
+		lTickCount = XbmcThreads::SystemClockMillis();
+	}
 #endif
 }
 
 void CApplication::FrameMove(bool processEvents)
 {
-  MEASURE_FUNCTION;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	MEASURE_FUNCTION;
 
-  if (processEvents)
-  {
-    // currently we calculate the repeat time (ie time from last similar keypress) just global as fps
-    float frameTime = m_frameTime.GetElapsedSeconds();
-    m_frameTime.StartZero();
-    // never set a frametime less than 2 fps to avoid problems when debuggin and on breaks
-    if( frameTime > 0.5 ) frameTime = 0.5;
+	if (processEvents)
+	{
+		// currently we calculate the repeat time (ie time from last similar keypress) just global as fps
+		float frameTime = m_frameTime.GetElapsedSeconds();
+		m_frameTime.StartZero();
+		// never set a frametime less than 2 fps to avoid problems when debuggin and on breaks
+		if( frameTime > 0.5 )
+			frameTime = 0.5;
 
-    g_graphicsContext.Lock();
-    // check if there are notifications to display
-    CGUIDialogKaiToast *toast = (CGUIDialogKaiToast *)g_windowManager.GetWindow(WINDOW_DIALOG_KAI_TOAST);
-    if (toast && toast->DoWork())
-    {
-      if (!toast->IsDialogRunning())
-      {
-        toast->Show();
-      }
-    }
-    g_graphicsContext.Unlock();
+		g_graphicsContext.Lock();
+		// check if there are notifications to display
+		CGUIDialogKaiToast *toast = (CGUIDialogKaiToast *)g_windowManager.GetWindow(WINDOW_DIALOG_KAI_TOAST);
+		if (toast && toast->DoWork())
+		{
+			if (!toast->IsDialogRunning())
+			{
+				toast->Show();
+			}
+		}
+		g_graphicsContext.Unlock();
 
-    UpdateLCD();
+		UpdateLCD();
 
 #if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
-    // Read the input from a remote
-    g_RemoteControl.Update();
+		// Read the input from a remote
+		g_RemoteControl.Update();
 #endif
 
-    // process input actions
-    CWinEvents::MessagePump();
-    ProcessHTTPApiButtons();
-    ProcessJsonRpcButtons();
-    ProcessRemote(frameTime);
-    ProcessGamepad(frameTime);
-    ProcessEventServer(frameTime);
-    ProcessPeripherals(frameTime);
-    m_pInertialScrollingHandler->ProcessInertialScroll(frameTime);
-  }
-  if (!m_bStop)
-    g_windowManager.Process(CTimeUtils::GetFrameTime());
-  g_windowManager.FrameMove();
+		// process input actions
+		CWinEvents::MessagePump();
+		ProcessHTTPApiButtons();
+		ProcessJsonRpcButtons();
+		ProcessRemote(frameTime);
+		ProcessGamepad(frameTime);
+		ProcessEventServer(frameTime);
+		ProcessPeripherals(frameTime);
+		m_pInertialScrollingHandler->ProcessInertialScroll(frameTime);
+	}
+	
+	if (!m_bStop)
+		g_windowManager.Process(CTimeUtils::GetFrameTime());
+	
+	g_windowManager.FrameMove();
 }
 
 bool CApplication::ProcessGamepad(float frameTime)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #ifdef HAS_SDL_JOYSTICK
-  if (!m_AppFocused)
-    return false;
-  int iWin = g_windowManager.GetActiveWindow() & WINDOW_ID_MASK;
-  if (g_windowManager.HasModalDialog())
-  {
-    iWin = g_windowManager.GetTopMostModalDialogID() & WINDOW_ID_MASK;
-  }
-  int bid;
-  g_Joystick.Update();
-  if (g_Joystick.GetButton(bid))
-  {
-    // reset Idle Timer
-    m_idleTimer.StartZero();
+	if (!m_AppFocused)
+		return false;
+	
+	int iWin = g_windowManager.GetActiveWindow() & WINDOW_ID_MASK;
+	if (g_windowManager.HasModalDialog())
+	{
+		iWin = g_windowManager.GetTopMostModalDialogID() & WINDOW_ID_MASK;
+	}
+	int bid;
+	g_Joystick.Update();
+	if (g_Joystick.GetButton(bid))
+	{
+		// reset Idle Timer
+		m_idleTimer.StartZero();
 
-    ResetScreenSaver();
-    if (WakeUpScreenSaverAndDPMS())
-    {
-      g_Joystick.Reset(true);
-      return true;
-    }
+		ResetScreenSaver();
+		if (WakeUpScreenSaverAndDPMS())
+		{
+			g_Joystick.Reset(true);
+			return true;
+		}
 
-    int actionID;
-    CStdString actionName;
-    bool fullrange;
-    if (CButtonTranslator::GetInstance().TranslateJoystickString(iWin, g_Joystick.GetJoystick().c_str(), bid, JACTIVE_BUTTON, actionID, actionName, fullrange))
-    {
-      CAction action(actionID, 1.0f, 0.0f, actionName);
-      g_audioManager.PlayActionSound(action);
-      g_Joystick.Reset();
-      g_Mouse.SetActive(false);
-      return OnAction(action);
-    }
-    else
-    {
-      g_Joystick.Reset();
-    }
-  }
-  if (g_Joystick.GetAxis(bid))
-  {
-    if (g_Joystick.GetAmount() < 0)
-    {
-      bid = -bid;
-    }
+		int actionID;
+		CStdString actionName;
+		bool fullrange;
+		if (CButtonTranslator::GetInstance().TranslateJoystickString(iWin, g_Joystick.GetJoystick().c_str(), bid, JACTIVE_BUTTON, actionID, actionName, fullrange))
+		{
+			CAction action(actionID, 1.0f, 0.0f, actionName);
+			g_audioManager.PlayActionSound(action);
+			g_Joystick.Reset();
+			g_Mouse.SetActive(false);
+			return OnAction(action);
+		}
+		else
+		{
+			g_Joystick.Reset();
+		}
+	}
+	
+	if (g_Joystick.GetAxis(bid))
+	{
+		if (g_Joystick.GetAmount() < 0)
+		{
+			bid = -bid;
+		}
 
-    int actionID;
-    CStdString actionName;
-    bool fullrange;
-    if (CButtonTranslator::GetInstance().TranslateJoystickString(iWin, g_Joystick.GetJoystick().c_str(), bid, JACTIVE_AXIS, actionID, actionName, fullrange))
-    {
-      ResetScreenSaver();
-      if (WakeUpScreenSaverAndDPMS())
-      {
-        return true;
-      }
+		int actionID;
+		CStdString actionName;
+		bool fullrange;
+		if (CButtonTranslator::GetInstance().TranslateJoystickString(iWin, g_Joystick.GetJoystick().c_str(), bid, JACTIVE_AXIS, actionID, actionName, fullrange))
+		{
+			ResetScreenSaver();
+			if (WakeUpScreenSaverAndDPMS())
+			{
+				return true;
+			}
 
-      CAction action(actionID, fullrange ? (g_Joystick.GetAmount() + 1.0f)/2.0f : fabs(g_Joystick.GetAmount()), 0.0f, actionName);
-      g_audioManager.PlayActionSound(action);
-      g_Joystick.Reset();
-      g_Mouse.SetActive(false);
-      return OnAction(action);
-    }
-    else
-    {
-      g_Joystick.ResetAxis(abs(bid));
-    }
-  }
-  int position;
-  if (g_Joystick.GetHat(bid, position))
-  {
-    // reset Idle Timer
-    m_idleTimer.StartZero();
+			CAction action(actionID, fullrange ? (g_Joystick.GetAmount() + 1.0f)/2.0f : fabs(g_Joystick.GetAmount()), 0.0f, actionName);
+			g_audioManager.PlayActionSound(action);
+			g_Joystick.Reset();
+			g_Mouse.SetActive(false);
+			return OnAction(action);
+		}
+		else
+		{
+			g_Joystick.ResetAxis(abs(bid));
+		}
+	}
+	
+	int position;
+	if (g_Joystick.GetHat(bid, position))
+	{
+		// reset Idle Timer
+		m_idleTimer.StartZero();
 
-    ResetScreenSaver();
-    if (WakeUpScreenSaverAndDPMS())
-    {
-      g_Joystick.Reset();
-      return true;
-    }
+		ResetScreenSaver();
+		if (WakeUpScreenSaverAndDPMS())
+		{
+			g_Joystick.Reset();
+			return true;
+		}
 
-    int actionID;
-    CStdString actionName;
-    bool fullrange;
+		int actionID;
+		CStdString actionName;
+		bool fullrange;
 
-    bid = position<<16|bid;
+		bid = position<<16|bid;
 
-    if (CButtonTranslator::GetInstance().TranslateJoystickString(iWin, g_Joystick.GetJoystick().c_str(), bid, JACTIVE_HAT, actionID, actionName, fullrange))
-    {
-      CAction action(actionID, 1.0f, 0.0f, actionName);
-      g_audioManager.PlayActionSound(action);
-      g_Joystick.Reset();
-      g_Mouse.SetActive(false);
-      return OnAction(action);
-    }
-  }
+		if (CButtonTranslator::GetInstance().TranslateJoystickString(iWin, g_Joystick.GetJoystick().c_str(), bid, JACTIVE_HAT, actionID, actionName, fullrange))
+		{
+			CAction action(actionID, 1.0f, 0.0f, actionName);
+			g_audioManager.PlayActionSound(action);
+			g_Joystick.Reset();
+			g_Mouse.SetActive(false);
+			return OnAction(action);
+		}
+	}
 #endif
-  return false;
+	return false;
 }
 
 bool CApplication::ProcessRemote(float frameTime)
@@ -4774,6 +4832,7 @@ bool CApplication::IsPlaying() const
 */
 	if (!m_pPlayer)
 		return false;
+	
 	if (!m_pPlayer->IsPlaying())
 		return false;
 	return true;
@@ -5088,131 +5147,156 @@ bool CApplication::ToggleDPMS(bool manual)
 
 bool CApplication::WakeUpScreenSaverAndDPMS()
 {
-
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #ifdef HAS_LCD
-    // turn on lcd backlight
-    if (g_lcd && g_advancedSettings.m_lcdDimOnScreenSave)
-      g_lcd->SetBackLight(1);
+	// turn on lcd backlight
+	if (g_lcd && g_advancedSettings.m_lcdDimOnScreenSave)
+		g_lcd->SetBackLight(1);
 #endif
 
-  // First reset DPMS, if active
-  if (m_dpmsIsActive)
-  {
-    if (m_dpmsIsManual)
-      return false;
-    // TODO: if screensaver lock is specified but screensaver is not active
-    // (DPMS came first), activate screensaver now.
-    ToggleDPMS(false);
-    ResetScreenSaverTimer();
-    return !m_bScreenSave || WakeUpScreenSaver();
-  }
-  else
-    return WakeUpScreenSaver();
+	// First reset DPMS, if active
+	if (m_dpmsIsActive)
+	{
+		if (m_dpmsIsManual)
+			return false;
+		// TODO: if screensaver lock is specified but screensaver is not active
+		// (DPMS came first), activate screensaver now.
+		ToggleDPMS(false);
+		ResetScreenSaverTimer();
+		return !m_bScreenSave || WakeUpScreenSaver();
+	}
+	else
+		return WakeUpScreenSaver();
 }
 
 bool CApplication::WakeUpScreenSaver()
 {
-  if (m_iScreenSaveLock == 2)
-    return false;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (m_iScreenSaveLock == 2)
+		return false;
 
-  // if Screen saver is active
-  if (m_bScreenSave && m_screenSaver)
-  {
-    if (m_iScreenSaveLock == 0)
-      if (g_settings.GetMasterProfile().getLockMode() != LOCK_MODE_EVERYONE &&
-          (g_settings.UsingLoginScreen() || g_guiSettings.GetBool("masterlock.startuplock")) &&
-          g_settings.GetCurrentProfile().getLockMode() != LOCK_MODE_EVERYONE &&
-          m_screenSaver->ID() != "screensaver.xbmc.builtin.dim" && m_screenSaver->ID() != "screensaver.xbmc.builtin.black" && m_screenSaver->ID() != "visualization")
-      {
-        m_iScreenSaveLock = 2;
-        CGUIMessage msg(GUI_MSG_CHECK_LOCK,0,0);
-        g_windowManager.GetWindow(WINDOW_SCREENSAVER)->OnMessage(msg);
-      }
-    if (m_iScreenSaveLock == -1)
-    {
-      m_iScreenSaveLock = 0;
-      return true;
-    }
+	// if Screen saver is active
+	if (m_bScreenSave && m_screenSaver)
+	{
+		if (m_iScreenSaveLock == 0)
+			if (g_settings.GetMasterProfile().getLockMode() != LOCK_MODE_EVERYONE &&
+					(g_settings.UsingLoginScreen() || g_guiSettings.GetBool("masterlock.startuplock")) &&
+					g_settings.GetCurrentProfile().getLockMode() != LOCK_MODE_EVERYONE &&
+					m_screenSaver->ID() != "screensaver.xbmc.builtin.dim" && m_screenSaver->ID() != "screensaver.xbmc.builtin.black" && m_screenSaver->ID() != "visualization")
+			{
+				m_iScreenSaveLock = 2;
+				CGUIMessage msg(GUI_MSG_CHECK_LOCK,0,0);
+				g_windowManager.GetWindow(WINDOW_SCREENSAVER)->OnMessage(msg);
+			}
+			
+		if (m_iScreenSaveLock == -1)
+		{
+			m_iScreenSaveLock = 0;
+			return true;
+		}
 
-    // disable screensaver
-    m_bScreenSave = false;
-    m_iScreenSaveLock = 0;
-    ResetScreenSaverTimer();
+		// disable screensaver
+		m_bScreenSave = false;
+		m_iScreenSaveLock = 0;
+		ResetScreenSaverTimer();
 
-    CAnnouncementManager::Announce(GUI, "xbmc", "OnScreensaverDeactivated");
+		CAnnouncementManager::Announce(GUI, "xbmc", "OnScreensaverDeactivated");
 
-    if (m_screenSaver->ID() == "visualization")
-    {
-      // we can just continue as usual from vis mode
-      return false;
-    }
-    else if (m_screenSaver->ID() == "screensaver.xbmc.builtin.dim" || m_screenSaver->ID() == "screensaver.xbmc.builtin.black")
-      return true;
-    else if (!m_screenSaver->ID().IsEmpty())
-    { // we're in screensaver window
-      if (g_windowManager.GetActiveWindow() == WINDOW_SCREENSAVER)
-        g_windowManager.PreviousWindow();  // show the previous window
-      if (g_windowManager.GetActiveWindow() == WINDOW_SLIDESHOW)
-        g_application.getApplicationMessenger().SendAction(CAction(ACTION_STOP), WINDOW_SLIDESHOW);
-    }
-    return true;
-  }
-  else
-    return false;
+		if (m_screenSaver->ID() == "visualization")
+		{
+			// we can just continue as usual from vis mode
+			return false;
+		}
+		else if (m_screenSaver->ID() == "screensaver.xbmc.builtin.dim" || m_screenSaver->ID() == "screensaver.xbmc.builtin.black")
+			return true;
+		else if (!m_screenSaver->ID().IsEmpty())
+		{ // we're in screensaver window
+			if (g_windowManager.GetActiveWindow() == WINDOW_SCREENSAVER)
+				g_windowManager.PreviousWindow();  // show the previous window
+			if (g_windowManager.GetActiveWindow() == WINDOW_SLIDESHOW)
+				g_application.getApplicationMessenger().SendAction(CAction(ACTION_STOP), WINDOW_SLIDESHOW);
+		}
+		return true;
+	}
+	else
+		return false;
 }
 
 void CApplication::CheckScreenSaverAndDPMS()
 {
-  if (!m_dpmsIsActive)
-    g_Windowing.ResetOSScreensaver();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (!m_dpmsIsActive)
+		g_Windowing.ResetOSScreensaver();
 
-  bool maybeScreensaver =
-      !m_dpmsIsActive && !m_bScreenSave
-      && !g_guiSettings.GetString("screensaver.mode").IsEmpty();
-  bool maybeDPMS =
-      !m_dpmsIsActive && m_dpms->IsSupported()
-      && g_guiSettings.GetInt("powermanagement.displaysoff") > 0;
+	bool maybeScreensaver = !m_dpmsIsActive && !m_bScreenSave && !g_guiSettings.GetString("screensaver.mode").IsEmpty();
+	bool maybeDPMS = !m_dpmsIsActive && m_dpms->IsSupported() && g_guiSettings.GetInt("powermanagement.displaysoff") > 0;
 
-  // Has the screen saver window become active?
-  if (maybeScreensaver && g_windowManager.IsWindowActive(WINDOW_SCREENSAVER))
-  {
-    m_bScreenSave = true;
-    maybeScreensaver = false;
-  }
+	// Has the screen saver window become active?
+	if (maybeScreensaver && g_windowManager.IsWindowActive(WINDOW_SCREENSAVER))
+	{
+		m_bScreenSave = true;
+		maybeScreensaver = false;
+	}
 
-  if (m_bScreenSave && IsPlayingVideo() && !m_pPlayer->IsPaused())
-  {
-    WakeUpScreenSaverAndDPMS();
-    return;
-  }
+	if (m_bScreenSave && IsPlayingVideo() && !m_pPlayer->IsPaused())
+	{
+		WakeUpScreenSaverAndDPMS();
+		return;
+	}
 
-  if (!maybeScreensaver && !maybeDPMS) return;  // Nothing to do.
+	if (!maybeScreensaver && !maybeDPMS) 
+		return;  // Nothing to do.
 
-  // See if we need to reset timer.
-  // * Are we playing a video and it is not paused?
-  if ((IsPlayingVideo() && !m_pPlayer->IsPaused())
-      // * Are we playing some music in fullscreen vis?
-      || (IsPlayingAudio() && g_windowManager.GetActiveWindow() == WINDOW_VISUALISATION 
-          && !g_guiSettings.GetString("musicplayer.visualisation").IsEmpty()))
-  {
-    ResetScreenSaverTimer();
-    return;
-  }
+	// See if we need to reset timer.
+	// * Are we playing a video and it is not paused?
+	if ((IsPlayingVideo() && !m_pPlayer->IsPaused())
+					// * Are we playing some music in fullscreen vis?
+					|| (IsPlayingAudio() && g_windowManager.GetActiveWindow() == WINDOW_VISUALISATION 
+					&& !g_guiSettings.GetString("musicplayer.visualisation").IsEmpty()))
+	{
+		ResetScreenSaverTimer();
+		return;
+	}
 
-  float elapsed = m_screenSaverTimer.GetElapsedSeconds();
+	float elapsed = m_screenSaverTimer.GetElapsedSeconds();
 
-  // DPMS has priority (it makes the screensaver not needed)
-  if (maybeDPMS
-      && elapsed > g_guiSettings.GetInt("powermanagement.displaysoff") * 60)
-  {
-    ToggleDPMS(false);
-    WakeUpScreenSaver();
-  }
-  else if (maybeScreensaver
-           && elapsed > g_guiSettings.GetInt("screensaver.time") * 60)
-  {
-    ActivateScreenSaver();
-  }
+	// DPMS has priority (it makes the screensaver not needed)
+	if (maybeDPMS&& elapsed > g_guiSettings.GetInt("powermanagement.displaysoff") * 60)
+	{
+		ToggleDPMS(false);
+		WakeUpScreenSaver();
+	}
+	else if (maybeScreensaver&& elapsed > g_guiSettings.GetInt("screensaver.time") * 60)
+	{
+		ActivateScreenSaver();
+	}
 }
 
 // activate the screensaver.
@@ -5220,343 +5304,390 @@ void CApplication::CheckScreenSaverAndDPMS()
 // the type of screensaver displayed
 void CApplication::ActivateScreenSaver(bool forceType /*= false */)
 {
-  m_bScreenSave = true;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	m_bScreenSave = true;
 
-  // Get Screensaver Mode
-  m_screenSaver.reset();
-  if (!CAddonMgr::Get().GetAddon(g_guiSettings.GetString("screensaver.mode"), m_screenSaver))
-    m_screenSaver.reset(new CScreenSaver(""));
+	// Get Screensaver Mode
+	m_screenSaver.reset();
+	if (!CAddonMgr::Get().GetAddon(g_guiSettings.GetString("screensaver.mode"), m_screenSaver))
+		m_screenSaver.reset(new CScreenSaver(""));
 
 #ifdef HAS_LCD
-  // turn off lcd backlight if requested
-  if (g_lcd && g_advancedSettings.m_lcdDimOnScreenSave)
-    g_lcd->SetBackLight(0);
+	// turn off lcd backlight if requested
+	if (g_lcd && g_advancedSettings.m_lcdDimOnScreenSave)
+		g_lcd->SetBackLight(0);
 #endif
 
-  CAnnouncementManager::Announce(GUI, "xbmc", "OnScreensaverActivated");
+	CAnnouncementManager::Announce(GUI, "xbmc", "OnScreensaverActivated");
 
-  // disable screensaver lock from the login screen
-  m_iScreenSaveLock = g_windowManager.GetActiveWindow() == WINDOW_LOGIN_SCREEN ? 1 : 0;
-  if (!forceType)
-  {
-    // set to Dim in the case of a dialog on screen or playing video
-    if (g_windowManager.HasModalDialog() || (IsPlayingVideo() && g_guiSettings.GetBool("screensaver.usedimonpause")))
-    {
-      if (!CAddonMgr::Get().GetAddon("screensaver.xbmc.builtin.dim", m_screenSaver))
-        m_screenSaver.reset(new CScreenSaver(""));
-    }
-    // Check if we are Playing Audio and Vis instead Screensaver!
-    else if (IsPlayingAudio() && g_guiSettings.GetBool("screensaver.usemusicvisinstead") && !g_guiSettings.GetString("musicplayer.visualisation").IsEmpty())
-    { // activate the visualisation
-      m_screenSaver.reset(new CScreenSaver("visualization"));
-      g_windowManager.ActivateWindow(WINDOW_VISUALISATION);
-      return;
-    }
-  }
-  // Picture slideshow
-  if (m_screenSaver->ID() == "screensaver.xbmc.builtin.slideshow")
-  {
-    // reset our codec info - don't want that on screen
-    g_infoManager.SetShowCodec(false);
-    CStdString type = m_screenSaver->GetSetting("type");
-    CStdString path = m_screenSaver->GetSetting("path");
-    if (type == "2" && path.IsEmpty())
-      type = "0";
-    if (type == "0")
-      path = "special://profile/Thumbnails/Video/Fanart";
-    if (type == "1")
-      path = "special://profile/Thumbnails/Music/Fanart";
-    m_applicationMessenger.PictureSlideShow(path, true, type != "2");
-  }
-  else if (m_screenSaver->ID() == "screensaver.xbmc.builtin.dim")
-    return;
-  else if (m_screenSaver->ID() == "screensaver.xbmc.builtin.black")
-    return;
-  else if (!m_screenSaver->ID().IsEmpty())
-    g_windowManager.ActivateWindow(WINDOW_SCREENSAVER);
+	// disable screensaver lock from the login screen
+	m_iScreenSaveLock = g_windowManager.GetActiveWindow() == WINDOW_LOGIN_SCREEN ? 1 : 0;
+	if (!forceType)
+	{
+		// set to Dim in the case of a dialog on screen or playing video
+		if (g_windowManager.HasModalDialog() || (IsPlayingVideo() && g_guiSettings.GetBool("screensaver.usedimonpause")))
+		{
+			if (!CAddonMgr::Get().GetAddon("screensaver.xbmc.builtin.dim", m_screenSaver))
+				m_screenSaver.reset(new CScreenSaver(""));
+		}
+		// Check if we are Playing Audio and Vis instead Screensaver!
+		else if (IsPlayingAudio() && g_guiSettings.GetBool("screensaver.usemusicvisinstead") && !g_guiSettings.GetString("musicplayer.visualisation").IsEmpty())
+		{ // activate the visualisation
+			m_screenSaver.reset(new CScreenSaver("visualization"));
+			g_windowManager.ActivateWindow(WINDOW_VISUALISATION);
+			return;
+		}
+	}
+	
+	// Picture slideshow
+	if (m_screenSaver->ID() == "screensaver.xbmc.builtin.slideshow")
+	{
+		// reset our codec info - don't want that on screen
+		g_infoManager.SetShowCodec(false);
+		CStdString type = m_screenSaver->GetSetting("type");
+		CStdString path = m_screenSaver->GetSetting("path");
+		if (type == "2" && path.IsEmpty())
+			type = "0";
+		if (type == "0")
+			path = "special://profile/Thumbnails/Video/Fanart";
+		if (type == "1")
+			path = "special://profile/Thumbnails/Music/Fanart";
+		m_applicationMessenger.PictureSlideShow(path, true, type != "2");
+	}
+	else if (m_screenSaver->ID() == "screensaver.xbmc.builtin.dim")
+		return;
+	else if (m_screenSaver->ID() == "screensaver.xbmc.builtin.black")
+		return;
+	else if (!m_screenSaver->ID().IsEmpty())
+		g_windowManager.ActivateWindow(WINDOW_SCREENSAVER);
 }
 
 void CApplication::CheckShutdown()
 {
-  CGUIDialogMusicScan *pMusicScan = (CGUIDialogMusicScan *)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_SCAN);
-  CGUIDialogVideoScan *pVideoScan = (CGUIDialogVideoScan *)g_windowManager.GetWindow(WINDOW_DIALOG_VIDEO_SCAN);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CGUIDialogMusicScan *pMusicScan = (CGUIDialogMusicScan *)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_SCAN);
+	CGUIDialogVideoScan *pVideoScan = (CGUIDialogVideoScan *)g_windowManager.GetWindow(WINDOW_DIALOG_VIDEO_SCAN);
 
-  // first check if we should reset the timer
-  bool resetTimer = false;
-  if (IsPlaying() || IsPaused()) // is something playing?
-    resetTimer = true;
+	// first check if we should reset the timer
+	bool resetTimer = false;
+	if (IsPlaying() || IsPaused()) // is something playing?
+		resetTimer = true;
 
-  if (pMusicScan && pMusicScan->IsScanning()) // music scanning?
-    resetTimer = true;
+	if (pMusicScan && pMusicScan->IsScanning()) // music scanning?
+		resetTimer = true;
 
-  if (pVideoScan && pVideoScan->IsScanning()) // video scanning?
-    resetTimer = true;
+	if (pVideoScan && pVideoScan->IsScanning()) // video scanning?
+		resetTimer = true;
 
-  if (g_windowManager.IsWindowActive(WINDOW_DIALOG_PROGRESS)) // progress dialog is onscreen
-    resetTimer = true;
+	if (g_windowManager.IsWindowActive(WINDOW_DIALOG_PROGRESS)) // progress dialog is onscreen
+		resetTimer = true;
 
-  if (resetTimer)
-  {
-    m_shutdownTimer.StartZero();
-    return;
-  }
+	if (resetTimer)
+	{
+		m_shutdownTimer.StartZero();
+		return;
+	}
 
-  if ( m_shutdownTimer.GetElapsedSeconds() > g_guiSettings.GetInt("powermanagement.shutdowntime") * 60 )
-  {
-    // Since it is a sleep instead of a shutdown, let's set everything to reset when we wake up.
-    m_shutdownTimer.Stop();
+	if ( m_shutdownTimer.GetElapsedSeconds() > g_guiSettings.GetInt("powermanagement.shutdowntime") * 60 )
+	{
+		// Since it is a sleep instead of a shutdown, let's set everything to reset when we wake up.
+		m_shutdownTimer.Stop();
 
-    // Sleep the box
-    getApplicationMessenger().Shutdown();
-  }
+		// Sleep the box
+		getApplicationMessenger().Shutdown();
+	}
 }
 
 bool CApplication::OnMessage(CGUIMessage& message)
 {
-  switch ( message.GetMessage() )
-  {
-  case GUI_MSG_NOTIFY_ALL:
-    {
-      if (message.GetParam1()==GUI_MSG_REMOVED_MEDIA)
-      {
-        // Update general playlist: Remove DVD playlist items
-        int nRemoved = g_playlistPlayer.RemoveDVDItems();
-        if ( nRemoved > 0 )
-        {
-          CGUIMessage msg( GUI_MSG_PLAYLIST_CHANGED, 0, 0 );
-          g_windowManager.SendMessage( msg );
-        }
-        // stop the file if it's on dvd (will set the resume point etc)
-        if (m_itemCurrentFile->IsOnDVD())
-          StopPlaying();
-      }
-    }
-    break;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	switch ( message.GetMessage() )
+	{
+		case GUI_MSG_NOTIFY_ALL:
+			{
+				if (message.GetParam1()==GUI_MSG_REMOVED_MEDIA)
+				{
+					// Update general playlist: Remove DVD playlist items
+					int nRemoved = g_playlistPlayer.RemoveDVDItems();
+					if ( nRemoved > 0 )
+					{
+						CGUIMessage msg( GUI_MSG_PLAYLIST_CHANGED, 0, 0 );
+						g_windowManager.SendMessage( msg );
+					}
+					// stop the file if it's on dvd (will set the resume point etc)
+					if (m_itemCurrentFile->IsOnDVD())
+						StopPlaying();
+				}
+			}
+			break;
 
-  case GUI_MSG_PLAYBACK_STARTED:
-    {
+		case GUI_MSG_PLAYBACK_STARTED:
+			{
 #ifdef TARGET_DARWIN
-      DarwinSetScheduling(message.GetMessage());
+				DarwinSetScheduling(message.GetMessage());
 #endif
-      // Update our infoManager with the new details etc.
-      if (m_nextPlaylistItem >= 0)
-      { // we've started a previously queued item
-        CFileItemPtr item = g_playlistPlayer.GetPlaylist(g_playlistPlayer.GetCurrentPlaylist())[m_nextPlaylistItem];
-        // update the playlist manager
-        int currentSong = g_playlistPlayer.GetCurrentSong();
-        int param = ((currentSong & 0xffff) << 16) | (m_nextPlaylistItem & 0xffff);
-        CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_CHANGED, 0, 0, g_playlistPlayer.GetCurrentPlaylist(), param, item);
-        g_windowManager.SendThreadMessage(msg);
-        g_playlistPlayer.SetCurrentSong(m_nextPlaylistItem);
-        *m_itemCurrentFile = *item;
-      }
-      g_infoManager.SetCurrentItem(*m_itemCurrentFile);
-      CLastFmManager::GetInstance()->OnSongChange(*m_itemCurrentFile);
-      g_partyModeManager.OnSongChange(true);
+				// Update our infoManager with the new details etc.
+				if (m_nextPlaylistItem >= 0)
+				{ // we've started a previously queued item
+					CFileItemPtr item = g_playlistPlayer.GetPlaylist(g_playlistPlayer.GetCurrentPlaylist())[m_nextPlaylistItem];
+					// update the playlist manager
+					int currentSong = g_playlistPlayer.GetCurrentSong();
+					int param = ((currentSong & 0xffff) << 16) | (m_nextPlaylistItem & 0xffff);
+					CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_CHANGED, 0, 0, g_playlistPlayer.GetCurrentPlaylist(), param, item);
+					g_windowManager.SendThreadMessage(msg);
+					g_playlistPlayer.SetCurrentSong(m_nextPlaylistItem);
+					*m_itemCurrentFile = *item;
+				}
+				
+				g_infoManager.SetCurrentItem(*m_itemCurrentFile);
+				CLastFmManager::GetInstance()->OnSongChange(*m_itemCurrentFile);
+				g_partyModeManager.OnSongChange(true);
 
-      CVariant param;
-      param["player"]["speed"] = 1;
-      param["player"]["playerid"] = g_playlistPlayer.GetCurrentPlaylist();
-      CAnnouncementManager::Announce(Player, "xbmc", "OnPlay", m_itemCurrentFile, param);
+				CVariant param;
+				param["player"]["speed"] = 1;
+				param["player"]["playerid"] = g_playlistPlayer.GetCurrentPlaylist();
+				CAnnouncementManager::Announce(Player, "xbmc", "OnPlay", m_itemCurrentFile, param);
 
-      DimLCDOnPlayback(true);
+				DimLCDOnPlayback(true);
 
-      if (IsPlayingAudio())
-      {
-        // Start our cdg parser as appropriate
+				if (IsPlayingAudio())
+				{
+					// Start our cdg parser as appropriate
 #ifdef HAS_KARAOKE
-        if (m_pKaraokeMgr && g_guiSettings.GetBool("karaoke.enabled") && !m_itemCurrentFile->IsInternetStream())
-        {
-          m_pKaraokeMgr->Stop();
-          if (m_itemCurrentFile->IsMusicDb())
-          {
-            if (!m_itemCurrentFile->HasMusicInfoTag() || !m_itemCurrentFile->GetMusicInfoTag()->Loaded())
-            {
-              IMusicInfoTagLoader* tagloader = CMusicInfoTagLoaderFactory::CreateLoader(m_itemCurrentFile->GetPath());
-              tagloader->Load(m_itemCurrentFile->GetPath(),*m_itemCurrentFile->GetMusicInfoTag());
-              delete tagloader;
-            }
-            m_pKaraokeMgr->Start(m_itemCurrentFile->GetMusicInfoTag()->GetURL());
-          }
-          else
-            m_pKaraokeMgr->Start(m_itemCurrentFile->GetPath());
-        }
+					if (m_pKaraokeMgr && g_guiSettings.GetBool("karaoke.enabled") && !m_itemCurrentFile->IsInternetStream())
+					{
+						m_pKaraokeMgr->Stop();
+						if (m_itemCurrentFile->IsMusicDb())
+						{
+							if (!m_itemCurrentFile->HasMusicInfoTag() || !m_itemCurrentFile->GetMusicInfoTag()->Loaded())
+							{
+								IMusicInfoTagLoader* tagloader = CMusicInfoTagLoaderFactory::CreateLoader(m_itemCurrentFile->GetPath());
+								tagloader->Load(m_itemCurrentFile->GetPath(),*m_itemCurrentFile->GetMusicInfoTag());
+								delete tagloader;
+							}
+							m_pKaraokeMgr->Start(m_itemCurrentFile->GetMusicInfoTag()->GetURL());
+						}
+						else
+							m_pKaraokeMgr->Start(m_itemCurrentFile->GetPath());
+					}
 #endif
-        // Let scrobbler know about the track
-        const CMusicInfoTag* tag=g_infoManager.GetCurrentSongTag();
-        if (tag)
-        {
-          CLastfmScrobbler::GetInstance()->AddSong(*tag, CLastFmManager::GetInstance()->IsRadioEnabled());
-          CLibrefmScrobbler::GetInstance()->AddSong(*tag, CLastFmManager::GetInstance()->IsRadioEnabled());
-        }
-      }
+					// Let scrobbler know about the track
+					const CMusicInfoTag* tag=g_infoManager.GetCurrentSongTag();
+					if (tag)
+					{
+						CLastfmScrobbler::GetInstance()->AddSong(*tag, CLastFmManager::GetInstance()->IsRadioEnabled());
+						CLibrefmScrobbler::GetInstance()->AddSong(*tag, CLastFmManager::GetInstance()->IsRadioEnabled());
+					}
+				}
 
-      return true;
-    }
-    break;
+				return true;
+			}
+			break;
 
-  case GUI_MSG_QUEUE_NEXT_ITEM:
-    {
-      // Check to see if our playlist player has a new item for us,
-      // and if so, we check whether our current player wants the file
-      int iNext = g_playlistPlayer.GetNextSong();
-      CPlayList& playlist = g_playlistPlayer.GetPlaylist(g_playlistPlayer.GetCurrentPlaylist());
-      if (iNext < 0 || iNext >= playlist.size())
-      {
-        if (m_pPlayer) m_pPlayer->OnNothingToQueueNotify();
-        return true; // nothing to do
-      }
-      // ok, grab the next song
-      CFileItemPtr item = playlist[iNext];
-      // ok - send the file to the player if it wants it
-      if (m_pPlayer && m_pPlayer->QueueNextFile(*item))
-      { // player wants the next file
-        m_nextPlaylistItem = iNext;
-      }
-      return true;
-    }
-    break;
+		case GUI_MSG_QUEUE_NEXT_ITEM:
+			{
+				// Check to see if our playlist player has a new item for us,
+				// and if so, we check whether our current player wants the file
+				int iNext = g_playlistPlayer.GetNextSong();
+				CPlayList& playlist = g_playlistPlayer.GetPlaylist(g_playlistPlayer.GetCurrentPlaylist());
+				if (iNext < 0 || iNext >= playlist.size())
+				{
+					if (m_pPlayer) 
+						m_pPlayer->OnNothingToQueueNotify();
+					return true; // nothing to do
+				}
+				// ok, grab the next song
+				CFileItemPtr item = playlist[iNext];
+				// ok - send the file to the player if it wants it
+				if (m_pPlayer && m_pPlayer->QueueNextFile(*item))
+				{ // player wants the next file
+					m_nextPlaylistItem = iNext;
+				}
+				return true;
+			}
+			break;
 
-  case GUI_MSG_PLAYBACK_STOPPED:
-  case GUI_MSG_PLAYBACK_ENDED:
-  case GUI_MSG_PLAYLISTPLAYER_STOPPED:
-    {
+		case GUI_MSG_PLAYBACK_STOPPED:
+		case GUI_MSG_PLAYBACK_ENDED:
+		case GUI_MSG_PLAYLISTPLAYER_STOPPED:
+			{
 #ifdef HAS_KARAOKE
-      if (m_pKaraokeMgr )
-        m_pKaraokeMgr->Stop();
+				if (m_pKaraokeMgr )
+					m_pKaraokeMgr->Stop();
 #endif
 #ifdef TARGET_DARWIN
-      DarwinSetScheduling(message.GetMessage());
+				DarwinSetScheduling(message.GetMessage());
 #endif
-      // first check if we still have items in the stack to play
-      if (message.GetMessage() == GUI_MSG_PLAYBACK_ENDED)
-      {
-        if (m_itemCurrentFile->IsStack() && m_currentStack->Size() > 0 && m_currentStackPosition < m_currentStack->Size() - 1)
-        { // just play the next item in the stack
-          PlayFile(*(*m_currentStack)[++m_currentStackPosition], true);
-          return true;
-        }
-      }
-      
-      // In case playback ended due to user eg. skipping over the end, clear
-      // our resume bookmark here
-      if (message.GetMessage() == GUI_MSG_PLAYBACK_ENDED && m_progressTrackingPlayCountUpdate && g_advancedSettings.m_videoIgnorePercentAtEnd > 0)
-      {
-        // Delete the bookmark
-        m_progressTrackingVideoResumeBookmark.timeInSeconds = -1.0f;
-      }
+				// first check if we still have items in the stack to play
+				if (message.GetMessage() == GUI_MSG_PLAYBACK_ENDED)
+				{
+					if (m_itemCurrentFile->IsStack() && m_currentStack->Size() > 0 && m_currentStackPosition < m_currentStack->Size() - 1)
+					{ // just play the next item in the stack
+						PlayFile(*(*m_currentStack)[++m_currentStackPosition], true);
+						return true;
+					}
+				}
 
-      // reset the current playing file
-      m_itemCurrentFile->Reset();
-      g_infoManager.ResetCurrentItem();
-      m_currentStack->Clear();
+				// In case playback ended due to user eg. skipping over the end, clear
+				// our resume bookmark here
+				if (message.GetMessage() == GUI_MSG_PLAYBACK_ENDED && m_progressTrackingPlayCountUpdate && g_advancedSettings.m_videoIgnorePercentAtEnd > 0)
+				{
+					// Delete the bookmark
+					m_progressTrackingVideoResumeBookmark.timeInSeconds = -1.0f;
+				}
 
-      if (message.GetMessage() == GUI_MSG_PLAYBACK_ENDED)
-      {
-        g_playlistPlayer.PlayNext(1, true);
-      }
-      else
-      {
-        // stop lastfm
-        if (CLastFmManager::GetInstance()->IsRadioEnabled())
-          CLastFmManager::GetInstance()->StopRadio();
+				// reset the current playing file
+				m_itemCurrentFile->Reset();
+				g_infoManager.ResetCurrentItem();
+				m_currentStack->Clear();
 
-        delete m_pPlayer;
-        m_pPlayer = 0;
+				if (message.GetMessage() == GUI_MSG_PLAYBACK_ENDED)
+				{
+					g_playlistPlayer.PlayNext(1, true);
+				}
+				else
+				{
+					// stop lastfm
+					if (CLastFmManager::GetInstance()->IsRadioEnabled())
+						CLastFmManager::GetInstance()->StopRadio();
 
-        // Reset playspeed
-        m_iPlaySpeed = 1;
-      }
+					delete m_pPlayer;
+					m_pPlayer = 0;
 
-      if (!IsPlaying())
-      {
-        g_audioManager.Enable(true);
-        DimLCDOnPlayback(false);
-      }
+					// Reset playspeed
+					m_iPlaySpeed = 1;
+				}
 
-      if (!IsPlayingVideo() && g_windowManager.GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO)
-      {
-        g_windowManager.PreviousWindow();
-      }
+				if (!IsPlaying())
+				{
+					g_audioManager.Enable(true);
+					DimLCDOnPlayback(false);
+				}
 
-      if (!IsPlayingAudio() && g_playlistPlayer.GetCurrentPlaylist() == PLAYLIST_NONE && g_windowManager.GetActiveWindow() == WINDOW_VISUALISATION)
-      {
-        g_settings.Save();  // save vis settings
-        WakeUpScreenSaverAndDPMS();
-        g_windowManager.PreviousWindow();
-      }
+				if (!IsPlayingVideo() && g_windowManager.GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO)
+				{
+					g_windowManager.PreviousWindow();
+				}
 
-      // DVD ejected while playing in vis ?
-      if (!IsPlayingAudio() && (m_itemCurrentFile->IsCDDA() || m_itemCurrentFile->IsOnDVD()) && !g_mediaManager.IsDiscInDrive() && g_windowManager.GetActiveWindow() == WINDOW_VISUALISATION)
-      {
-        // yes, disable vis
-        g_settings.Save();    // save vis settings
-        WakeUpScreenSaverAndDPMS();
-        g_windowManager.PreviousWindow();
-      }
+				if (!IsPlayingAudio() && g_playlistPlayer.GetCurrentPlaylist() == PLAYLIST_NONE && g_windowManager.GetActiveWindow() == WINDOW_VISUALISATION)
+				{
+					g_settings.Save();  // save vis settings
+					WakeUpScreenSaverAndDPMS();
+					g_windowManager.PreviousWindow();
+				}
 
-      if (IsEnableTestMode()) g_application.getApplicationMessenger().Quit();
-      return true;
-    }
-    break;
+				// DVD ejected while playing in vis ?
+				if (!IsPlayingAudio() && (m_itemCurrentFile->IsCDDA() || m_itemCurrentFile->IsOnDVD()) && !g_mediaManager.IsDiscInDrive() && g_windowManager.GetActiveWindow() == WINDOW_VISUALISATION)
+				{
+					// yes, disable vis
+					g_settings.Save();    // save vis settings
+					WakeUpScreenSaverAndDPMS();
+					g_windowManager.PreviousWindow();
+				}
 
-  case GUI_MSG_PLAYLISTPLAYER_STARTED:
-  case GUI_MSG_PLAYLISTPLAYER_CHANGED:
-    {
-      return true;
-    }
-    break;
-  case GUI_MSG_FULLSCREEN:
-    { // Switch to fullscreen, if we can
-      SwitchToFullScreen();
-      return true;
-    }
-    break;
-  case GUI_MSG_EXECUTE:
-    if (message.GetNumStringParams())
-      return ExecuteXBMCAction(message.GetStringParam());
-    break;
-  }
-  return false;
+				if (IsEnableTestMode()) 
+					g_application.getApplicationMessenger().Quit();
+				return true;
+			}
+			break;
+
+		case GUI_MSG_PLAYLISTPLAYER_STARTED:
+		case GUI_MSG_PLAYLISTPLAYER_CHANGED:
+			{
+				return true;
+			}
+			break;
+			
+		case GUI_MSG_FULLSCREEN:
+			{ // Switch to fullscreen, if we can
+				SwitchToFullScreen();
+				return true;
+			}
+			break;
+			
+		case GUI_MSG_EXECUTE:
+			if (message.GetNumStringParams())
+				return ExecuteXBMCAction(message.GetStringParam());
+			break;
+	}
+	
+	return false;
 }
 
 bool CApplication::ExecuteXBMCAction(std::string actionStr)
-    {
-      // see if it is a user set string
-      CLog::Log(LOGDEBUG,"%s : Translating %s", __FUNCTION__, actionStr.c_str());
-      CGUIInfoLabel info(actionStr, "");
-      actionStr = info.GetLabel(0);
-      CLog::Log(LOGDEBUG,"%s : To %s", __FUNCTION__, actionStr.c_str());
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// see if it is a user set string
+	CLog::Log(LOGDEBUG,"%s : Translating %s", __FUNCTION__, actionStr.c_str());
+	CGUIInfoLabel info(actionStr, "");
+	actionStr = info.GetLabel(0);
+	CLog::Log(LOGDEBUG,"%s : To %s", __FUNCTION__, actionStr.c_str());
 
-      // user has asked for something to be executed
-      if (CBuiltins::HasCommand(actionStr))
-        CBuiltins::Execute(actionStr);
-      else
-      {
-        // try translating the action from our ButtonTranslator
-        int actionID;
-        if (CButtonTranslator::TranslateActionString(actionStr.c_str(), actionID))
-        {
-          OnAction(CAction(actionID));
-          return true;
-        }
-        CFileItem item(actionStr, false);
+	// user has asked for something to be executed
+	if (CBuiltins::HasCommand(actionStr))
+		CBuiltins::Execute(actionStr);
+	else
+	{
+		// try translating the action from our ButtonTranslator
+		int actionID;
+		if (CButtonTranslator::TranslateActionString(actionStr.c_str(), actionID))
+		{
+			OnAction(CAction(actionID));
+			return true;
+		}
+		CFileItem item(actionStr, false);
 #ifdef HAS_PYTHON
-        if (item.IsPythonScript())
-        { // a python script
-          g_pythonParser.evalFile(item.GetPath().c_str(),ADDON::AddonPtr());
-        }
-        else
+		if (item.IsPythonScript())
+		{ // a python script
+			g_pythonParser.evalFile(item.GetPath().c_str(),ADDON::AddonPtr());
+		}
+		else
 #endif
-        if (item.IsAudio() || item.IsVideo())
-        { // an audio or video file
-          PlayFile(item);
-        }
-        else
-          return false;
-      }
-      return true;
-    }
+		if (item.IsAudio() || item.IsVideo())
+		{ // an audio or video file
+			PlayFile(item);
+		}
+		else
+			return false;
+	}
+	return true;
+}
 
 void CApplication::Process()
 {
@@ -5615,125 +5746,135 @@ void CApplication::Process()
 // We get called every 500ms
 void CApplication::ProcessSlow()
 {
-  g_powerManager.ProcessEvents();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	g_powerManager.ProcessEvents();
 
 #if defined(__APPLE__) &&  !defined(__arm__)
-  // There is an issue on OS X that several system services ask the cursor to become visible
-  // during their startup routines.  Given that we can't control this, we hack it in by
-  // forcing the
-  if (g_Windowing.IsFullScreen())
-  { // SDL thinks it's hidden
-    Cocoa_HideMouse();
-  }
+	// There is an issue on OS X that several system services ask the cursor to become visible
+	// during their startup routines.  Given that we can't control this, we hack it in by
+	// forcing the
+	if (g_Windowing.IsFullScreen())
+	{ // SDL thinks it's hidden
+		Cocoa_HideMouse();
+	}
 #endif
 
-  // Store our file state for use on close()
-  UpdateFileState();
+	// Store our file state for use on close()
+	UpdateFileState();
 
-  if (IsPlayingAudio())
-  {
-    CLastfmScrobbler::GetInstance()->UpdateStatus();
-    CLibrefmScrobbler::GetInstance()->UpdateStatus();
-  }
+	if (IsPlayingAudio())
+	{
+		CLastfmScrobbler::GetInstance()->UpdateStatus();
+		CLibrefmScrobbler::GetInstance()->UpdateStatus();
+	}
 
-  // Check if we need to activate the screensaver / DPMS.
-  CheckScreenSaverAndDPMS();
+	// Check if we need to activate the screensaver / DPMS.
+	CheckScreenSaverAndDPMS();
 
-  // Check if we need to shutdown (if enabled).
+	// Check if we need to shutdown (if enabled).
 #ifdef __APPLE__
-  if (g_guiSettings.GetInt("powermanagement.shutdowntime") && g_advancedSettings.m_fullScreen)
+	if (g_guiSettings.GetInt("powermanagement.shutdowntime") && g_advancedSettings.m_fullScreen)
 #else
-  if (g_guiSettings.GetInt("powermanagement.shutdowntime"))
+	if (g_guiSettings.GetInt("powermanagement.shutdowntime"))
 #endif
-  {
-    CheckShutdown();
-  }
+	{
+		CheckShutdown();
+	}
 
-  // check if we should restart the player
-  CheckDelayedPlayerRestart();
+	// check if we should restart the player
+	CheckDelayedPlayerRestart();
 
-  //  check if we can unload any unreferenced dlls or sections
-  if (!IsPlayingVideo())
-    CSectionLoader::UnloadDelayed();
+	//  check if we can unload any unreferenced dlls or sections
+	if (!IsPlayingVideo())
+		CSectionLoader::UnloadDelayed();
 
-  // check for any idle curl connections
-  g_curlInterface.CheckIdle();
+	// check for any idle curl connections
+	g_curlInterface.CheckIdle();
 
-  // check for any idle myth sessions
-  CMythSession::CheckIdle();
+	// check for any idle myth sessions
+	CMythSession::CheckIdle();
 
 #ifdef HAS_FILESYSTEM_HTSP
-  // check for any idle htsp sessions
-  HTSP::CHTSPDirectorySession::CheckIdle();
+	// check for any idle htsp sessions
+	HTSP::CHTSPDirectorySession::CheckIdle();
 #endif
 
 #ifdef HAS_KARAOKE
-  if ( m_pKaraokeMgr )
-    m_pKaraokeMgr->ProcessSlow();
+	if ( m_pKaraokeMgr )
+		m_pKaraokeMgr->ProcessSlow();
 #endif
 
-  // LED - LCD SwitchOn On Paused! m_bIsPaused=TRUE -> LED/LCD is ON!
-  if(IsPaused() != m_bIsPaused)
-  {
+	// LED - LCD SwitchOn On Paused! m_bIsPaused=TRUE -> LED/LCD is ON!
+	if(IsPaused() != m_bIsPaused)
+	{
 #ifdef HAS_LCD
-    DimLCDOnPlayback(m_bIsPaused);
+		DimLCDOnPlayback(m_bIsPaused);
 #endif
-    m_bIsPaused = IsPaused();
-  }
+		m_bIsPaused = IsPaused();
+	}
 
-  if (!IsPlayingVideo())
-    g_largeTextureManager.CleanupUnusedImages();
+	if (!IsPlayingVideo())
+		g_largeTextureManager.CleanupUnusedImages();
 
 #ifdef HAS_DVD_DRIVE
-  // checks whats in the DVD drive and tries to autostart the content (xbox games, dvd, cdda, avi files...)
-  if (!IsPlayingVideo())
-    m_Autorun->HandleAutorun();
+	// checks whats in the DVD drive and tries to autostart the content (xbox games, dvd, cdda, avi files...)
+	if (!IsPlayingVideo())
+		m_Autorun->HandleAutorun();
 #endif
 
-  // update upnp server/renderer states
-  if(CUPnP::IsInstantiated())
-    CUPnP::GetInstance()->UpdateState();
+	// update upnp server/renderer states
+	if(CUPnP::IsInstantiated())
+		CUPnP::GetInstance()->UpdateState();
 
-  //Check to see if current playing Title has changed and whether we should broadcast the fact
-  CheckForTitleChange();
+	//Check to see if current playing Title has changed and whether we should broadcast the fact
+	CheckForTitleChange();
 
 #if defined(_LINUX) && defined(HAS_FILESYSTEM_SMB)
-  smb.CheckIfIdle();
+	smb.CheckIfIdle();
 #endif
-  
+
 #ifdef HAS_FILESYSTEM_NFS
-  gNfsConnection.CheckIfIdle();
+	gNfsConnection.CheckIfIdle();
 #endif
 
 #ifdef HAS_FILESYSTEM_AFP
-  gAfpConnection.CheckIfIdle();
+	gAfpConnection.CheckIfIdle();
 #endif
 
 #ifdef HAS_FILESYSTEM_SFTP
-  CSFTPSessionManager::ClearOutIdleSessions();
+	CSFTPSessionManager::ClearOutIdleSessions();
 #endif
 
-  g_mediaManager.ProcessEvents();
+	g_mediaManager.ProcessEvents();
 
 #ifdef HAS_LIRC
-  if (g_RemoteControl.IsInUse() && !g_RemoteControl.IsInitialized())
-    g_RemoteControl.Initialize();
+	if (g_RemoteControl.IsInUse() && !g_RemoteControl.IsInitialized())
+		g_RemoteControl.Initialize();
 #endif
 
 #ifdef HAS_LCD
-  // attempt to reinitialize the LCD (e.g. after resuming from sleep)
-  if (!IsPlayingVideo())
-  {
-    if (g_lcd && !g_lcd->IsConnected())
-    {
-      g_lcd->Stop();
-      g_lcd->Initialize();
-    }
-  }
+	// attempt to reinitialize the LCD (e.g. after resuming from sleep)
+	if (!IsPlayingVideo())
+	{
+		if (g_lcd && !g_lcd->IsConnected())
+		{
+			g_lcd->Stop();
+			g_lcd->Initialize();
+		}
+	}
 #endif
-  
-  if (!IsPlayingVideo())
-    CAddonInstaller::Get().UpdateRepos();
+
+	if (!IsPlayingVideo())
+		CAddonInstaller::Get().UpdateRepos();
 }
 
 // Global Idle Time in Seconds
@@ -5741,219 +5882,409 @@ void CApplication::ProcessSlow()
 // int return: system Idle time in seconds! 0 is no idle!
 int CApplication::GlobalIdleTime()
 {
-  if(!m_idleTimer.IsRunning())
-  {
-    m_idleTimer.Stop();
-    m_idleTimer.StartZero();
-  }
-  return (int)m_idleTimer.GetElapsedSeconds();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if(!m_idleTimer.IsRunning())
+	{
+		m_idleTimer.Stop();
+		m_idleTimer.StartZero();
+	}
+	return (int)m_idleTimer.GetElapsedSeconds();
 }
 
 float CApplication::NavigationIdleTime()
 {
-  if (!m_navigationTimer.IsRunning())
-  {
-    m_navigationTimer.Stop();
-    m_navigationTimer.StartZero();
-  }
-  return m_navigationTimer.GetElapsedSeconds();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (!m_navigationTimer.IsRunning())
+	{
+		m_navigationTimer.Stop();
+		m_navigationTimer.StartZero();
+	}
+	return m_navigationTimer.GetElapsedSeconds();
 }
 
 void CApplication::DelayedPlayerRestart()
 {
-  m_restartPlayerTimer.StartZero();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	m_restartPlayerTimer.StartZero();
 }
 
 void CApplication::CheckDelayedPlayerRestart()
 {
-  if (m_restartPlayerTimer.GetElapsedSeconds() > 3)
-  {
-    m_restartPlayerTimer.Stop();
-    m_restartPlayerTimer.Reset();
-    Restart(true);
-  }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (m_restartPlayerTimer.GetElapsedSeconds() > 3)
+	{
+		m_restartPlayerTimer.Stop();
+		m_restartPlayerTimer.Reset();
+		Restart(true);
+	}
 }
 
 void CApplication::Restart(bool bSamePosition)
 {
-  // this function gets called when the user changes a setting (like noninterleaved)
-  // and which means we gotta close & reopen the current playing file
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// this function gets called when the user changes a setting (like noninterleaved)
+	// and which means we gotta close & reopen the current playing file
 
-  // first check if we're playing a file
-  if ( !IsPlayingVideo() && !IsPlayingAudio())
-    return ;
+	// first check if we're playing a file
+	if ( !IsPlayingVideo() && !IsPlayingAudio())
+		return ;
 
-  if( !m_pPlayer )
-    return ;
+	if( !m_pPlayer )
+		return ;
 
-  SaveFileState();
+	SaveFileState();
 
-  // do we want to return to the current position in the file
-  if (false == bSamePosition)
-  {
-    // no, then just reopen the file and start at the beginning
-    PlayFile(*m_itemCurrentFile, true);
-    return ;
-  }
+	// do we want to return to the current position in the file
+	if (false == bSamePosition)
+	{
+		// no, then just reopen the file and start at the beginning
+		PlayFile(*m_itemCurrentFile, true);
+		return ;
+	}
 
-  // else get current position
-  double time = GetTime();
+	// else get current position
+	double time = GetTime();
 
-  // get player state, needed for dvd's
-  CStdString state = m_pPlayer->GetPlayerState();
+	// get player state, needed for dvd's
+	CStdString state = m_pPlayer->GetPlayerState();
 
-  // set the requested starttime
-  m_itemCurrentFile->m_lStartOffset = (long)(time * 75.0);
+	// set the requested starttime
+	m_itemCurrentFile->m_lStartOffset = (long)(time * 75.0);
 
-  // reopen the file
-  if ( PlayFile(*m_itemCurrentFile, true) && m_pPlayer )
-    m_pPlayer->SetPlayerState(state);
+	// reopen the file
+	if ( PlayFile(*m_itemCurrentFile, true) && m_pPlayer )
+		m_pPlayer->SetPlayerState(state);
 }
 
 const CStdString& CApplication::CurrentFile()
 {
-  return m_itemCurrentFile->GetPath();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return m_itemCurrentFile->GetPath();
 }
 
 CFileItem& CApplication::CurrentFileItem()
 {
-  return *m_itemCurrentFile;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return *m_itemCurrentFile;
 }
 
 void CApplication::ShowVolumeBar(const CAction *action)
 {
-  CGUIDialog *volumeBar = (CGUIDialog *)g_windowManager.GetWindow(WINDOW_DIALOG_VOLUME_BAR);
-  if (volumeBar)
-  {
-    volumeBar->Show();
-    if (action)
-      volumeBar->OnAction(*action);
-  }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CGUIDialog *volumeBar = (CGUIDialog *)g_windowManager.GetWindow(WINDOW_DIALOG_VOLUME_BAR);
+	if (volumeBar)
+	{
+		volumeBar->Show();
+		if (action)
+			volumeBar->OnAction(*action);
+	}
 }
 
 bool CApplication::IsMuted() const
 {
-  return g_settings.m_bMute;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return g_settings.m_bMute;
 }
 
 void CApplication::ToggleMute(void)
 {
-  if (g_settings.m_bMute)
-    UnMute();
-  else
-    Mute();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (g_settings.m_bMute)
+		UnMute();
+	else
+		Mute();
 }
 
 void CApplication::Mute()
 {
-  g_settings.m_iPreMuteVolumeLevel = GetVolume();
-  SetVolume(0);
-  g_settings.m_bMute = true;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	g_settings.m_iPreMuteVolumeLevel = GetVolume();
+	SetVolume(0);
+	g_settings.m_bMute = true;
 }
 
 void CApplication::UnMute()
 {
-  SetVolume(g_settings.m_iPreMuteVolumeLevel);
-  g_settings.m_iPreMuteVolumeLevel = 0;
-  g_settings.m_bMute = false;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	SetVolume(g_settings.m_iPreMuteVolumeLevel);
+	g_settings.m_iPreMuteVolumeLevel = 0;
+	g_settings.m_bMute = false;
 }
 
 void CApplication::SetVolume(long iValue, bool isPercentage /* = true */)
 {
-  // convert the percentage to a mB (milliBell) value (*100 for dB)
-  if (isPercentage)
-    iValue = (long)((float)iValue * 0.01f * (VOLUME_MAXIMUM - VOLUME_MINIMUM) + VOLUME_MINIMUM);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// convert the percentage to a mB (milliBell) value (*100 for dB)
+	if (isPercentage)
+		iValue = (long)((float)iValue * 0.01f * (VOLUME_MAXIMUM - VOLUME_MINIMUM) + VOLUME_MINIMUM);
 
-  SetHardwareVolume(iValue);
+	SetHardwareVolume(iValue);
 #ifndef HAS_SDL_AUDIO
-  g_audioManager.SetVolume(g_settings.m_nVolumeLevel);
+	g_audioManager.SetVolume(g_settings.m_nVolumeLevel);
 #else
-  g_audioManager.SetVolume((int)(128.f * (g_settings.m_nVolumeLevel - VOLUME_MINIMUM) / (float)(VOLUME_MAXIMUM - VOLUME_MINIMUM)));
+	g_audioManager.SetVolume((int)(128.f * (g_settings.m_nVolumeLevel - VOLUME_MINIMUM) / (float)(VOLUME_MAXIMUM - VOLUME_MINIMUM)));
 #endif
 }
 
 void CApplication::SetHardwareVolume(long hardwareVolume)
 {
-  // TODO DRC
-  if (hardwareVolume >= VOLUME_MAXIMUM) // + VOLUME_DRC_MAXIMUM
-    hardwareVolume = VOLUME_MAXIMUM;// + VOLUME_DRC_MAXIMUM;
-  if (hardwareVolume <= VOLUME_MINIMUM)
-    hardwareVolume = VOLUME_MINIMUM;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// TODO DRC
+	if (hardwareVolume >= VOLUME_MAXIMUM) // + VOLUME_DRC_MAXIMUM
+		hardwareVolume = VOLUME_MAXIMUM;// + VOLUME_DRC_MAXIMUM;
+	if (hardwareVolume <= VOLUME_MINIMUM)
+		hardwareVolume = VOLUME_MINIMUM;
 
-  // update our settings
-  if (hardwareVolume > VOLUME_MAXIMUM)
-  {
-    g_settings.m_dynamicRangeCompressionLevel = hardwareVolume - VOLUME_MAXIMUM;
-    g_settings.m_nVolumeLevel = VOLUME_MAXIMUM;
-  }
-  else
-  {
-    g_settings.m_dynamicRangeCompressionLevel = 0;
-    g_settings.m_nVolumeLevel = hardwareVolume;
-  }
+	// update our settings
+	if (hardwareVolume > VOLUME_MAXIMUM)
+	{
+		g_settings.m_dynamicRangeCompressionLevel = hardwareVolume - VOLUME_MAXIMUM;
+		g_settings.m_nVolumeLevel = VOLUME_MAXIMUM;
+	}
+	else
+	{
+		g_settings.m_dynamicRangeCompressionLevel = 0;
+		g_settings.m_nVolumeLevel = hardwareVolume;
+	}
 
-  // and tell our player to update the volume
-  if (m_pPlayer)
-  {
-    m_pPlayer->SetVolume(g_settings.m_nVolumeLevel);
-    // TODO DRC
-//    m_pPlayer->SetDynamicRangeCompression(g_settings.m_dynamicRangeCompressionLevel);
-  }
+	// and tell our player to update the volume
+	if (m_pPlayer)
+	{
+		m_pPlayer->SetVolume(g_settings.m_nVolumeLevel);
+		// TODO DRC
+		//    m_pPlayer->SetDynamicRangeCompression(g_settings.m_dynamicRangeCompressionLevel);
+	}
 }
 
 int CApplication::GetVolume() const
 {
-  // converts the hardware volume (in mB) to a percentage
-  return int(((float)(g_settings.m_nVolumeLevel + g_settings.m_dynamicRangeCompressionLevel - VOLUME_MINIMUM)) / (VOLUME_MAXIMUM - VOLUME_MINIMUM)*100.0f + 0.5f);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	// converts the hardware volume (in mB) to a percentage
+  	return int(((float)(g_settings.m_nVolumeLevel + g_settings.m_dynamicRangeCompressionLevel - VOLUME_MINIMUM)) / (VOLUME_MAXIMUM - VOLUME_MINIMUM)*100.0f + 0.5f);
 }
 
 int CApplication::GetSubtitleDelay() const
 {
-  // converts subtitle delay to a percentage
-  return int(((float)(g_settings.m_currentVideoSettings.m_SubtitleDelay + g_advancedSettings.m_videoSubsDelayRange)) / (2 * g_advancedSettings.m_videoSubsDelayRange)*100.0f + 0.5f);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	// converts subtitle delay to a percentage
+  	return int(((float)(g_settings.m_currentVideoSettings.m_SubtitleDelay + g_advancedSettings.m_videoSubsDelayRange)) / (2 * g_advancedSettings.m_videoSubsDelayRange)*100.0f + 0.5f);
 }
 
 int CApplication::GetAudioDelay() const
 {
-  // converts subtitle delay to a percentage
-  return int(((float)(g_settings.m_currentVideoSettings.m_AudioDelay + g_advancedSettings.m_videoAudioDelayRange)) / (2 * g_advancedSettings.m_videoAudioDelayRange)*100.0f + 0.5f);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+ 	// converts subtitle delay to a percentage
+  	return int(((float)(g_settings.m_currentVideoSettings.m_AudioDelay + g_advancedSettings.m_videoAudioDelayRange)) / (2 * g_advancedSettings.m_videoAudioDelayRange)*100.0f + 0.5f);
 }
 
 void CApplication::SetPlaySpeed(int iSpeed)
 {
-  if (!IsPlayingAudio() && !IsPlayingVideo())
-    return ;
-  if (m_iPlaySpeed == iSpeed)
-    return ;
-  if (!m_pPlayer->CanSeek())
-    return;
-  if (m_pPlayer->IsPaused())
-  {
-    if (
-      ((m_iPlaySpeed > 1) && (iSpeed > m_iPlaySpeed)) ||
-      ((m_iPlaySpeed < -1) && (iSpeed < m_iPlaySpeed))
-    )
-    {
-      iSpeed = m_iPlaySpeed; // from pause to ff/rw, do previous ff/rw speed
-    }
-    m_pPlayer->Pause();
-  }
-  m_iPlaySpeed = iSpeed;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (!IsPlayingAudio() && !IsPlayingVideo())
+		return ;
+	
+	if (m_iPlaySpeed == iSpeed)
+		return ;
+	
+	if (!m_pPlayer->CanSeek())
+		return;
+	
+	if (m_pPlayer->IsPaused())
+	{
+		if (((m_iPlaySpeed > 1) && (iSpeed > m_iPlaySpeed)) ||((m_iPlaySpeed < -1) && (iSpeed < m_iPlaySpeed)))
+		{
+			iSpeed = m_iPlaySpeed; // from pause to ff/rw, do previous ff/rw speed
+		}
+		m_pPlayer->Pause();
+	}
+	m_iPlaySpeed = iSpeed;
 
-  m_pPlayer->ToFFRW(m_iPlaySpeed);
-  if (m_iPlaySpeed == 1)
-  { // restore volume
-    m_pPlayer->SetVolume(g_settings.m_nVolumeLevel);
-  }
-  else
-  { // mute volume
-    m_pPlayer->SetVolume(VOLUME_MINIMUM);
-  }
+	m_pPlayer->ToFFRW(m_iPlaySpeed);
+	if (m_iPlaySpeed == 1)
+	{ // restore volume
+		m_pPlayer->SetVolume(g_settings.m_nVolumeLevel);
+	}
+	else
+	{ // mute volume
+		m_pPlayer->SetVolume(VOLUME_MINIMUM);
+	}
 }
 
 int CApplication::GetPlaySpeed() const
 {
-  return m_iPlaySpeed;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return m_iPlaySpeed;
 }
 
 // Returns the total time in seconds of the current media.  Fractional
@@ -5962,33 +6293,63 @@ int CApplication::GetPlaySpeed() const
 // SeekTime().
 double CApplication::GetTotalTime() const
 {
-  double rc = 0.0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	double rc = 0.0;
 
-  if (IsPlaying() && m_pPlayer)
-  {
-    if (m_itemCurrentFile->IsStack() && m_currentStack->Size() > 0)
-      rc = (*m_currentStack)[m_currentStack->Size() - 1]->m_lEndOffset;
-    else
-      rc = m_pPlayer->GetTotalTime();
-  }
+	if (IsPlaying() && m_pPlayer)
+	{
+		if (m_itemCurrentFile->IsStack() && m_currentStack->Size() > 0)
+			rc = (*m_currentStack)[m_currentStack->Size() - 1]->m_lEndOffset;
+		else
+			rc = m_pPlayer->GetTotalTime();
+	}
 
-  return rc;
+	return rc;
 }
 
 void CApplication::StopShutdownTimer()
 {
-  if (m_shutdownTimer.IsRunning())
-    m_shutdownTimer.Stop();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (m_shutdownTimer.IsRunning())
+		m_shutdownTimer.Stop();
 }
 
 void CApplication::ResetShutdownTimers()
 {
-  // reset system shutdown timer
-  m_shutdownTimer.StartZero();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// reset system shutdown timer
+	m_shutdownTimer.StartZero();
 
-  // delete custom shutdown timer
-  if (g_alarmClock.HasAlarm("shutdowntimer"))
-    g_alarmClock.Stop("shutdowntimer", true);
+	// delete custom shutdown timer
+	if (g_alarmClock.HasAlarm("shutdowntimer"))
+		g_alarmClock.Stop("shutdowntimer", true);
 }
 
 // Returns the current time in seconds of the currently playing media.
@@ -5996,20 +6357,30 @@ void CApplication::ResetShutdownTimers()
 // be consistent with GetTotalTime() and SeekTime().
 double CApplication::GetTime() const
 {
-  double rc = 0.0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	double rc = 0.0;
 
-  if (IsPlaying() && m_pPlayer)
-  {
-    if (m_itemCurrentFile->IsStack() && m_currentStack->Size() > 0)
-    {
-      long startOfCurrentFile = (m_currentStackPosition > 0) ? (*m_currentStack)[m_currentStackPosition-1]->m_lEndOffset : 0;
-      rc = (double)startOfCurrentFile + m_pPlayer->GetTime() * 0.001;
-    }
-    else
-      rc = static_cast<double>(m_pPlayer->GetTime() * 0.001f);
-  }
+	if (IsPlaying() && m_pPlayer)
+	{
+		if (m_itemCurrentFile->IsStack() && m_currentStack->Size() > 0)
+		{
+			long startOfCurrentFile = (m_currentStackPosition > 0) ? (*m_currentStack)[m_currentStackPosition-1]->m_lEndOffset : 0;
+			rc = (double)startOfCurrentFile + m_pPlayer->GetTime() * 0.001;
+		}
+		else
+			rc = static_cast<double>(m_pPlayer->GetTime() * 0.001f);
+	}
 
-  return rc;
+	return rc;
 }
 
 // Sets the current position of the currently playing media to the specified
@@ -6019,182 +6390,298 @@ double CApplication::GetTime() const
 // consistent with GetTime() and GetTotalTime().
 void CApplication::SeekTime( double dTime )
 {
-CLog::Log(LOGDEBUG,"==========>>> cyk @@@@@@@@@@@@@@@@@@@@@@@ SeekTime ");
-  if (IsPlaying() && m_pPlayer && (dTime >= 0.0))
-  {
-    if (!m_pPlayer->CanSeek()) return;
-    if (m_itemCurrentFile->IsStack() && m_currentStack->Size() > 0)
-    {
-      // find the item in the stack we are seeking to, and load the new
-      // file if necessary, and calculate the correct seek within the new
-      // file.  Otherwise, just fall through to the usual routine if the
-      // time is higher than our total time.
-      for (int i = 0; i < m_currentStack->Size(); i++)
-      {
-        if ((*m_currentStack)[i]->m_lEndOffset > dTime)
-        {
-          long startOfNewFile = (i > 0) ? (*m_currentStack)[i-1]->m_lEndOffset : 0;
-          if (m_currentStackPosition == i)
-            m_pPlayer->SeekTime((__int64)((dTime - startOfNewFile) * 1000.0));
-          else
-          { // seeking to a new file
-            m_currentStackPosition = i;
-            CFileItem item(*(*m_currentStack)[i]);
-            item.m_lStartOffset = (long)((dTime - startOfNewFile) * 75.0);
-            // don't just call "PlayFile" here, as we are quite likely called from the
-            // player thread, so we won't be able to delete ourselves.
-            m_applicationMessenger.PlayFile(item, true);
-          }
-          return;
-        }
-      }
-    }
-    // convert to milliseconds and perform seek
-    m_pPlayer->SeekTime( static_cast<__int64>( dTime * 1000.0 ) );
-  }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CLog::Log(LOGDEBUG,"==========>>> cyk @@@@@@@@@@@@@@@@@@@@@@@ SeekTime ");
+	if (IsPlaying() && m_pPlayer && (dTime >= 0.0))
+	{
+		if (!m_pPlayer->CanSeek())
+			return;
+		if (m_itemCurrentFile->IsStack() && m_currentStack->Size() > 0)
+		{
+			// find the item in the stack we are seeking to, and load the new
+			// file if necessary, and calculate the correct seek within the new
+			// file.  Otherwise, just fall through to the usual routine if the
+			// time is higher than our total time.
+			for (int i = 0; i < m_currentStack->Size(); i++)
+			{
+				if ((*m_currentStack)[i]->m_lEndOffset > dTime)
+				{
+					long startOfNewFile = (i > 0) ? (*m_currentStack)[i-1]->m_lEndOffset : 0;
+					if (m_currentStackPosition == i)
+						m_pPlayer->SeekTime((__int64)((dTime - startOfNewFile) * 1000.0));
+					else
+					{ // seeking to a new file
+						m_currentStackPosition = i;
+						CFileItem item(*(*m_currentStack)[i]);
+						item.m_lStartOffset = (long)((dTime - startOfNewFile) * 75.0);
+						// don't just call "PlayFile" here, as we are quite likely called from the
+						// player thread, so we won't be able to delete ourselves.
+						m_applicationMessenger.PlayFile(item, true);
+					}
+					return;
+				}
+			}
+		}
+		// convert to milliseconds and perform seek
+		m_pPlayer->SeekTime( static_cast<__int64>( dTime * 1000.0 ) );
+	}
 }
 
 float CApplication::GetPercentage() const
 {
-  if (IsPlaying() && m_pPlayer)
-  {
-    if (IsPlayingAudio() && m_itemCurrentFile->HasMusicInfoTag())
-    {
-      const CMusicInfoTag& tag = *m_itemCurrentFile->GetMusicInfoTag();
-      if (tag.GetDuration() > 0)
-        return (float)(GetTime() / tag.GetDuration() * 100);
-    }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (IsPlaying() && m_pPlayer)
+	{
+		if (IsPlayingAudio() && m_itemCurrentFile->HasMusicInfoTag())
+		{
+			const CMusicInfoTag& tag = *m_itemCurrentFile->GetMusicInfoTag();
+			if (tag.GetDuration() > 0)
+				return (float)(GetTime() / tag.GetDuration() * 100);
+		}
 
-    if (m_itemCurrentFile->IsStack() && m_currentStack->Size() > 0)
-      return (float)(GetTime() / GetTotalTime() * 100);
-    else
-      return m_pPlayer->GetPercentage();
-  }
-  return 0.0f;
+		if (m_itemCurrentFile->IsStack() && m_currentStack->Size() > 0)
+			return (float)(GetTime() / GetTotalTime() * 100);
+		else
+			return m_pPlayer->GetPercentage();
+	}
+	return 0.0f;
 }
 
 float CApplication::GetCachePercentage() const
 {
-  if (IsPlaying() && m_pPlayer)
-    return m_pPlayer->GetCachePercentage();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (IsPlaying() && m_pPlayer)
+		return m_pPlayer->GetCachePercentage();
 
-  return 0.0f;
+	return 0.0f;
 }
 
 void CApplication::SeekPercentage(float percent)
 {
-  if (IsPlaying() && m_pPlayer && (percent >= 0.0))
-  {
-    if (!m_pPlayer->CanSeek()) return;
-    if (m_itemCurrentFile->IsStack() && m_currentStack->Size() > 0)
-      SeekTime(percent * 0.01 * GetTotalTime());
-    else
-      m_pPlayer->SeekPercentage(percent);
-  }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (IsPlaying() && m_pPlayer && (percent >= 0.0))
+	{
+		if (!m_pPlayer->CanSeek())
+			return;
+		
+		if (m_itemCurrentFile->IsStack() && m_currentStack->Size() > 0)
+			SeekTime(percent * 0.01 * GetTotalTime());
+		else
+			m_pPlayer->SeekPercentage(percent);
+	}
 }
 
 // SwitchToFullScreen() returns true if a switch is made, else returns false
 bool CApplication::SwitchToFullScreen()
 {
-  // if playing from the video info window, close it first!
-  if (g_windowManager.HasModalDialog() && g_windowManager.GetTopMostModalDialogID() == WINDOW_DIALOG_VIDEO_INFO)
-  {
-    CGUIDialogVideoInfo* pDialog = (CGUIDialogVideoInfo*)g_windowManager.GetWindow(WINDOW_DIALOG_VIDEO_INFO);
-    if (pDialog) pDialog->Close(true);
-  }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// if playing from the video info window, close it first!
+	if (g_windowManager.HasModalDialog() && g_windowManager.GetTopMostModalDialogID() == WINDOW_DIALOG_VIDEO_INFO)
+	{
+		CGUIDialogVideoInfo* pDialog = (CGUIDialogVideoInfo*)g_windowManager.GetWindow(WINDOW_DIALOG_VIDEO_INFO);
+		if (pDialog)
+			pDialog->Close(true);
+	}
 
-  // don't switch if there is a dialog on screen or the slideshow is active
-  if (/*g_windowManager.HasModalDialog() ||*/ g_windowManager.GetActiveWindow() == WINDOW_SLIDESHOW)
-    return false;
+	// don't switch if there is a dialog on screen or the slideshow is active
+	if (/*g_windowManager.HasModalDialog() ||*/ g_windowManager.GetActiveWindow() == WINDOW_SLIDESHOW)
+		return false;
 
-  // See if we're playing a video, and are in GUI mode
-  if ( IsPlayingVideo() && g_windowManager.GetActiveWindow() != WINDOW_FULLSCREEN_VIDEO)
-  {
-    // Reset frame count so that timing is FPS will be correct.
-    {
-      CSingleLock lock(m_frameMutex);
-      m_frameCount = 0;
-    }
+	// See if we're playing a video, and are in GUI mode
+	if ( IsPlayingVideo() && g_windowManager.GetActiveWindow() != WINDOW_FULLSCREEN_VIDEO)
+	{
+		// Reset frame count so that timing is FPS will be correct.
+		{
+			CSingleLock lock(m_frameMutex);
+			m_frameCount = 0;
+		}
 
-    // then switch to fullscreen mode
-    g_windowManager.ActivateWindow(WINDOW_FULLSCREEN_VIDEO);
-    return true;
-  }
-  // special case for switching between GUI & visualisation mode. (only if we're playing an audio song)
-  if (IsPlayingAudio() && g_windowManager.GetActiveWindow() != WINDOW_VISUALISATION)
-  { // then switch to visualisation
-    g_windowManager.ActivateWindow(WINDOW_VISUALISATION);
-    return true;
-  }
-  return false;
+		// then switch to fullscreen mode
+		g_windowManager.ActivateWindow(WINDOW_FULLSCREEN_VIDEO);
+		return true;
+	}
+	
+	// special case for switching between GUI & visualisation mode. (only if we're playing an audio song)
+	if (IsPlayingAudio() && g_windowManager.GetActiveWindow() != WINDOW_VISUALISATION)
+	{ // then switch to visualisation
+		g_windowManager.ActivateWindow(WINDOW_VISUALISATION);
+		return true;
+	}
+	return false;
 }
 
 void CApplication::Minimize()
 {
-  g_Windowing.Minimize();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	g_Windowing.Minimize();
 }
 
 PLAYERCOREID CApplication::GetCurrentPlayer()
 {
-  return m_eCurrentPlayer;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return m_eCurrentPlayer;
 }
 
 // when a scan is initiated, save current settings
 // and enable tag reading and remote thums
 void CApplication::SaveMusicScanSettings()
 {
-  CLog::Log(LOGINFO,"Music scan has started... Enabling tag reading, and remote thumbs");
-  g_settings.m_bMyMusicIsScanning = true;
-  g_settings.Save();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CLog::Log(LOGINFO,"Music scan has started... Enabling tag reading, and remote thumbs");
+	g_settings.m_bMyMusicIsScanning = true;
+	g_settings.Save();
 }
 
 void CApplication::RestoreMusicScanSettings()
 {
-  g_settings.m_bMyMusicIsScanning = false;
-  g_settings.Save();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	g_settings.m_bMyMusicIsScanning = false;
+	g_settings.Save();
 }
 
 void CApplication::UpdateLibraries()
 {
-  if (g_guiSettings.GetBool("videolibrary.updateonstartup"))
-  {
-    CLog::Log(LOGNOTICE, "%s - Starting video library startup scan", __FUNCTION__);
-    CGUIDialogVideoScan *scanner = (CGUIDialogVideoScan *)g_windowManager.GetWindow(WINDOW_DIALOG_VIDEO_SCAN);
-    if (scanner && !scanner->IsScanning())
-      scanner->StartScanning("");
-  }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (g_guiSettings.GetBool("videolibrary.updateonstartup"))
+	{
+		CLog::Log(LOGNOTICE, "%s - Starting video library startup scan", __FUNCTION__);
+		CGUIDialogVideoScan *scanner = (CGUIDialogVideoScan *)g_windowManager.GetWindow(WINDOW_DIALOG_VIDEO_SCAN);
+		if (scanner && !scanner->IsScanning())
+			scanner->StartScanning("");
+	}
 
-  if (g_guiSettings.GetBool("musiclibrary.updateonstartup"))
-  {
-    CLog::Log(LOGNOTICE, "%s - Starting music library startup scan", __FUNCTION__);
-    CGUIDialogMusicScan *scanner = (CGUIDialogMusicScan *)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_SCAN);
-    if (scanner && !scanner->IsScanning())
-      scanner->StartScanning("");
-  }
+	if (g_guiSettings.GetBool("musiclibrary.updateonstartup"))
+	{
+		CLog::Log(LOGNOTICE, "%s - Starting music library startup scan", __FUNCTION__);
+		CGUIDialogMusicScan *scanner = (CGUIDialogMusicScan *)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_SCAN);
+		if (scanner && !scanner->IsScanning())
+			scanner->StartScanning("");
+	}
 }
 
 void CApplication::CheckPlayingProgress()
 {
-  // check if we haven't rewound past the start of the file
-  if (IsPlaying())
-  {
-    int iSpeed = g_application.GetPlaySpeed();
-    if (iSpeed < 1)
-    {
-      iSpeed *= -1;
-      int iPower = 0;
-      while (iSpeed != 1)
-      {
-        iSpeed >>= 1;
-        iPower++;
-      }
-      if (g_infoManager.GetPlayTime() / 1000 < iPower)
-      {
-        g_application.SetPlaySpeed(1);
-        g_application.SeekTime(0);
-      }
-    }
-  }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// check if we haven't rewound past the start of the file
+	if (IsPlaying())
+	{
+		int iSpeed = g_application.GetPlaySpeed();
+		if (iSpeed < 1)
+		{
+			iSpeed *= -1;
+			int iPower = 0;
+			while (iSpeed != 1)
+			{
+				iSpeed >>= 1;
+				iPower++;
+			}
+			
+			if (g_infoManager.GetPlayTime() / 1000 < iPower)
+			{
+				g_application.SetPlaySpeed(1);
+				g_application.SeekTime(0);
+			}
+		}
+	}
 }
 
 bool CApplication::ProcessAndStartPlaylist(const CStdString& strPlayList, CPlayList& playlist, int iPlaylist, int track)
@@ -6244,84 +6731,174 @@ bool CApplication::ProcessAndStartPlaylist(const CStdString& strPlayList, CPlayL
 
 void CApplication::SaveCurrentFileSettings()
 {
-  if (m_itemCurrentFile->IsVideo())
-  {
-    // save video settings
-    if (g_settings.m_currentVideoSettings != g_settings.m_defaultVideoSettings)
-    {
-      CVideoDatabase dbs;
-      dbs.Open();
-      dbs.SetVideoSettings(m_itemCurrentFile->GetPath(), g_settings.m_currentVideoSettings);
-      dbs.Close();
-    }
-  }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (m_itemCurrentFile->IsVideo())
+	{
+		// save video settings
+		if (g_settings.m_currentVideoSettings != g_settings.m_defaultVideoSettings)
+		{
+			CVideoDatabase dbs;
+			dbs.Open();
+			dbs.SetVideoSettings(m_itemCurrentFile->GetPath(), g_settings.m_currentVideoSettings);
+			dbs.Close();
+		}
+	}
 }
 
 bool CApplication::AlwaysProcess(const CAction& action)
 {
-  // check if this button is mapped to a built-in function
-  if (!action.GetName().IsEmpty())
-  {
-    CStdString builtInFunction;
-    vector<CStdString> params;
-    CUtil::SplitExecFunction(action.GetName(), builtInFunction, params);
-    builtInFunction.ToLower();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// check if this button is mapped to a built-in function
+	if (!action.GetName().IsEmpty())
+	{
+		CStdString builtInFunction;
+		vector<CStdString> params;
+		CUtil::SplitExecFunction(action.GetName(), builtInFunction, params);
+		builtInFunction.ToLower();
 
-    // should this button be handled normally or just cancel the screensaver?
-    if (   builtInFunction.Equals("powerdown")
-        || builtInFunction.Equals("reboot")
-        || builtInFunction.Equals("restart")
-        || builtInFunction.Equals("restartapp")
-        || builtInFunction.Equals("suspend")
-        || builtInFunction.Equals("hibernate")
-        || builtInFunction.Equals("quit")
-        || builtInFunction.Equals("shutdown"))
-    {
-      return true;
-    }
-  }
+		// should this button be handled normally or just cancel the screensaver?
+		if (   builtInFunction.Equals("powerdown")
+					|| builtInFunction.Equals("reboot")
+					|| builtInFunction.Equals("restart")
+					|| builtInFunction.Equals("restartapp")
+					|| builtInFunction.Equals("suspend")
+					|| builtInFunction.Equals("hibernate")
+					|| builtInFunction.Equals("quit")
+					|| builtInFunction.Equals("shutdown"))
+		{
+			return true;
+		}
+	}
 
-  return false;
+	return false;
 }
 
 CApplicationMessenger& CApplication::getApplicationMessenger()
 {
-   return m_applicationMessenger;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+   	return m_applicationMessenger;
 }
 
 bool CApplication::IsCurrentThread() const
 {
-  return CThread::IsCurrentThread(m_threadID);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return CThread::IsCurrentThread(m_threadID);
 }
 
 bool CApplication::IsPresentFrame()
 {
-  CSingleLock lock(m_frameMutex);
-  bool ret = m_bPresentFrame;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CSingleLock lock(m_frameMutex);
+	bool ret = m_bPresentFrame;
 
-  return ret;
+	return ret;
 }
 
 #if defined(HAS_LINUX_NETWORK)
 CNetworkLinux& CApplication::getNetwork()
 {
-  return m_network;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return m_network;
 }
 #elif defined(HAS_WIN32_NETWORK)
 CNetworkWin32& CApplication::getNetwork()
 {
-  return m_network;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return m_network;
 }
 #else
 CNetwork& CApplication::getNetwork()
 {
-  return m_network;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return m_network;
 }
 
 #endif
 #ifdef HAS_PERFORMANCE_SAMPLE
 CPerformanceStats &CApplication::GetPerformanceStats()
 {
-  return m_perfStats;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return m_perfStats;
 }
 #endif
