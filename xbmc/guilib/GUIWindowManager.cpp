@@ -97,7 +97,14 @@ bool CGUIWindowManager::SendMessage(int message, int senderID, int destID, int p
 		1、
 
 	说明:
-		1、
+		1、发送消息的原理:
+			接收消息的窗体或者其他的非窗体实例，他们都必须实现
+			一个OnMessage 的方法，此函数中就是对这些需要接收消息的
+			实例直接调用其OnMessage 方法来达到消息传递及响应的
+
+		2、此函数的实现过程:
+			1、向所有的非窗体的需要接收gui 消息的实例发送消息( 即调用其实例的OnMessage 方法)
+			2、
 */
 	CGUIMessage msg(message, senderID, destID, param1, param2);
 	return SendMessage(msg);
@@ -113,11 +120,20 @@ bool CGUIWindowManager::SendMessage(CGUIMessage& message)
 		1、
 
 	说明:
-		1、
+		1、发送消息的原理:
+			接收消息的窗体或者其他的非窗体实例，他们都必须实现
+			一个OnMessage 的方法，此函数中就是对这些需要接收消息的
+			实例直接调用其OnMessage 方法来达到消息传递及响应的
+
+		2、此函数的实现过程:
+			1、向所有的非窗体的需要接收gui 消息的实例发送消息( 即调用其实例的OnMessage 方法)
+			2、
 */
 	bool handled = false;
 	//  CLog::Log(LOGDEBUG,"SendMessage: mess=%d send=%d control=%d param1=%d", message.GetMessage(), message.GetSenderId(), message.GetControlId(), message.GetParam1());
 	// Send the message to all none window targets
+
+	/* 向所有的非窗体的需要接收gui 消息的实例发送消息( 即调用其实例的OnMessage 方法) */
 	for (int i = 0; i < (int) m_vecMsgTargets.size(); i++)
 	{
 		IMsgTargetCallback* pMsgTarget = m_vecMsgTargets[i];
@@ -131,6 +147,7 @@ bool CGUIWindowManager::SendMessage(CGUIMessage& message)
 
 	//  A GUI_MSG_NOTIFY_ALL is send to any active modal dialog
 	//  and all windows whether they are active or not
+	/* 如果是通告所有窗体的消息，则向所有窗体发送消息( 即调用其实例的OnMessage 方法) */
 	if (message.GetMessage()==GUI_MSG_NOTIFY_ALL)
 	{
 		CSingleLock lock(g_graphicsContext);
@@ -217,7 +234,8 @@ bool CGUIWindowManager::SendMessage(CGUIMessage& message, int window)
 		1、
 
 	说明:
-		1、
+		1、直接发送消息给指定的窗体，即直接调用此窗体
+			实例的OnMessage 方法
 */
 	CGUIWindow* pWindow = GetWindow(window);
 	if(pWindow)

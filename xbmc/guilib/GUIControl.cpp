@@ -68,8 +68,7 @@ CGUIControl::CGUIControl()
 	m_controlIsDirty = true;
 }
 
-CGUIControl::CGUIControl(int parentID, int controlID, float posX, float posY, float width, float height)
-: m_hitRect(posX, posY, posX + width, posY + height)
+CGUIControl::CGUIControl(int parentID, int controlID, float posX, float posY, float width, float height) : m_hitRect(posX, posY, posX + width, posY + height)
 {
 /*
 	参数:
@@ -463,6 +462,7 @@ bool CGUIControl::SendWindowMessage(CGUIMessage &message)
 	CGUIWindow *pWindow = g_windowManager.GetWindow(GetParentID());
 	if (pWindow)
 		return pWindow->OnMessage(message);
+	
 	return g_windowManager.SendMessage(message);
 }
 
@@ -634,7 +634,8 @@ bool CGUIControl::IsVisible() const
 	说明:
 		1、
 */
-	if (m_forceHidden) return false;
+	if (m_forceHidden) 
+		return false;
 	return m_visible == VISIBLE;
 }
 

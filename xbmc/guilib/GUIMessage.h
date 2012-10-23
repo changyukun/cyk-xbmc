@@ -278,42 +278,42 @@ class CFileItemList;
 class CGUIMessage
 {
 public:
-  CGUIMessage(int dwMsg, int senderID, int controlID, int param1 = 0, int param2 = 0);
-  CGUIMessage(int msg, int senderID, int controlID, int param1, int param2, CFileItemList* item);
-  CGUIMessage(int msg, int senderID, int controlID, int param1, int param2, const CGUIListItemPtr &item);
-  CGUIMessage(const CGUIMessage& msg);
-  virtual ~CGUIMessage(void);
-  const CGUIMessage& operator = (const CGUIMessage& msg);
+	CGUIMessage(int dwMsg, int senderID, int controlID, int param1 = 0, int param2 = 0);
+	CGUIMessage(int msg, int senderID, int controlID, int param1, int param2, CFileItemList* item);
+	CGUIMessage(int msg, int senderID, int controlID, int param1, int param2, const CGUIListItemPtr &item);
+	CGUIMessage(const CGUIMessage& msg);
+	virtual ~CGUIMessage(void);
+	const CGUIMessage& operator = (const CGUIMessage& msg);
 
-  int GetControlId() const ;
-  int GetMessage() const;
-  void* GetPointer() const;
-  CGUIListItemPtr GetItem() const;
-  int GetParam1() const;
-  int GetParam2() const;
-  int GetSenderId() const;
-  void SetParam1(int param1);
-  void SetParam2(int param2);
-  void SetPointer(void* pointer);
-  void SetLabel(const std::string& strLabel);
-  void SetLabel(int iString);               // for convience - looks up in strings.xml
-  const std::string& GetLabel() const;
-  void SetStringParam(const CStdString &strParam);
-  void SetStringParams(const std::vector<CStdString> &params);
-  const CStdString& GetStringParam(size_t param = 0) const;
-  size_t GetNumStringParams() const;
+	int GetControlId() const ;
+	int GetMessage() const;
+	void* GetPointer() const;
+	CGUIListItemPtr GetItem() const;
+	int GetParam1() const;
+	int GetParam2() const;
+	int GetSenderId() const;
+	void SetParam1(int param1);
+	void SetParam2(int param2);
+	void SetPointer(void* pointer);
+	void SetLabel(const std::string& strLabel);
+	void SetLabel(int iString);               // for convience - looks up in strings.xml
+	const std::string& GetLabel() const;
+	void SetStringParam(const CStdString &strParam);
+	void SetStringParams(const std::vector<CStdString> &params);
+	const CStdString& GetStringParam(size_t param = 0) const;
+	size_t GetNumStringParams() const;
 
-private:
-  std::string m_strLabel;
-  std::vector<CStdString> m_params;
-  int m_senderID;
-  int m_controlID;
-  int m_message;
-  void* m_pointer;
-  int m_param1;
-  int m_param2;
-  CGUIListItemPtr m_item;
+	private:
+	std::string m_strLabel;
+	std::vector<CStdString> m_params;
+	int m_senderID;
+	int m_controlID;
+	int m_message;
+	void* m_pointer;
+	int m_param1;
+	int m_param2;
+	CGUIListItemPtr m_item;
 
-  static CStdString empty_string;
+	static CStdString empty_string;
 };
 #endif

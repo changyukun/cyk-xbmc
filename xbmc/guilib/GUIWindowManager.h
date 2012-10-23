@@ -159,7 +159,15 @@ private:
 	IWindowManagerCallback* m_pCallback;
 	std::vector < std::pair<CGUIMessage*,int> > m_vecThreadMessages;
 	CCriticalSection m_critSection;
-	std::vector <IMsgTargetCallback*> m_vecMsgTargets;
+	
+	std::vector <IMsgTargetCallback*> m_vecMsgTargets; /* 	此容器内保存的为所有为非窗体类、并且需要接收gui 消息
+														的实例，通过方法CGUIWindowManager::AddMsgTarget() 向其中添加实例
+														的。
+
+														此容器内的所有实例如何得到gui 消息的，详见CGUIWindowManager::SendMessage
+														，即当gui 调用CGUIWindowManager::SendMessage 发送消息的时候就会遍历
+														此容器内的所有实例，然后调用每个实例的OnMessage 方法
+													*/
 
 	bool m_bShowOverlay;
 	int  m_iNested;
