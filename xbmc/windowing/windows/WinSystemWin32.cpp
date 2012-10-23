@@ -185,7 +185,7 @@ bool CWinSystemWin32::CreateNewWindow(const CStdString& name, bool fullScreen, R
 	// Register the windows class
 	WNDCLASS wndClass;
 	wndClass.style = CS_OWNDC; // For OpenGL
-	wndClass.lpfnWndProc = CWinEvents::WndProc;
+	wndClass.lpfnWndProc = CWinEvents::WndProc; /* 见此窗口类的消息回调函数CWinEventsWin32::WndProc()  */
 	wndClass.cbClsExtra = 0;
 	wndClass.cbWndExtra = 0;
 	wndClass.hInstance = m_hInstance;
@@ -203,14 +203,18 @@ bool CWinSystemWin32::CreateNewWindow(const CStdString& name, bool fullScreen, R
 	HWND hWnd = CreateWindow( 	name.c_str(), 
 								name.c_str(), 
 								fullScreen ? WS_POPUP : WS_OVERLAPPEDWINDOW,
-								0, 
-								0, 
-								m_nWidth,
-								m_nHeight, 
-								0, /* 父窗口句柄*/
-								NULL, /* 菜单句柄*/
-								m_hInstance,  /* 实例号*/
-								userFunction ); /* 窗口创建的时候作为create lparam 的参数*/
+								0, 				/* x */
+								0, 				/* y */
+								m_nWidth,		/* 宽度*/
+								m_nHeight, 		/* 高度*/
+								0, 				/* 父窗口句柄*/
+								NULL, 			/* 菜单句柄*/
+								m_hInstance,  	/* 实例号*/
+								userFunction ); 	/* 	窗口创建的时候作为窗口创建消息的参数，即WM_CREATE 消息
+													的lParam 参数值[ 见CWinEventsWin32::WndProc() 中对WM_CREATE 消息的处理]，
+													在xbmc 的工程中，函数CWinSystemWin32::CreateNewWindow  就被调用过一次，
+													而传入的此参数就是CApplication::OnEvent()
+												*/
 	if( hWnd == NULL )
 	{
 		return false;
@@ -274,6 +278,7 @@ bool CWinSystemWin32::CreateBlankWindows()
 	int reg = RegisterClassEx(&wcex);
 
 	// We need as many blank windows as there are screens (minus 1)
+	/* 多个屏幕需要创建多个窗口*/
 	int BlankWindowsCount = m_MonitorsInfo.size() -1;
 
 	m_hBlankWindows.reserve(BlankWindowsCount);

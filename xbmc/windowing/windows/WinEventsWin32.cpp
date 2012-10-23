@@ -387,10 +387,38 @@ bool CWinEventsWin32::MessagePump()
 		1、
 		
 	说明:
-		1、
+		1、消息循环函数，即消息抽水机
+
+		函数原型：BOOL PeekMessage（LPMSG IpMsg，HWND hWnd，UINT wMSGfilterMin，UINT wMsgFilterMax，UINT wRemoveMsg）；
+
+
+		lpMsg：接收消息信息的MSG结构指针。 　　
+		hWnd：其消息被检查的窗口的句柄。 　　
+		wMsgFilterMin：指定被检查的消息范围里的第一个消息。 　　
+		wMsgFilterMax：指定被检查的消息范围里的最后一个消息。 　　
+		wRemoveMsg：确定消息如何被处理。此参数可取下列值之一： 　　
+				PM_NOREMOVE：PeekMessage处理后，消息不从队列里除掉。 　　
+				PM_REMOVE：PeekMessage处理后，消息从队列里除掉。 　　
+				可将PM_NOYIELD随意组合到PM_NOREMOVE或PM_REMOVE。此标志使系统不释放等待调用程序空闲的线程。 　　
+				缺省地，处理所有类型的消息。若只处理某些消息，指定一个或多个下列值： 　　
+						PM_QS_INPUT：Windows NT5.0和Windows 98：处理鼠标和键盘消息。 　　
+						PM_QS_PAINT：Windows NT 5.0和Windows 98：处理画图消息。 　　
+						PM_QS_POSTMESSAGE：Windows NT 5.0和Windows 98：处理所有被寄送的消息，包括计时器和热键。 　　
+						PM_QS_SENDMESSAGE：Windows NT 5.0和Windows 98：处理所有发送消息。 　　
+
+		函数返回值：如果消息可得到，返回非零值；如果没有消息可得到，返回值是零。
+
+
+		和函数GetMessage不一样的是，函数PeekMesssge在返回前不等待消息被放到队列里。 　　
+		PeekMesssge只得到那些与参数hWnd标识的窗口相联系的消息或被lsChild确定为其子
+		窗口相联系的消息，并且该消息要在由参数wMsgFiterMin和wMsgFiherMax确定的范围内。
+		如果hWnd为NULL，则PeekMessage接收属于当前调用线程的窗口的消息（PeekMessage不
+		接收属于其他线程的窗口的消息）。如果hWnd为-1，PeekMessage只返回hWnd值为
+		NULL的消息，该消息由函数PostThreadMessage寄送。如果wMsgFilterMin和wMsgFilterMax都为零，
+		PeekMessage返回所有可得的消息（即，无范围过滤）。
 */
 	MSG  msg;
-	while( PeekMessage( &msg, NULL, 0U, 0U, PM_REMOVE ) )
+	while( PeekMessage( &msg, NULL, 0U, 0U, PM_REMOVE) )
 	{
 		TranslateMessage( &msg );
 		DispatchMessage( &msg );
@@ -417,7 +445,7 @@ LRESULT CALLBACK CWinEventsWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 
 	if (uMsg == WM_CREATE)
 	{
-		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG)(((LPCREATESTRUCT)lParam)->lpCreateParams));
+		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG)(((LPCREATESTRUCT)lParam)->lpCreateParams));  /* 相见下面GetWindowLong 的说明，而那个函数是获取，而此函数是设置*/
 		DIB_InitOSKeymap();
 		g_uQueryCancelAutoPlay = RegisterWindowMessage(TEXT("QueryCancelAutoPlay"));
 		shcne.pidl = NULL;
@@ -428,7 +456,60 @@ LRESULT CALLBACK CWinEventsWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 		return 0;
 	}
 
-	m_pEventFunc = (PHANDLE_EVENT_FUNC)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+
+	/*
+		函数原型：
+			LONG GetWindowLong ( HWND hWnd,  int nIndex )
+ 
+		参数：
+			hWnd	：指定窗口的句柄
+			nIndex	：需要获得的信息的类型
+
+ 			------>>
+			nIndex取值如下:
+			GWL_EXSTYLE    		得到扩展的窗口风格
+			GWL_STYLE      		得到窗口风格
+			GWL_WNDPROC    		得到窗口回调函数的地址，或者句柄。得到后必须使用CallWindowProc 函数来调用 
+			GWL_HINSTANCE  		得到应用程序运行实例的句柄
+			GWL_HWNDPARENT 	得到父窗口的句柄
+			GWL_ID         			得到窗口的标识符
+			GWL_USERDATA   		得到和窗口相关联的32 位的值（每一个窗口都有一个有意留给创建窗口的应用程序是用的32位的值）
+			
+
+		GetWindowLong 使用的例子:
+		
+			什么是消息循环，如下形式
+			while(GetMessage(&Msg, NULL, 0, 0) > 0)
+			{
+				TranslateMessage(&Msg);
+				DispatchMessage(&Msg);
+			}
+
+			消息循环调用了GetMessage()， 它到你的消息队列中去看．如果队列是空的你的程序就在那里等（阻塞在那里）． 
+
+			当一个事件发生导致一个消息加到队列中去（比如系统注冊了一次鼠标点击）GetMessage()就返回一个正值表示有一个消息待处理，并且它将我们传递的MSG结构体填充．如果遇到了WM_QUIT它就返回0，如果有错误发生就返回负值． 
+
+			我们拿到信号（在Msg变量中）并传给TranslateMessage()，它进行一些额外的处理，将虛键值转为字符信息．这一步其实是可有可无的，但是有些地方会依赖这个步骤． 
+
+			一旦上面的工作完成了我们把消息传给DispatchMessage()．DispatchMessage()先看看信号是给哪个窗口的，再找到那个窗口的窗口过程. 再调用那个过程，参数为窗口的句柄，消息，wParam和lParam． 
+
+			在你的窗口过程中，你得到了那些参数，就可以为所欲为了．如果你沒有处理某些特定的消息，那你就调用DefWindowProc()来为你做一些默认的操作（一般就是什么都不做）． 
+
+			一旦你完成了对消息的处理，你的窗口过程就返回了，DispatchMessage()返回了，我们就再次循环．
+
+注意==>>	这是windows程序中一个非常重要的概念.．你的窗口过程并不是由系统来神奇地调用的，实际上你在DispatchMessage()中自己间接地调用了它．如果你愿意，你可以对消息调用GetWindowLong()得到它的窗口过程再直接调用它！
+
+			while(GetMessage(&Msg, NULL, 0, 0) > 0)
+			{
+				WNDPROC fWndProc = (WNDPROC)GetWindowLong(Msg.hwnd, GWL_WNDPROC);
+				fWndProc(Msg.hwnd, Msg.message, Msg.wParam, Msg.lParam);
+			}
+
+			我对前面的例子用了这种方法，可以工作，但是有很多的方面这种方法沒有注意到，比如Unicode/ANSI转換，时钟回调函数等等，它很可能在我们的简单试验中可以工作．所以试下就可以了，不要在实际的代码中用它：)
+
+	*/
+
+	m_pEventFunc = (PHANDLE_EVENT_FUNC)GetWindowLongPtr(hWnd, GWLP_USERDATA); /* 见上面对此函数的说明*/
 	if (!m_pEventFunc)
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 

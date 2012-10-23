@@ -433,6 +433,10 @@ bool CApplication::OnEvent(XBMC_Event& newEvent)
 		
 	说明:
 		1、此函数会在MessagePump()  中得到调用，即通过g_application.OnEvent 的调用
+
+			在linux 系统中，在函数CWinEventsLinux::MessagePump() 相当于消息循环的函数内直接对此函数进行调用
+			在windows 系统中，是通过消息处理函数得到调用的，基本过程如下
+				CWinEventsWin32::MessagePump()  ==>>  DispatchMessage( &msg )  ==>>  CWinEventsWin32::WndProc()  ==>>  m_pEventFunc
 */
 	switch(newEvent.type)
 	{
@@ -440,18 +444,22 @@ bool CApplication::OnEvent(XBMC_Event& newEvent)
 			if (!g_application.m_bStop)
 				g_application.getApplicationMessenger().Quit();
 			break;
+			
 		case XBMC_KEYDOWN:
 			g_application.OnKey(g_Keyboard.ProcessKeyDown(newEvent.key.keysym));
 			break;
+			
 		case XBMC_KEYUP:
 			g_Keyboard.ProcessKeyUp();
 			break;
+			
 		case XBMC_MOUSEBUTTONDOWN:
 		case XBMC_MOUSEBUTTONUP:
 		case XBMC_MOUSEMOTION:
 			g_Mouse.HandleEvent(newEvent);
 			g_application.ProcessMouse();
 			break;
+			
 		case XBMC_VIDEORESIZE:
 			if (!g_application.m_bInitializing &&!g_advancedSettings.m_fullScreen)
 			{
@@ -462,6 +470,7 @@ bool CApplication::OnEvent(XBMC_Event& newEvent)
 				g_settings.Save();
 			}
 			break;
+			
 		case XBMC_VIDEOMOVE:
 #ifdef TARGET_WINDOWS
 			if (g_advancedSettings.m_fullScreen)
@@ -480,9 +489,11 @@ bool CApplication::OnEvent(XBMC_Event& newEvent)
 				g_Windowing.OnMove(newEvent.move.x, newEvent.move.y);
 			}
 			break;
+			
 		case XBMC_USEREVENT:
 			g_application.getApplicationMessenger().UserEvent(newEvent.user.code);
 			break;
+			
 		case XBMC_APPCOMMAND:
 			return g_application.OnAppCommand(newEvent.appcommand.action);
 	}
@@ -574,7 +585,7 @@ bool CApplication::Create()
 		1、
 
 	说明:
-		1、
+		1、此函数如在XBMC_PC.cpp  的WinMain()  、或者xbmc.cpp  的main() 函数中被调用，即此函数在入口函数中被调用了
 */
 	g_settings.Initialize(); //Initialize default AdvancedSettings
 
@@ -833,7 +844,10 @@ bool CApplication::Create()
 	}
 #else
 	bool bFullScreen = g_guiSettings.m_LookAndFeelResolution != RES_WINDOW;
-	if (!g_Windowing.CreateNewWindow("XBMC", bFullScreen, g_settings.m_ResInfo[g_guiSettings.m_LookAndFeelResolution], OnEvent))
+	/* 
+		调用不同系统的窗口创建函数，如CWinSystemWin32::CreateNewWindow() 
+	*/
+	if (!g_Windowing.CreateNewWindow("XBMC", bFullScreen, g_settings.m_ResInfo[g_guiSettings.m_LookAndFeelResolution], OnEvent)) 
 	{
 		CLog::Log(LOGFATAL, "CApplication::Create: Unable to create window");
 		return false;
@@ -2406,7 +2420,7 @@ void CApplication::Render()
 		1、
 		
 	说明:
-		1、
+		1、此函数会在CXBApplicationEx::Run() 中被调用
 */
 	// do not render if we are stopped
 	if (m_bStop)
@@ -3157,7 +3171,7 @@ void CApplication::FrameMove(bool processEvents)
 		1、
 		
 	说明:
-		1、
+		1、此函数会在CXBApplicationEx::Run() 中被调用，即在Run()  中被一个死循环内循环调用
 */
 	MEASURE_FUNCTION;
 
@@ -3190,7 +3204,8 @@ void CApplication::FrameMove(bool processEvents)
 #endif
 
 		// process input actions
-		CWinEvents::MessagePump();
+		CWinEvents::MessagePump(); /* 详见文件WinEvents.h  中对CWinEvents  的定义，根据不同的操作系统定义不同的类型*/
+
 		ProcessHTTPApiButtons();
 		ProcessJsonRpcButtons();
 		ProcessRemote(frameTime);
@@ -3201,7 +3216,9 @@ void CApplication::FrameMove(bool processEvents)
 	}
 	
 	if (!m_bStop)
+	{
 		g_windowManager.Process(CTimeUtils::GetFrameTime());
+	}
 	
 	g_windowManager.FrameMove();
 }
@@ -5634,7 +5651,10 @@ bool CApplication::OnMessage(CGUIMessage& message)
 			
 		case GUI_MSG_EXECUTE:
 			if (message.GetNumStringParams())
+			{
+				/* cyk 这里也会调用到FrameMove 方法*/
 				return ExecuteXBMCAction(message.GetStringParam());
+			}
 			break;
 	}
 	
@@ -5699,7 +5719,9 @@ void CApplication::Process()
 		1、
 
 	说明:
-		1、此实例会在CGUIWindowManager::ProcessRenderLoop 中被调用
+		1、此函数会在CXBApplicationEx::Run() 中被调用
+			此实例也会在CGUIWindowManager::ProcessRenderLoop 中被调用
+			
 */
 
 	MEASURE_FUNCTION;
@@ -5718,7 +5740,8 @@ void CApplication::Process()
 
 	// process messages, even if a movie is playing
 	m_applicationMessenger.ProcessMessages();
-	if (g_application.m_bStop) return; //we're done, everything has been unloaded
+	if (g_application.m_bStop) 
+		return; //we're done, everything has been unloaded
 
 	// check if we can free unused memory
 #ifndef _LINUX

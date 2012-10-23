@@ -38,43 +38,83 @@ CLinuxInputDevices CWinEventsLinux::m_devices;
 
 CWinEventsLinux::CWinEventsLinux()
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 }
 
 void CWinEventsLinux::RefreshDevices()
 {
-  m_devices.InitAvailable();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	m_devices.InitAvailable();
 }
 
 bool CWinEventsLinux::IsRemoteLowBattery()
 {
-  return m_devices.IsRemoteLowBattery();
-  return false;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	return m_devices.IsRemoteLowBattery();
+	return false;
 }
 
 bool CWinEventsLinux::MessagePump()
 {
-  if (!m_initialized)
-  {
-    m_devices.InitAvailable();
-    m_initialized = true;
-  }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、相当于windows  的消息循环函数，即消息抽水机
+*/
+	if (!m_initialized)
+	{
+		m_devices.InitAvailable();
+		m_initialized = true;
+	}
 
-  bool ret = false;
-  XBMC_Event event = {0};
-  while (1)
-  {
-    event = m_devices.ReadEvent();
-    if (event.type != XBMC_NOEVENT)
-    {
-      ret |= g_application.OnEvent(event);
-    }
-    else
-    {
-      break;
-    }
-  }
+	bool ret = false;
+	XBMC_Event event = {0};
+	while (1)
+	{
+		event = m_devices.ReadEvent();
+		if (event.type != XBMC_NOEVENT)
+		{
+			ret |= g_application.OnEvent(event);
+		}
+		else
+		{
+			break;
+		}
+	}
 
-  return ret;
+	return ret;
 }
 
 #endif

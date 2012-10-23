@@ -47,56 +47,68 @@
 
 int main(int argc, char* argv[])
 {
-  int status = -1;
-  //this can't be set from CAdvancedSettings::Initialize() because it will overwrite
-  //the loglevel set with the --debug flag
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、cyk --------> 非windows 程序的入口函数
+*/
+	int status = -1;
+	//this can't be set from CAdvancedSettings::Initialize() because it will overwrite
+	//the loglevel set with the --debug flag
 #ifdef _DEBUG
-  g_advancedSettings.m_logLevel     = LOG_LEVEL_DEBUG;
-  g_advancedSettings.m_logLevelHint = LOG_LEVEL_DEBUG;
+	g_advancedSettings.m_logLevel     = LOG_LEVEL_DEBUG;
+	g_advancedSettings.m_logLevelHint = LOG_LEVEL_DEBUG;
 #else
-  g_advancedSettings.m_logLevel     = LOG_LEVEL_NORMAL;
-  g_advancedSettings.m_logLevelHint = LOG_LEVEL_NORMAL;
+	g_advancedSettings.m_logLevel     = LOG_LEVEL_NORMAL;
+	g_advancedSettings.m_logLevelHint = LOG_LEVEL_NORMAL;
 #endif
-  CLog::SetLogLevel(g_advancedSettings.m_logLevel);
+	CLog::SetLogLevel(g_advancedSettings.m_logLevel);
 
 #ifdef _LINUX
 #if defined(DEBUG)
-  struct rlimit rlim;
-  rlim.rlim_cur = rlim.rlim_max = RLIM_INFINITY;
-  if (setrlimit(RLIMIT_CORE, &rlim) == -1)
-    CLog::Log(LOGDEBUG, "Failed to set core size limit (%s)", strerror(errno));
+	struct rlimit rlim;
+	rlim.rlim_cur = rlim.rlim_max = RLIM_INFINITY;
+	
+	if (setrlimit(RLIMIT_CORE, &rlim) == -1)
+		CLog::Log(LOGDEBUG, "Failed to set core size limit (%s)", strerror(errno));
 #endif
-  // Prevent child processes from becoming zombies on exit if not waited upon. See also Util::Command
-  struct sigaction sa;
-  memset(&sa, 0, sizeof(sa));
+	// Prevent child processes from becoming zombies on exit if not waited upon. See also Util::Command
+	struct sigaction sa;
+	memset(&sa, 0, sizeof(sa));
 
-  sa.sa_flags = SA_NOCLDWAIT;
-  sa.sa_handler = SIG_IGN;
-  sigaction(SIGCHLD, &sa, NULL);
+	sa.sa_flags = SA_NOCLDWAIT;
+	sa.sa_handler = SIG_IGN;
+	sigaction(SIGCHLD, &sa, NULL);
 #endif
-  setlocale(LC_NUMERIC, "C");
-  g_advancedSettings.Initialize();
-  
+	setlocale(LC_NUMERIC, "C");
+	g_advancedSettings.Initialize();
+
 #ifndef _WIN32
-  CAppParamParser appParamParser;
-  appParamParser.Parse((const char **)argv, argc);
+	CAppParamParser appParamParser;
+	appParamParser.Parse((const char **)argv, argc);
 #endif
-  g_application.Preflight();
-  if (!g_application.Create())
-  {
-    fprintf(stderr, "ERROR: Unable to create application. Exiting\n");
-    return status;
-  }
+	g_application.Preflight();
 
-  try
-  {
-    status = g_application.Run();
-  }
-  catch(...)
-  {
-    fprintf(stderr, "ERROR: Exception caught on main loop. Exiting\n");
-    status = -1;
-  }
+	if (!g_application.Create()) /* 调用create  方法*/
+	{
+		fprintf(stderr, "ERROR: Unable to create application. Exiting\n");
+		return status;
+	}
 
-  return status;
+	try
+	{
+		status = g_application.Run(); /* 调用Run  方法，实质是CXBApplicationEx::Run() 方法*/
+	}
+	catch(...)
+	{
+		fprintf(stderr, "ERROR: Exception caught on main loop. Exiting\n");
+		status = -1;
+	}
+
+	return status;
 }

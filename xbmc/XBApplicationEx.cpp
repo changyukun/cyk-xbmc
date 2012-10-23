@@ -29,141 +29,197 @@
 
 CXBApplicationEx::CXBApplicationEx()
 {
-  // Variables to perform app timing
-  m_bStop = false;
-  m_AppActive = true;
-  m_AppFocused = true;
-  m_ExitCode = EXITCODE_QUIT;
+/*
+	参数:
+		1、
+
+	返回:
+		1、
+
+	说明:
+		1、
+*/
+	// Variables to perform app timing
+	m_bStop = false;
+	m_AppActive = true;
+	m_AppFocused = true;
+	m_ExitCode = EXITCODE_QUIT;
 }
 
 CXBApplicationEx::~CXBApplicationEx()
 {
+/*
+	参数:
+		1、
+
+	返回:
+		1、
+
+	说明:
+		1、
+*/
 }
 
 /* Create the app */
 bool CXBApplicationEx::Create()
 {
-  // Variables to perform app timing
-  m_bStop = false;
-  m_AppActive = true;
-  m_AppFocused = true;
-  m_ExitCode = EXITCODE_QUIT;
+/*
+	参数:
+		1、
 
-  // Initialize the app's device-dependent objects
-  if (!Initialize())
-  {
-    CLog::Log(LOGERROR, "XBAppEx: Call to Initialize() failed!" );
-    return false;
-  }
+	返回:
+		1、
 
-  return true;
+	说明:
+		1、
+*/
+	// Variables to perform app timing
+	m_bStop = false;
+	m_AppActive = true;
+	m_AppFocused = true;
+	m_ExitCode = EXITCODE_QUIT;
+
+	// Initialize the app's device-dependent objects
+	if (!Initialize())
+	{
+		CLog::Log(LOGERROR, "XBAppEx: Call to Initialize() failed!" );
+		return false;
+	}
+
+	return true;
 }
 
 /* Destroy the app */
 VOID CXBApplicationEx::Destroy()
 {
-  CLog::Log(LOGNOTICE, "destroy");
-  // Perform app-specific cleanup
-  Cleanup();
+/*
+	参数:
+		1、
+
+	返回:
+		1、
+
+	说明:
+		1、
+*/
+	CLog::Log(LOGNOTICE, "destroy");
+	// Perform app-specific cleanup
+	Cleanup();
 }
 
 /* Function that runs the application */
 INT CXBApplicationEx::Run()
 {
-  CLog::Log(LOGNOTICE, "Running the application..." );
+/*
+	参数:
+		1、
 
-  BYTE processExceptionCount = 0;
-  BYTE frameMoveExceptionCount = 0;
-  BYTE renderExceptionCount = 0;
+	返回:
+		1、
+
+	说明:
+		1、此函数如在XBMC_PC.cpp  的WinMain()  、或者xbmc.cpp  的main() 函数中被调用，即此函数在入口函数中被调用了
+*/
+	CLog::Log(LOGNOTICE, "Running the application..." );
+
+	BYTE processExceptionCount = 0;
+	BYTE frameMoveExceptionCount = 0;
+	BYTE renderExceptionCount = 0;
 
 #ifndef _DEBUG
-  const BYTE MAX_EXCEPTION_COUNT = 10;
+	const BYTE MAX_EXCEPTION_COUNT = 10;
 #endif
 
-  // Run xbmc
-  while (!m_bStop)
-  {
+	// Run xbmc
+	while (!m_bStop)
+	{
 #ifdef HAS_PERFORMANCE_SAMPLE
-    CPerformanceSample sampleLoop("XBApplicationEx-loop");
+		CPerformanceSample sampleLoop("XBApplicationEx-loop");
 #endif
-    //-----------------------------------------
-    // Animate and render a frame
-    //-----------------------------------------
+		//-----------------------------------------
+		// Animate and render a frame
+		//-----------------------------------------
 #ifndef _DEBUG
-    try
-    {
+		try
+		{
 #endif
-      Process();
-      //reset exception count
-      processExceptionCount = 0;
+			Process(); /* 实质调用的是CApplication::Process() */
+			//reset exception count
+			processExceptionCount = 0;
 
 #ifndef _DEBUG
-
-    }
-    catch (...)
-    {
-      CLog::Log(LOGERROR, "exception in CApplication::Process()");
-      processExceptionCount++;
-      //MAX_EXCEPTION_COUNT exceptions in a row? -> bail out
-      if (processExceptionCount > MAX_EXCEPTION_COUNT)
-      {
-        CLog::Log(LOGERROR, "CApplication::Process(), too many exceptions");
-        throw;
-      }
-    }
+		}
+		catch (...)
+		{
+			CLog::Log(LOGERROR, "exception in CApplication::Process()");
+			processExceptionCount++;
+			//MAX_EXCEPTION_COUNT exceptions in a row? -> bail out
+			if (processExceptionCount > MAX_EXCEPTION_COUNT)
+			{
+				CLog::Log(LOGERROR, "CApplication::Process(), too many exceptions");
+				throw;
+			}
+		}
 #endif
-    // Frame move the scene
+		// Frame move the scene
 #ifndef _DEBUG
-    try
-    {
+		try
+		{
 #endif
-      if (!m_bStop) FrameMove(true);
-      //reset exception count
-      frameMoveExceptionCount = 0;
-
-#ifndef _DEBUG
-
-    }
-    catch (...)
-    {
-      CLog::Log(LOGERROR, "exception in CApplication::FrameMove()");
-      frameMoveExceptionCount++;
-      //MAX_EXCEPTION_COUNT exceptions in a row? -> bail out
-      if (frameMoveExceptionCount > MAX_EXCEPTION_COUNT)
-      {
-        CLog::Log(LOGERROR, "CApplication::FrameMove(), too many exceptions");
-        throw;
-      }
-    }
-#endif
-
-    // Render the scene
-#ifndef _DEBUG
-    try
-    {
-#endif
-      if (!m_bStop) Render();
-      //reset exception count
-      renderExceptionCount = 0;
+			if (!m_bStop)
+				FrameMove(true); /* 实质调用的是CApplication::FrameMove() */
+			
+			//reset exception count
+			frameMoveExceptionCount = 0;
 
 #ifndef _DEBUG
 
-    }
-    catch (...)
-    {
-      CLog::Log(LOGERROR, "exception in CApplication::Render()");
-      renderExceptionCount++;
-      //MAX_EXCEPTION_COUNT exceptions in a row? -> bail out
-      if (renderExceptionCount > MAX_EXCEPTION_COUNT)
-      {
-        CLog::Log(LOGERROR, "CApplication::Render(), too many exceptions");
-        throw;
-      }
-    }
+		}
+		catch (...)
+		{
+			CLog::Log(LOGERROR, "exception in CApplication::FrameMove()");
+			frameMoveExceptionCount++;
+			
+			//MAX_EXCEPTION_COUNT exceptions in a row? -> bail out
+			if (frameMoveExceptionCount > MAX_EXCEPTION_COUNT)
+			{
+				CLog::Log(LOGERROR, "CApplication::FrameMove(), too many exceptions");
+				throw;
+			}
+		}
 #endif
-  } // while (!m_bStop)
-  Destroy();
 
-  CLog::Log(LOGNOTICE, "application stopped..." );
-  return m_ExitCode;
+		// Render the scene
+#ifndef _DEBUG
+		try
+		{
+#endif
+			if (!m_bStop) 
+				Render(); /* 实质调用的是CApplication::Render() */
+			
+			//reset exception count
+			renderExceptionCount = 0;
+
+#ifndef _DEBUG
+
+		}
+		catch (...)
+		{
+			CLog::Log(LOGERROR, "exception in CApplication::Render()");
+			renderExceptionCount++;
+			
+			//MAX_EXCEPTION_COUNT exceptions in a row? -> bail out
+			if (renderExceptionCount > MAX_EXCEPTION_COUNT)
+			{
+				CLog::Log(LOGERROR, "CApplication::Render(), too many exceptions");
+				throw;
+			}
+		}
+#endif
+	} // while (!m_bStop)
+	
+	Destroy();
+
+	CLog::Log(LOGNOTICE, "application stopped..." );
+	return m_ExitCode;
 }
