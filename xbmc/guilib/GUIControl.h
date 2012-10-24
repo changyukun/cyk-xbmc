@@ -321,7 +321,7 @@ protected:
 	float m_width;
 	CRect m_hitRect;
 	CGUIInfoColor m_diffuseColor;
-	int m_controlID;
+	int m_controlID; /* 每个CGuiWindow  实例的id 号，如WINDOW_HOME、WINDOW_PROGRAMS 等值*/
 	int m_parentID;
 	bool m_bHasFocus;
 	bool m_bInvalidated;

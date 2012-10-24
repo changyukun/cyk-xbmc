@@ -75,6 +75,8 @@ public:
  \ingroup winmsg
  \brief
  */
+
+/* 窗体类，所有界面都是基于此类的*/
 class CGUIWindow : public CGUIControlGroup, protected CCriticalSection
 {
 public:
@@ -125,9 +127,9 @@ public:
 	virtual bool OnMessage(CGUIMessage& message);
 
 	bool ControlGroupHasFocus(int groupID, int controlID);
-	virtual bool HasID(int controlID) const { return controlID >= m_controlID && controlID < m_controlID + m_idRange; };
-	void SetIDRange(int range) { m_idRange = range; };
-	int GetIDRange() const { return m_idRange; };
+	virtual bool HasID(int controlID) const { return controlID >= m_controlID && controlID < m_controlID + m_idRange; }; /* 判断传入的id 是否在id 的范围之内*/
+	void SetIDRange(int range) { m_idRange = range; }; /* 设定id 的范围*/
+	int GetIDRange() const { return m_idRange; }; /* 获取id 的范围*/
 	int GetPreviousWindow() { return m_previousWindow; };
 	CRect GetScaledBounds() const;
 	virtual void ClearAll();
@@ -231,7 +233,7 @@ protected:
 	void ChangeButtonToEdit(int id, bool singleLabel = false);
 	//#endif
 
-	int m_idRange;
+	int m_idRange; /* CGuiWindow 实例id 号的范围，表示可以设定同一类型窗体的个数，见CGuiWindow  的构造函数*/
 	OVERLAY_STATE m_overlayState;
 	RESOLUTION_INFO m_coordsRes; // resolution that the window coordinates are in.
 	bool m_needsScaling;

@@ -144,17 +144,17 @@ private:
 	friend class CApplicationMessenger;
 	void ActivateWindow_Internal(int windowID, const std::vector<CStdString> &params, bool swappingWindows);
 
-	typedef std::map<int, CGUIWindow *> WindowMap;
-	WindowMap m_mapWindows;
-	std::vector <CGUIWindow*> m_vecCustomWindows;
+	typedef std::map<int, CGUIWindow *> WindowMap; /* 将id 号与window 窗体实例实现一个映射，构成一个类似表的形式*/
+	WindowMap m_mapWindows; /* 相当于所有窗体的容器，调用delete /Remove  方法的窗体从此容器中清除，然后添加到了m_deleteWindows 容器中*/
+	std::vector <CGUIWindow*> m_vecCustomWindows; /* 保存用户添加的窗体的容器，见方法AddCustomWindow */
 	std::vector <CGUIWindow*> m_activeDialogs;
-	std::vector <CGUIWindow*> m_deleteWindows;
+	std::vector <CGUIWindow*> m_deleteWindows; /* 已经删除的窗体构成一个容器*/
 	typedef std::vector<CGUIWindow*>::iterator iDialog;
 	typedef std::vector<CGUIWindow*>::const_iterator ciDialog;
 	typedef std::vector<CGUIWindow*>::reverse_iterator rDialog;
 	typedef std::vector<CGUIWindow*>::const_reverse_iterator crDialog;
 
-	std::stack<int> m_windowHistory;
+	std::stack<int> m_windowHistory; /* 窗体操作栈，即窗体操作的历史记录，即窗体被激活先后顺序的容器，保存的是窗体的id 号*/
 
 	IWindowManagerCallback* m_pCallback;
 	std::vector < std::pair<CGUIMessage*,int> > m_vecThreadMessages;

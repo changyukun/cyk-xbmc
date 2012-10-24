@@ -476,7 +476,7 @@ int CGUIControl::GetID(void) const
 		1、
 
 	说明:
-		1、
+		1、获取的是control id
 */
   	return m_controlID;
 }

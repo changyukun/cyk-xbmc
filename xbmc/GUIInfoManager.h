@@ -550,240 +550,242 @@ private:
 class CGUIInfoManager : public IMsgTargetCallback
 {
 public:
-  CGUIInfoManager(void);
-  virtual ~CGUIInfoManager(void);
+	CGUIInfoManager(void);
+	virtual ~CGUIInfoManager(void);
 
-  void Clear();
-  virtual bool OnMessage(CGUIMessage &message);
+	void Clear();
+	virtual bool OnMessage(CGUIMessage &message);
 
-  /*! \brief Register a boolean condition/expression
-   This routine allows controls or other clients of the info manager to register
-   to receive updates of particular expressions, in a particular context (currently windows).
+	/*! \brief Register a boolean condition/expression
+	This routine allows controls or other clients of the info manager to register
+	to receive updates of particular expressions, in a particular context (currently windows).
 
-   In the future, it will allow clients to receive pushed callbacks when the expression changes.
+	In the future, it will allow clients to receive pushed callbacks when the expression changes.
 
-   \param expression the boolean condition or expression
-   \param context the context window
-   \return an identifier used to reference this expression
+	\param expression the boolean condition or expression
+	\param context the context window
+	\return an identifier used to reference this expression
 
-   \sa GetBoolValue
-   */
-  unsigned int Register(const CStdString &expression, int context = 0);
+	\sa GetBoolValue
+	*/
+	unsigned int Register(const CStdString &expression, int context = 0);
 
-  /*! \brief Get a previously registered boolean expression's value
-   Checks the cache and evaluates the boolean expression if required.
-   \sa Register
-   */
-  bool GetBoolValue(unsigned int expression, const CGUIListItem *item = NULL);
+	/*! \brief Get a previously registered boolean expression's value
+	Checks the cache and evaluates the boolean expression if required.
+	\sa Register
+	*/
+	bool GetBoolValue(unsigned int expression, const CGUIListItem *item = NULL);
 
-  /*! \brief Evaluate a boolean expression
-   \param expression the expression to evaluate
-   \param context the context in which to evaluate the expression (currently windows)
-   \return the value of the evaluated expression.
-   \sa Register, GetBoolValue
-   */
-  bool EvaluateBool(const CStdString &expression, int context = 0);
+	/*! \brief Evaluate a boolean expression
+	\param expression the expression to evaluate
+	\param context the context in which to evaluate the expression (currently windows)
+	\return the value of the evaluated expression.
+	\sa Register, GetBoolValue
+	*/
+	bool EvaluateBool(const CStdString &expression, int context = 0);
 
-  int TranslateString(const CStdString &strCondition);
+	int TranslateString(const CStdString &strCondition);
 
-  /*! \brief Get integer value of info.
-   \param value int reference to pass value of given info
-   \param info id of info
-   \param context the context in which to evaluate the expression (currently windows)
-   \param item optional listitem if want to get listitem related int
-   \return true if given info was handled
-   \sa GetItemInt, GetMultiInfoInt
-   */
-  bool GetInt(int &value, int info, int contextWindow = 0, const CGUIListItem *item = NULL) const;
-  CStdString GetLabel(int info, int contextWindow = 0);
+	/*! \brief Get integer value of info.
+	\param value int reference to pass value of given info
+	\param info id of info
+	\param context the context in which to evaluate the expression (currently windows)
+	\param item optional listitem if want to get listitem related int
+	\return true if given info was handled
+	\sa GetItemInt, GetMultiInfoInt
+	*/
+	bool GetInt(int &value, int info, int contextWindow = 0, const CGUIListItem *item = NULL) const;
+	CStdString GetLabel(int info, int contextWindow = 0);
 
-  CStdString GetImage(int info, int contextWindow);
+	CStdString GetImage(int info, int contextWindow);
 
-  CStdString GetTime(TIME_FORMAT format = TIME_FORMAT_GUESS) const;
-  CStdString GetLcdTime( int _eInfo ) const;
-  CStdString GetDate(bool bNumbersOnly = false);
-  CStdString GetDuration(TIME_FORMAT format = TIME_FORMAT_GUESS) const;
+	CStdString GetTime(TIME_FORMAT format = TIME_FORMAT_GUESS) const;
+	CStdString GetLcdTime( int _eInfo ) const;
+	CStdString GetDate(bool bNumbersOnly = false);
+	CStdString GetDuration(TIME_FORMAT format = TIME_FORMAT_GUESS) const;
 
-  void SetCurrentItem(CFileItem &item);
-  void ResetCurrentItem();
-  // Current song stuff
-  /// \brief Retrieves tag info (if necessary) and fills in our current song path.
-  void SetCurrentSong(CFileItem &item);
-  void SetCurrentAlbumThumb(const CStdString thumbFileName);
-  void SetCurrentMovie(CFileItem &item);
-  void SetCurrentSlide(CFileItem &item);
-  const CFileItem &GetCurrentSlide() const;
-  void ResetCurrentSlide();
-  void SetCurrentSongTag(const MUSIC_INFO::CMusicInfoTag &tag);
-  void SetCurrentVideoTag(const CVideoInfoTag &tag);
+	void SetCurrentItem(CFileItem &item);
+	void ResetCurrentItem();
+	// Current song stuff
+	/// \brief Retrieves tag info (if necessary) and fills in our current song path.
+	void SetCurrentSong(CFileItem &item);
+	void SetCurrentAlbumThumb(const CStdString thumbFileName);
+	void SetCurrentMovie(CFileItem &item);
+	void SetCurrentSlide(CFileItem &item);
+	const CFileItem &GetCurrentSlide() const;
+	void ResetCurrentSlide();
+	void SetCurrentSongTag(const MUSIC_INFO::CMusicInfoTag &tag);
+	void SetCurrentVideoTag(const CVideoInfoTag &tag);
 
-  const MUSIC_INFO::CMusicInfoTag *GetCurrentSongTag() const;
-  const CVideoInfoTag* GetCurrentMovieTag() const;
+	const MUSIC_INFO::CMusicInfoTag *GetCurrentSongTag() const;
+	const CVideoInfoTag* GetCurrentMovieTag() const;
 
-  CStdString GetMusicLabel(int item);
-  CStdString GetMusicTagLabel(int info, const CFileItem *item);
-  CStdString GetVideoLabel(int item);
-  CStdString GetPlaylistLabel(int item) const;
-  CStdString GetMusicPartyModeLabel(int item);
-  const CStdString GetMusicPlaylistInfo(const GUIInfo& info);
-  CStdString GetPictureLabel(int item);
+	CStdString GetMusicLabel(int item);
+	CStdString GetMusicTagLabel(int info, const CFileItem *item);
+	CStdString GetVideoLabel(int item);
+	CStdString GetPlaylistLabel(int item) const;
+	CStdString GetMusicPartyModeLabel(int item);
+	const CStdString GetMusicPlaylistInfo(const GUIInfo& info);
+	CStdString GetPictureLabel(int item);
 
-  __int64 GetPlayTime() const;  // in ms
-  CStdString GetCurrentPlayTime(TIME_FORMAT format = TIME_FORMAT_GUESS) const;
-  int GetPlayTimeRemaining() const;
-  int GetTotalPlayTime() const;
-  CStdString GetCurrentPlayTimeRemaining(TIME_FORMAT format) const;
-  CStdString GetVersion();
-  CStdString GetBuild();
+	__int64 GetPlayTime() const;  // in ms
+	CStdString GetCurrentPlayTime(TIME_FORMAT format = TIME_FORMAT_GUESS) const;
+	int GetPlayTimeRemaining() const;
+	int GetTotalPlayTime() const;
+	CStdString GetCurrentPlayTimeRemaining(TIME_FORMAT format) const;
+	CStdString GetVersion();
+	CStdString GetBuild();
 
-  bool GetDisplayAfterSeek();
-  void SetDisplayAfterSeek(unsigned int timeOut = 2500, int seekOffset = 0);
-  void SetSeeking(bool seeking) { m_playerSeeking = seeking; };
-  void SetShowTime(bool showtime) { m_playerShowTime = showtime; };
-  void SetShowCodec(bool showcodec) { m_playerShowCodec = showcodec; };
-  void SetShowInfo(bool showinfo) { m_playerShowInfo = showinfo; };
-  void ToggleShowCodec() { m_playerShowCodec = !m_playerShowCodec; };
-  bool ToggleShowInfo() { m_playerShowInfo = !m_playerShowInfo; return m_playerShowInfo; };
-  bool m_performingSeek;
+	bool GetDisplayAfterSeek();
+	void SetDisplayAfterSeek(unsigned int timeOut = 2500, int seekOffset = 0);
+	void SetSeeking(bool seeking) { m_playerSeeking = seeking; };
+	void SetShowTime(bool showtime) { m_playerShowTime = showtime; };
+	void SetShowCodec(bool showcodec) { m_playerShowCodec = showcodec; };
+	void SetShowInfo(bool showinfo) { m_playerShowInfo = showinfo; };
+	void ToggleShowCodec() { m_playerShowCodec = !m_playerShowCodec; };
+	bool ToggleShowInfo() { m_playerShowInfo = !m_playerShowInfo; return m_playerShowInfo; };
+	bool m_performingSeek;
 
-  std::string GetSystemHeatInfo(int info);
-  CTemperature GetGPUTemperature();
+	std::string GetSystemHeatInfo(int info);
+	CTemperature GetGPUTemperature();
 
-  void UpdateFPS();
-  inline float GetFPS() const { return m_fps; };
+	void UpdateFPS();
+	inline float GetFPS() const { return m_fps; };
 
-  void SetNextWindow(int windowID) { m_nextWindowID = windowID; };
-  void SetPreviousWindow(int windowID) { m_prevWindowID = windowID; };
+	void SetNextWindow(int windowID) { m_nextWindowID = windowID; };
+	void SetPreviousWindow(int windowID) { m_prevWindowID = windowID; };
 
-  void ResetCache();
-  bool GetItemInt(int &value, const CGUIListItem *item, int info) const;
-  CStdString GetItemLabel(const CFileItem *item, int info);
-  CStdString GetItemImage(const CFileItem *item, int info);
+	void ResetCache();
+	bool GetItemInt(int &value, const CGUIListItem *item, int info) const;
+	CStdString GetItemLabel(const CFileItem *item, int info);
+	CStdString GetItemImage(const CFileItem *item, int info);
 
-  // Called from tuxbox service thread to update current status
-  void UpdateFromTuxBox();
+	// Called from tuxbox service thread to update current status
+	void UpdateFromTuxBox();
 
-  /*! \brief containers call here to specify that the focus is changing
-   \param id control id
-   \param next true if we're moving to the next item, false if previous
-   \param scrolling true if the container is scrolling, false if the movement requires no scroll
-   */
-  void SetContainerMoving(int id, bool next, bool scrolling)
-  {
-    // magnitude 2 indicates a scroll, sign indicates direction
-    m_containerMoves[id] = (next ? 1 : -1) * (scrolling ? 2 : 1);
-  }
+	/*! \brief containers call here to specify that the focus is changing
+	\param id control id
+	\param next true if we're moving to the next item, false if previous
+	\param scrolling true if the container is scrolling, false if the movement requires no scroll
+	*/
+	void SetContainerMoving(int id, bool next, bool scrolling)
+	{
+		// magnitude 2 indicates a scroll, sign indicates direction
+		m_containerMoves[id] = (next ? 1 : -1) * (scrolling ? 2 : 1);
+	}
 
-  void SetLibraryBool(int condition, bool value);
-  bool GetLibraryBool(int condition);
-  void ResetLibraryBools();
-  CStdString LocalizeTime(const CDateTime &time, TIME_FORMAT format) const;
+	void SetLibraryBool(int condition, bool value);
+	bool GetLibraryBool(int condition);
+	void ResetLibraryBools();
+	CStdString LocalizeTime(const CDateTime &time, TIME_FORMAT format) const;
 
-  int TranslateSingleString(const CStdString &strCondition);
+	int TranslateSingleString(const CStdString &strCondition);
 
-  int RegisterSkinVariableString(const INFO::CSkinVariableString* info);
-  int TranslateSkinVariableString(const CStdString& name, int context);
-  CStdString GetSkinVariableString(int info, bool preferImage = false, const CGUIListItem *item=NULL);
+	int RegisterSkinVariableString(const INFO::CSkinVariableString* info);
+	int TranslateSkinVariableString(const CStdString& name, int context);
+	CStdString GetSkinVariableString(int info, bool preferImage = false, const CGUIListItem *item=NULL);
+	
 protected:
-  friend class INFO::InfoSingle;
-  bool GetBool(int condition, int contextWindow = 0, const CGUIListItem *item=NULL);
+	friend class INFO::InfoSingle;
+	bool GetBool(int condition, int contextWindow = 0, const CGUIListItem *item=NULL);
 
-  // routines for window retrieval
-  bool CheckWindowCondition(CGUIWindow *window, int condition) const;
-  CGUIWindow *GetWindowWithCondition(int contextWindow, int condition) const;
+	// routines for window retrieval
+	bool CheckWindowCondition(CGUIWindow *window, int condition) const;
+	CGUIWindow *GetWindowWithCondition(int contextWindow, int condition) const;
 
-  /*! \brief class for holding information on properties
-   */
-  class Property
-  {
-  public:
-    Property(const CStdString &property, const CStdString &parameters);
+	/*! \brief class for holding information on properties
+	*/
+	class Property
+	{
+		public:
+			Property(const CStdString &property, const CStdString &parameters);
 
-    const CStdString &param(unsigned int n = 0) const;
-    unsigned int num_params() const;
+			const CStdString &param(unsigned int n = 0) const;
+			unsigned int num_params() const;
 
-    CStdString name;
-  private:
-    std::vector<CStdString> params;
-  };
+			CStdString name;
+			
+		private:
+			std::vector<CStdString> params;
+	};
 
-  bool GetMultiInfoBool(const GUIInfo &info, int contextWindow = 0, const CGUIListItem *item = NULL);
-  bool GetMultiInfoInt(int &value, const GUIInfo &info, int contextWindow = 0) const;
-  CStdString GetMultiInfoLabel(const GUIInfo &info, int contextWindow = 0);
-  int TranslateListItem(const Property &info);
-  int TranslateMusicPlayerString(const CStdString &info) const;
-  TIME_FORMAT TranslateTimeFormat(const CStdString &format);
-  bool GetItemBool(const CGUIListItem *item, int condition) const;
+	bool GetMultiInfoBool(const GUIInfo &info, int contextWindow = 0, const CGUIListItem *item = NULL);
+	bool GetMultiInfoInt(int &value, const GUIInfo &info, int contextWindow = 0) const;
+	CStdString GetMultiInfoLabel(const GUIInfo &info, int contextWindow = 0);
+	int TranslateListItem(const Property &info);
+	int TranslateMusicPlayerString(const CStdString &info) const;
+	TIME_FORMAT TranslateTimeFormat(const CStdString &format);
+	bool GetItemBool(const CGUIListItem *item, int condition) const;
 
-  /*! \brief Split an info string into it's constituent parts and parameters
-   Format is:
-     
-     info1(params1).info2(params2).info3(params3) ...
-   
-   where the parameters are an optional comma separated parameter list.
-   
-   \param infoString the original string
-   \param info the resulting pairs of info and parameters.
-   */
-  void SplitInfoString(const CStdString &infoString, std::vector<Property> &info);
+	/*! \brief Split an info string into it's constituent parts and parameters
+	Format is:
 
-  // Conditional string parameters for testing are stored in a vector for later retrieval.
-  // The offset into the string parameters array is returned.
-  int ConditionalStringParameter(const CStdString &strParameter, bool caseSensitive = false);
-  int AddMultiInfo(const GUIInfo &info);
-  int AddListItemProp(const CStdString &str, int offset=0);
+	info1(params1).info2(params2).info3(params3) ...
 
-  CStdString GetAudioScrobblerLabel(int item);
+	where the parameters are an optional comma separated parameter list.
 
-  // Conditional string parameters are stored here
-  CStdStringArray m_stringParameters;
+	\param infoString the original string
+	\param info the resulting pairs of info and parameters.
+	*/
+	void SplitInfoString(const CStdString &infoString, std::vector<Property> &info);
 
-  // Array of multiple information mapped to a single integer lookup
-  std::vector<GUIInfo> m_multiInfo;
-  std::vector<std::string> m_listitemProperties;
+	// Conditional string parameters for testing are stored in a vector for later retrieval.
+	// The offset into the string parameters array is returned.
+	int ConditionalStringParameter(const CStdString &strParameter, bool caseSensitive = false);
+	int AddMultiInfo(const GUIInfo &info);
+	int AddListItemProp(const CStdString &str, int offset=0);
 
-  CStdString m_currentMovieDuration;
+	CStdString GetAudioScrobblerLabel(int item);
 
-  // Current playing stuff
-  CFileItem* m_currentFile;
-  CStdString m_currentMovieThumb;
-  unsigned int m_lastMusicBitrateTime;
-  unsigned int m_MusicBitrate;
-  CFileItem* m_currentSlide;
+	// Conditional string parameters are stored here
+	CStdStringArray m_stringParameters;
 
-  // fan stuff
-  unsigned int m_lastSysHeatInfoTime;
-  int m_fanSpeed;
-  CTemperature m_gpuTemp;
-  CTemperature m_cpuTemp;
+	// Array of multiple information mapped to a single integer lookup
+	std::vector<GUIInfo> m_multiInfo;
+	std::vector<std::string> m_listitemProperties;
 
-  //Fullscreen OSD Stuff
-  unsigned int m_AfterSeekTimeout;
-  int m_seekOffset;
-  bool m_playerSeeking;
-  bool m_playerShowTime;
-  bool m_playerShowCodec;
-  bool m_playerShowInfo;
+	CStdString m_currentMovieDuration;
 
-  // FPS counters
-  float m_fps;
-  unsigned int m_frameCounter;
-  unsigned int m_lastFPSTime;
+	// Current playing stuff
+	CFileItem* m_currentFile;
+	CStdString m_currentMovieThumb;
+	unsigned int m_lastMusicBitrateTime;
+	unsigned int m_MusicBitrate;
+	CFileItem* m_currentSlide;
 
-  std::map<int, int> m_containerMoves;  // direction of list moving
-  int m_nextWindowID;
-  int m_prevWindowID;
+	// fan stuff
+	unsigned int m_lastSysHeatInfoTime;
+	int m_fanSpeed;
+	CTemperature m_gpuTemp;
+	CTemperature m_cpuTemp;
 
-  std::vector<INFO::InfoBool*> m_bools;
-  std::vector<INFO::CSkinVariableString> m_skinVariableStrings;
-  unsigned int m_updateTime;
+	//Fullscreen OSD Stuff
+	unsigned int m_AfterSeekTimeout;
+	int m_seekOffset;
+	bool m_playerSeeking;
+	bool m_playerShowTime;
+	bool m_playerShowCodec;
+	bool m_playerShowInfo;
 
-  int m_libraryHasMusic;
-  int m_libraryHasMovies;
-  int m_libraryHasTVShows;
-  int m_libraryHasMusicVideos;
+	// FPS counters
+	float m_fps;
+	unsigned int m_frameCounter;
+	unsigned int m_lastFPSTime;
 
-  CCriticalSection m_critInfo;
+	std::map<int, int> m_containerMoves;  // direction of list moving
+	int m_nextWindowID;
+	int m_prevWindowID;
+
+	std::vector<INFO::InfoBool*> m_bools;
+	std::vector<INFO::CSkinVariableString> m_skinVariableStrings;
+	unsigned int m_updateTime;
+
+	int m_libraryHasMusic;
+	int m_libraryHasMovies;
+	int m_libraryHasTVShows;
+	int m_libraryHasMusicVideos;
+
+	CCriticalSection m_critInfo;
 };
 
 /*!

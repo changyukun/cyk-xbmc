@@ -262,6 +262,7 @@ void CGUIWindowManager::AddUniqueInstance(CGUIWindow *window)
 	int instance = 0;
 	while (GetWindow(window->GetID()))
 		window->SetID(window->GetID() + (++instance << 16));
+	
 	Add(window);
 }
 
@@ -275,7 +276,7 @@ void CGUIWindowManager::Add(CGUIWindow* pWindow)
 		1、
 
 	说明:
-		1、
+		1、将传入的窗体添加到m_mapWindows 容器中
 */
 	if (!pWindow)
 	{
@@ -325,13 +326,15 @@ void CGUIWindowManager::AddModeless(CGUIWindow* dialog)
 		1、
 
 	说明:
-		1、
+		1、将传入的dialog 插入到m_activeDialogs 容器中，如果传入的已经在容器中，则直接返回，否则插入到容器
 */
 	CSingleLock lock(g_graphicsContext);
+
 	// only add the window if it's not already added
 	for (iDialog it = m_activeDialogs.begin(); it != m_activeDialogs.end(); ++it)
 		if (*it == dialog)
 			return;
+		
 	m_activeDialogs.push_back(dialog);
 }
 
@@ -345,13 +348,15 @@ void CGUIWindowManager::Remove(int id)
 		1、
 
 	说明:
-		1、
+		1、将传入id 所对应的窗体从各个容器中清除掉
+		2、此方法与Delete 方法的区别在于此方法只是从相应的容器中将此窗体清除，而不
+			将此窗体添加到删除的窗体容器中，而Delete 方法将此窗体添加到删除的窗体容器中
 */
 	CSingleLock lock(g_graphicsContext);
 	WindowMap::iterator it = m_mapWindows.find(id);
 	if (it != m_mapWindows.end())
 	{
-		for(vector<CGUIWindow*>::iterator it2 = m_activeDialogs.begin(); it2 != m_activeDialogs.end();)
+		for(vector<CGUIWindow*>::iterator it2 = m_activeDialogs.begin(); it2 != m_activeDialogs.end();)  /* 从m_activeDialogs 容器中清除窗体*/
 		{
 			if(*it2 == it->second)
 				it2 = m_activeDialogs.erase(it2);
@@ -359,7 +364,7 @@ void CGUIWindowManager::Remove(int id)
 				it2++;
 		}
 
-		m_mapWindows.erase(it);
+		m_mapWindows.erase(it); /* 从m_mapWindows 容器中清除窗体*/
 	}
 	else
 	{
@@ -381,14 +386,14 @@ void CGUIWindowManager::Delete(int id)
 		1、
 
 	说明:
-		1、
+		1、详见Remove 方法
 */
 	CSingleLock lock(g_graphicsContext);
 	CGUIWindow *pWindow = GetWindow(id);
 	if (pWindow)
 	{
 		Remove(id);
-		m_deleteWindows.push_back(pWindow);
+		m_deleteWindows.push_back(pWindow); /* 添加到已经删除的窗体容器中*/
 	}
 }
 
@@ -402,43 +407,62 @@ void CGUIWindowManager::PreviousWindow()
 		1、
 
 	说明:
-		1、
+		1、此函数实现激活上一个窗体的功能
+		2、函数执行的原理:
+
+			根据窗体操作栈(m_windowHistory) 来实现的
 */
 	// deactivate any window
 	CSingleLock lock(g_graphicsContext);
 	CLog::Log(LOGDEBUG,"CGUIWindowManager::PreviousWindow: Deactivate");
-	int currentWindow = GetActiveWindow();
-	CGUIWindow *pCurrentWindow = GetWindow(currentWindow);
-	if (!pCurrentWindow)
+	
+	int currentWindow = GetActiveWindow(); /* 获取当前激活窗体的id 号*/
+	CGUIWindow *pCurrentWindow = GetWindow(currentWindow); /* 获取当前激活窗体指针*/
+	if (!pCurrentWindow)/* 没有当前被激活的窗体*/
 		return;     // no windows or window history yet
 
 	// check to see whether our current window has a <previouswindow> tag
-	if (pCurrentWindow->GetPreviousWindow() != WINDOW_INVALID)
+	if (pCurrentWindow->GetPreviousWindow() != WINDOW_INVALID)/* 获取当前窗体是否具有上一个窗体的标记*/
 	{
 		// TODO: we may need to test here for the
 		//       whether our history should be changed
 
 		// don't reactivate the previouswindow if it is ourselves.
 		if (currentWindow != pCurrentWindow->GetPreviousWindow())
-			ActivateWindow(pCurrentWindow->GetPreviousWindow());
-		return;
+			ActivateWindow(pCurrentWindow->GetPreviousWindow());/* 激活上一个窗体*/
+		
+		return;/* 返回*/
 	}
+
+	/* 
+		执行到此处时只能是从窗体的历史记录中获取上一个窗体进行激活了
+	*/
+	
 	// get the previous window in our stack
+	/* 窗体操作记录总数少于2 个，则激活home 窗体*/
 	if (m_windowHistory.size() < 2)
 	{ // no previous window history yet - check if we should just activate home
-		if (GetActiveWindow() != WINDOW_INVALID && GetActiveWindow() != WINDOW_HOME)
+		if (GetActiveWindow() != WINDOW_INVALID && GetActiveWindow() != WINDOW_HOME)/* 当前窗体有效，并且不是home 窗体，则激活home 窗体，否则直接返回了*/
 		{
 			ClearWindowHistory();
 			ActivateWindow(WINDOW_HOME);
 		}
-		return;
+		return; /* 返回*/
 	}
-	m_windowHistory.pop();
-	int previousWindow = GetActiveWindow();
-	m_windowHistory.push(currentWindow);
 
-	CGUIWindow *pNewWindow = GetWindow(previousWindow);
-	if (!pNewWindow)
+	/*
+		执行到此处时窗体操作栈中的数量肯定是大于等于2 个，因此需要从窗体操作栈中获取前一个窗体
+	*/
+
+	/* 如下三行代码就是从窗体的操作记录表( 窗体操作栈)  中取出当前窗体前一个窗体的id 号*/
+	m_windowHistory.pop(); /* 将当前激活的窗体出栈*/
+	int previousWindow = GetActiveWindow(); /* 取出当前窗体的前一个窗体，即当前窗体出栈后栈顶的那个窗体*/
+	m_windowHistory.push(currentWindow); /* 再将当前激活的窗体入栈*/
+
+	
+
+	CGUIWindow *pNewWindow = GetWindow(previousWindow);/* 根据前一个窗体的id 号取出窗体的指针*/
+	if (!pNewWindow)/* 没得到前一个窗体的指针则清除窗体操作记录栈，将home 窗体激活*/
 	{
 		CLog::Log(LOGERROR, "Unable to activate the previous window");
 		ClearWindowHistory();
@@ -446,6 +470,10 @@ void CGUIWindowManager::PreviousWindow()
 		return;
 	}
 
+	/* 
+		执行到此处时获得到了前一个窗体的指针
+	*/
+	
 	// ok to go to the previous window now
 
 	// tell our info manager which window we are going to
@@ -487,6 +515,7 @@ void CGUIWindowManager::ChangeActiveWindow(int newWindow, const CStdString& strP
 	vector<CStdString> params;
 	if (!strPath.IsEmpty())
 		params.push_back(strPath);
+	
 	ActivateWindow(newWindow, params, true);
 }
 
@@ -505,6 +534,7 @@ void CGUIWindowManager::ActivateWindow(int iWindowID, const CStdString& strPath)
 	vector<CStdString> params;
 	if (!strPath.IsEmpty())
 		params.push_back(strPath);
+	
 	ActivateWindow(iWindowID, params, false);
 }
 
@@ -554,15 +584,18 @@ void CGUIWindowManager::ActivateWindow_Internal(int iWindowID, const vector<CStd
 		if (iWindowID != WINDOW_MUSIC_NAV)
 			iWindowID = WINDOW_MUSIC_FILES;
 	}
+	
 	// virtual video window which returns the last open video window (aka the video start window)
 	if (iWindowID == WINDOW_VIDEOS || iWindowID == WINDOW_VIDEO_FILES)
 	{ // backward compatibility for pre-Eden
 		iWindowID = WINDOW_VIDEO_NAV;
 	}
+	
 	if (iWindowID == WINDOW_SCRIPTS)
 	{ // backward compatibility for pre-Dharma
 		iWindowID = WINDOW_PROGRAMS;
 	}
+	
 	if (iWindowID == WINDOW_START)
 	{ // virtual start window
 		iWindowID = g_SkinInfo->GetStartWindow();
@@ -580,15 +613,15 @@ void CGUIWindowManager::ActivateWindow_Internal(int iWindowID, const vector<CStd
 	}
 
 	// first check existence of the window we wish to activate.
-	CGUIWindow *pNewWindow = GetWindow(iWindowID);
-	if (!pNewWindow)
+	CGUIWindow *pNewWindow = GetWindow(iWindowID);/* 获取要激活的窗体*/
+	if (!pNewWindow)/* 没得到*/
 	{ // nothing to see here - move along
 		CLog::Log(LOGERROR, "Unable to locate window with id %d.  Check skin files", iWindowID - WINDOW_HOME);
 		return ;
 	}
-	else if (pNewWindow->IsDialog())
+	else if (pNewWindow->IsDialog()) /* 如果要激活的窗体是个对话框*/
 	{ // if we have a dialog, we do a DoModal() rather than activate the window
-		if (!pNewWindow->IsDialogRunning())
+		if (!pNewWindow->IsDialogRunning())/* 对话框没有在运行状态，则将其模态显示出来*/
 		{
 			CSingleExit exitit(g_graphicsContext);
 			((CGUIDialog *)pNewWindow)->DoModal(iWindowID, params.size() ? params[0] : "");
@@ -606,6 +639,7 @@ void CGUIWindowManager::ActivateWindow_Internal(int iWindowID, const vector<CStd
 	CGUIWindow *pWindow = GetWindow(currentWindow);
 	if (pWindow)
 		CloseWindowSync(pWindow, iWindowID);
+	
 	g_infoManager.SetNextWindow(WINDOW_INVALID);
 
 	// Add window to the history list (we must do this before we activate it,
@@ -614,6 +648,7 @@ void CGUIWindowManager::ActivateWindow_Internal(int iWindowID, const vector<CStd
 	// off the history stack
 	if (swappingWindows && m_windowHistory.size())
 		m_windowHistory.pop();
+	
 	AddToWindowHistory(iWindowID);
 
 	g_infoManager.SetPreviousWindow(currentWindow);
@@ -900,7 +935,7 @@ CGUIWindow* CGUIWindowManager::GetWindow(int id) const
 		1、
 
 	说明:
-		1、
+		1、根据传入的id 号，在容器m_mapWindows 中查找并返回此id 号对应的窗体指针
 */
 	if (id == WINDOW_INVALID)
 	{
@@ -911,6 +946,7 @@ CGUIWindow* CGUIWindowManager::GetWindow(int id) const
 	WindowMap::const_iterator it = m_mapWindows.find(id);
 	if (it != m_mapWindows.end())
 		return (*it).second;
+	
 	return NULL;
 }
 
@@ -1203,10 +1239,11 @@ int CGUIWindowManager::GetActiveWindow() const
 		1、
 
 	说明:
-		1、
+		1、获取激活的窗体，即在窗体容器堆栈最上面的认为是当前激活的窗体
 */
 	if (!m_windowHistory.empty())
 		return m_windowHistory.top();
+	
 	return WINDOW_INVALID;
 }
 
@@ -1419,7 +1456,12 @@ void CGUIWindowManager::AddToWindowHistory(int newWindowID)
 		1、
 
 	说明:
-		1、
+		1、将传入的窗口作为历史记录的最后一个窗口
+			添加原则:
+			如果历史记录中没有此窗体，则先将历史记录中所有的记录清除掉
+			如果历史记录中有此窗体，则将此窗体之后操作的那些窗体从记录中清除
+			然后将此窗体压入到历史记录的顶端
+			
 */
 	// Check the window stack to see if this window is in our history,
 	// and if so, pop all the other windows off the stack so that we
@@ -1431,6 +1473,7 @@ void CGUIWindowManager::AddToWindowHistory(int newWindowID)
 			break;
 		historySave.pop();
 	}
+	
 	if (!historySave.empty())
 	{ // found window in history
 		m_windowHistory = historySave;

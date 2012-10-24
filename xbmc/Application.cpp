@@ -2614,6 +2614,7 @@ bool CApplication::OnKey(const CKey& key)
 	{
 		iWin = g_windowManager.GetTopMostModalDialogID() & WINDOW_ID_MASK;
 	}
+	
 	if (iWin == WINDOW_DIALOG_FULLSCREEN_INFO)
 	{ // fullscreen info dialog - special case
 		action = CButtonTranslator::GetInstance().GetAction(iWin, key);
