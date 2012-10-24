@@ -652,7 +652,7 @@ public:
 	void UpdateFPS();
 	inline float GetFPS() const { return m_fps; };
 
-	void SetNextWindow(int windowID) { m_nextWindowID = windowID; };
+	void SetNextWindow(int windowID) { m_nextWindowID = windowID; }; /* 设定窗体的windowID 为下一个窗体id ，即相当于全局变量保存这个值，作为下一个窗体id 的值*/
 	void SetPreviousWindow(int windowID) { m_prevWindowID = windowID; };
 
 	void ResetCache();
@@ -773,8 +773,12 @@ protected:
 	unsigned int m_lastFPSTime;
 
 	std::map<int, int> m_containerMoves;  // direction of list moving
-	int m_nextWindowID;
-	int m_prevWindowID;
+	
+	int m_nextWindowID; /* 	保存下一个窗体id 的值，见方法SetNextWindow ，似乎在调用CGUIWindowManager::CloseWindowSync()  和CGUIWindowManager::HideOverlay()  两
+							个方法的前后必须的调用此方法，见CGUIWindowManager::ActivateWindow_Internal() 和CGUIWindowManager::PreviousWindow() 两
+							个方法中的使用*/
+							
+	int m_prevWindowID; /* 	保存上一个窗体id 的值，见方法SetPreviousWindow */
 
 	std::vector<INFO::InfoBool*> m_bools;
 	std::vector<INFO::CSkinVariableString> m_skinVariableStrings;

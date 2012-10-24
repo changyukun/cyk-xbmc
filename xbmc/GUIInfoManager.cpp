@@ -2872,1956 +2872,2597 @@ bool CGUIInfoManager::GetMultiInfoBool(const GUIInfo &info, int contextWindow, c
 
 bool CGUIInfoManager::GetMultiInfoInt(int &value, const GUIInfo &info, int contextWindow) const
 {
-  if (info.m_info >= LISTITEM_START && info.m_info <= LISTITEM_END)
-  {
-    CFileItemPtr item;
-    CGUIWindow *window = NULL;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (info.m_info >= LISTITEM_START && info.m_info <= LISTITEM_END)
+	{
+		CFileItemPtr item;
+		CGUIWindow *window = NULL;
 
-    int data1 = info.GetData1();
-    if (!data1) // No container specified, so we lookup the current view container
-    {
-      window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_HAS_LIST_ITEMS);
-      if (window && window->IsMediaWindow())
-        data1 = ((CGUIMediaWindow*)(window))->GetViewContainerID();
-    }
+		int data1 = info.GetData1();
+		if (!data1) // No container specified, so we lookup the current view container
+		{
+			window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_HAS_LIST_ITEMS);
+			if (window && window->IsMediaWindow())
+				data1 = ((CGUIMediaWindow*)(window))->GetViewContainerID();
+		}
 
-    if (!window) // If we don't have a window already (from lookup above), get one
-      window = GetWindowWithCondition(contextWindow, 0);
+		if (!window) // If we don't have a window already (from lookup above), get one
+			window = GetWindowWithCondition(contextWindow, 0);
 
-    if (window)
-    {
-      const CGUIControl *control = window->GetControl(data1);
-      if (control && control->IsContainer())
-        item = boost::static_pointer_cast<CFileItem>(((CGUIBaseContainer *)control)->GetListItem(info.GetData2(), info.GetInfoFlag()));
-    }
+		if (window)
+		{
+			const CGUIControl *control = window->GetControl(data1);
+			if (control && control->IsContainer())
+				item = boost::static_pointer_cast<CFileItem>(((CGUIBaseContainer *)control)->GetListItem(info.GetData2(), info.GetInfoFlag()));
+		}
 
-    if (item) // If we got a valid item, do the lookup
-      return GetItemInt(value, item.get(), info.m_info);
-  }
+		if (item) // If we got a valid item, do the lookup
+			return GetItemInt(value, item.get(), info.m_info);
+	}
 
-  return 0;
+	return 0;
 }
 
 /// \brief Examines the multi information sent and returns the string as appropriate
 CStdString CGUIInfoManager::GetMultiInfoLabel(const GUIInfo &info, int contextWindow)
 {
-  if (info.m_info == SKIN_STRING)
-  {
-    return g_settings.GetSkinString(info.GetData1());
-  }
-  else if (info.m_info == SKIN_BOOL)
-  {
-    bool bInfo = g_settings.GetSkinBool(info.GetData1());
-    if (bInfo)
-      return g_localizeStrings.Get(20122);
-  }
-  if (info.m_info >= LISTITEM_START && info.m_info <= LISTITEM_END)
-  {
-    CFileItemPtr item;
-    CGUIWindow *window = NULL;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (info.m_info == SKIN_STRING)
+	{
+		return g_settings.GetSkinString(info.GetData1());
+	}
+	else if (info.m_info == SKIN_BOOL)
+	{
+		bool bInfo = g_settings.GetSkinBool(info.GetData1());
+		if (bInfo)
+			return g_localizeStrings.Get(20122);
+	}
+	if (info.m_info >= LISTITEM_START && info.m_info <= LISTITEM_END)
+	{
+		CFileItemPtr item;
+		CGUIWindow *window = NULL;
 
-    int data1 = info.GetData1();
-    if (!data1) // No container specified, so we lookup the current view container
-    {
-      window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_HAS_LIST_ITEMS);
-      if (window && window->IsMediaWindow())
-        data1 = ((CGUIMediaWindow*)(window))->GetViewContainerID();
-    }
+		int data1 = info.GetData1();
+		if (!data1) // No container specified, so we lookup the current view container
+		{
+			window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_HAS_LIST_ITEMS);
+			if (window && window->IsMediaWindow())
+				data1 = ((CGUIMediaWindow*)(window))->GetViewContainerID();
+		}
 
-    if (!window) // If we don't have a window already (from lookup above), get one
-      window = GetWindowWithCondition(contextWindow, 0);
+		if (!window) // If we don't have a window already (from lookup above), get one
+			window = GetWindowWithCondition(contextWindow, 0);
 
-    if (window)
-    {
-      const CGUIControl *control = window->GetControl(data1);
-      if (control && control->IsContainer())
-        item = boost::static_pointer_cast<CFileItem>(((CGUIBaseContainer *)control)->GetListItem(info.GetData2(), info.GetInfoFlag()));
-    }
+		if (window)
+		{
+			const CGUIControl *control = window->GetControl(data1);
+			if (control && control->IsContainer())
+				item = boost::static_pointer_cast<CFileItem>(((CGUIBaseContainer *)control)->GetListItem(info.GetData2(), info.GetInfoFlag()));
+		}
 
-    if (item) // If we got a valid item, do the lookup
-      return GetItemImage(item.get(), info.m_info); // Image prioritizes images over labels (in the case of music item ratings for instance)
-  }
-  else if (info.m_info == PLAYER_TIME)
-  {
-    return GetCurrentPlayTime((TIME_FORMAT)info.GetData1());
-  }
-  else if (info.m_info == PLAYER_TIME_REMAINING)
-  {
-    return GetCurrentPlayTimeRemaining((TIME_FORMAT)info.GetData1());
-  }
-  else if (info.m_info == PLAYER_FINISH_TIME)
-  {
-    CDateTime time = CDateTime::GetCurrentDateTime();
-    time += CDateTimeSpan(0, 0, 0, GetPlayTimeRemaining());
-    return LocalizeTime(time, (TIME_FORMAT)info.GetData1());
-  }
-  else if (info.m_info == PLAYER_TIME_SPEED)
-  {
-    CStdString strTime;
-    if (g_application.GetPlaySpeed() != 1)
-      strTime.Format("%s (%ix)", GetCurrentPlayTime((TIME_FORMAT)info.GetData1()).c_str(), g_application.GetPlaySpeed());
-    else
-      strTime = GetCurrentPlayTime();
-    return strTime;
-  }
-  else if (info.m_info == PLAYER_DURATION)
-  {
-    return GetDuration((TIME_FORMAT)info.GetData1());
-  }
-  else if (info.m_info == PLAYER_SEEKTIME)
-  {
-    TIME_FORMAT format = (TIME_FORMAT)info.GetData1();
-    if (format == TIME_FORMAT_GUESS && GetTotalPlayTime() >= 3600)
-      format = TIME_FORMAT_HH_MM_SS;
-    CGUIDialogSeekBar *seekBar = (CGUIDialogSeekBar*)g_windowManager.GetWindow(WINDOW_DIALOG_SEEK_BAR);
-    if (seekBar)
-      return seekBar->GetSeekTimeLabel(format);
-  }
-  else if (info.m_info == PLAYER_SEEKOFFSET)
-  {
-    CStdString seekOffset = StringUtils::SecondsToTimeString(abs(m_seekOffset), (TIME_FORMAT)info.GetData1());
-    if (m_seekOffset < 0)
-      return "-" + seekOffset;
-    if (m_seekOffset > 0)
-      return "+" + seekOffset;
-  }
-  else if (info.m_info == SYSTEM_TIME)
-  {
-    return GetTime((TIME_FORMAT)info.GetData1());
-  }
-  else if (info.m_info == SYSTEM_DATE)
-  {
-    CDateTime time=CDateTime::GetCurrentDateTime();
-    return time.GetAsLocalizedDate(m_stringParameters[info.GetData1()],false);
-  }
-  else if (info.m_info == CONTAINER_NUM_PAGES || info.m_info == CONTAINER_CURRENT_PAGE ||
-           info.m_info == CONTAINER_NUM_ITEMS || info.m_info == CONTAINER_POSITION)
-  {
-    const CGUIControl *control = NULL;
-    if (info.GetData1())
-    { // container specified
-      CGUIWindow *window = GetWindowWithCondition(contextWindow, 0);
-      if (window)
-        control = window->GetControl(info.GetData1());
-    }
-    else
-    { // no container specified - assume a mediawindow
-      CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
-      if (window)
-        control = window->GetControl(window->GetViewContainerID());
-    }
-    if (control)
-    {
-      if (control->IsContainer())
-        return ((CGUIBaseContainer *)control)->GetLabel(info.m_info);
-      else if (control->GetControlType() == CGUIControl::GUICONTROL_TEXTBOX)
-        return ((CGUITextBox *)control)->GetLabel(info.m_info);
-    }
-  }
-  else if (info.m_info == SYSTEM_GET_CORE_USAGE)
-  {
-    CStdString strCpu;
-    strCpu.Format("%4.2f", g_cpuInfo.GetCoreInfo(atoi(m_stringParameters[info.GetData1()].c_str())).m_fPct);
-    return strCpu;
-  }
-  else if (info.m_info >= MUSICPLAYER_TITLE && info.m_info <= MUSICPLAYER_ALBUM_ARTIST)
-    return GetMusicPlaylistInfo(info);
-  else if (info.m_info == CONTAINER_PROPERTY)
-  {
-    CGUIWindow *window = NULL;
-    if (info.GetData1())
-    { // container specified
-      window = GetWindowWithCondition(contextWindow, 0);
-    }
-    else
-    { // no container specified - assume a mediawindow
-      window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
-    }
-    if (window)
-      return ((CGUIMediaWindow *)window)->CurrentDirectory().GetProperty(m_stringParameters[info.GetData2()]).asString();
-  }
-  else if (info.m_info == CONTROL_GET_LABEL)
-  {
-    CGUIWindow *window = GetWindowWithCondition(contextWindow, 0);
-    if (window)
-    {
-      const CGUIControl *control = window->GetControl(info.GetData1());
-      if (control)
-        return control->GetDescription();
-    }
-  }
-  else if (info.m_info == WINDOW_PROPERTY)
-  {
-    CGUIWindow *window = NULL;
-    if (info.GetData1())
-    { // window specified
-      window = g_windowManager.GetWindow(info.GetData1());//GetWindowWithCondition(contextWindow, 0);
-    }
-    else
-    { // no window specified - assume active
-      window = GetWindowWithCondition(contextWindow, 0);
-    }
+		if (item) // If we got a valid item, do the lookup
+			return GetItemImage(item.get(), info.m_info); // Image prioritizes images over labels (in the case of music item ratings for instance)
+	}
+	else if (info.m_info == PLAYER_TIME)
+	{
+		return GetCurrentPlayTime((TIME_FORMAT)info.GetData1());
+	}
+	else if (info.m_info == PLAYER_TIME_REMAINING)
+	{
+		return GetCurrentPlayTimeRemaining((TIME_FORMAT)info.GetData1());
+	}
+	else if (info.m_info == PLAYER_FINISH_TIME)
+	{
+		CDateTime time = CDateTime::GetCurrentDateTime();
+		time += CDateTimeSpan(0, 0, 0, GetPlayTimeRemaining());
+		return LocalizeTime(time, (TIME_FORMAT)info.GetData1());
+	}
+	else if (info.m_info == PLAYER_TIME_SPEED)
+	{
+		CStdString strTime;
+		if (g_application.GetPlaySpeed() != 1)
+			strTime.Format("%s (%ix)", GetCurrentPlayTime((TIME_FORMAT)info.GetData1()).c_str(), g_application.GetPlaySpeed());
+		else
+			strTime = GetCurrentPlayTime();
+		return strTime;
+	}
+	else if (info.m_info == PLAYER_DURATION)
+	{
+		return GetDuration((TIME_FORMAT)info.GetData1());
+	}
+	else if (info.m_info == PLAYER_SEEKTIME)
+	{
+		TIME_FORMAT format = (TIME_FORMAT)info.GetData1();
+		if (format == TIME_FORMAT_GUESS && GetTotalPlayTime() >= 3600)
+			format = TIME_FORMAT_HH_MM_SS;
+		CGUIDialogSeekBar *seekBar = (CGUIDialogSeekBar*)g_windowManager.GetWindow(WINDOW_DIALOG_SEEK_BAR);
+		if (seekBar)
+			return seekBar->GetSeekTimeLabel(format);
+	}
+	else if (info.m_info == PLAYER_SEEKOFFSET)
+	{
+		CStdString seekOffset = StringUtils::SecondsToTimeString(abs(m_seekOffset), (TIME_FORMAT)info.GetData1());
+		if (m_seekOffset < 0)
+			return "-" + seekOffset;
+		if (m_seekOffset > 0)
+			return "+" + seekOffset;
+	}
+	else if (info.m_info == SYSTEM_TIME)
+	{
+		return GetTime((TIME_FORMAT)info.GetData1());
+	}
+	else if (info.m_info == SYSTEM_DATE)
+	{
+		CDateTime time=CDateTime::GetCurrentDateTime();
+		return time.GetAsLocalizedDate(m_stringParameters[info.GetData1()],false);
+	}
+	else if (info.m_info == CONTAINER_NUM_PAGES || info.m_info == CONTAINER_CURRENT_PAGE ||info.m_info == CONTAINER_NUM_ITEMS || info.m_info == CONTAINER_POSITION)
+	{
+		const CGUIControl *control = NULL;
+		if (info.GetData1())
+		{ // container specified
+			CGUIWindow *window = GetWindowWithCondition(contextWindow, 0);
+			if (window)
+				control = window->GetControl(info.GetData1());
+		}
+		else
+		{ // no container specified - assume a mediawindow
+			CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
+			if (window)
+				control = window->GetControl(window->GetViewContainerID());
+		}
+		if (control)
+		{
+			if (control->IsContainer())
+				return ((CGUIBaseContainer *)control)->GetLabel(info.m_info);
+			else if (control->GetControlType() == CGUIControl::GUICONTROL_TEXTBOX)
+				return ((CGUITextBox *)control)->GetLabel(info.m_info);
+		}
+	}
+	else if (info.m_info == SYSTEM_GET_CORE_USAGE)
+	{
+		CStdString strCpu;
+		strCpu.Format("%4.2f", g_cpuInfo.GetCoreInfo(atoi(m_stringParameters[info.GetData1()].c_str())).m_fPct);
+		return strCpu;
+	}
+	else if (info.m_info >= MUSICPLAYER_TITLE && info.m_info <= MUSICPLAYER_ALBUM_ARTIST)
+		return GetMusicPlaylistInfo(info);
+	else if (info.m_info == CONTAINER_PROPERTY)
+	{
+		CGUIWindow *window = NULL;
+		if (info.GetData1())
+		{ // container specified
+			window = GetWindowWithCondition(contextWindow, 0);
+		}
+		else
+		{ // no container specified - assume a mediawindow
+			window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
+		}
+		
+		if (window)
+			return ((CGUIMediaWindow *)window)->CurrentDirectory().GetProperty(m_stringParameters[info.GetData2()]).asString();
+	}
+	else if (info.m_info == CONTROL_GET_LABEL)
+	{
+		CGUIWindow *window = GetWindowWithCondition(contextWindow, 0);
+		if (window)
+		{
+			const CGUIControl *control = window->GetControl(info.GetData1());
+			if (control)
+				return control->GetDescription();
+		}
+	}
+	else if (info.m_info == WINDOW_PROPERTY)
+	{
+		CGUIWindow *window = NULL;
+		if (info.GetData1())
+		{ // window specified
+			window = g_windowManager.GetWindow(info.GetData1());//GetWindowWithCondition(contextWindow, 0);
+		}
+		else
+		{ // no window specified - assume active
+			window = GetWindowWithCondition(contextWindow, 0);
+		}
 
-    if (window)
-      return window->GetProperty(m_stringParameters[info.GetData2()]).asString();
-  }
-  else if (info.m_info == SYSTEM_ADDON_TITLE ||
-           info.m_info == SYSTEM_ADDON_ICON)
-  {
-    AddonPtr addon;
-    if (info.GetData2() == 0)
-      CAddonMgr::Get().GetAddon(const_cast<CGUIInfoManager*>(this)->GetLabel(info.GetData1(), contextWindow),addon);
-    else
-      CAddonMgr::Get().GetAddon(m_stringParameters[info.GetData1()],addon);
-    if (addon && info.m_info == SYSTEM_ADDON_TITLE)
-      return addon->Name();
-    if (addon && info.m_info == SYSTEM_ADDON_ICON)
-      return addon->Icon();
-  }
+		if (window)
+			return window->GetProperty(m_stringParameters[info.GetData2()]).asString();
+	}
+	else if (info.m_info == SYSTEM_ADDON_TITLE || info.m_info == SYSTEM_ADDON_ICON)
+	{
+		AddonPtr addon;
+		if (info.GetData2() == 0)
+			CAddonMgr::Get().GetAddon(const_cast<CGUIInfoManager*>(this)->GetLabel(info.GetData1(), contextWindow),addon);
+		else
+			CAddonMgr::Get().GetAddon(m_stringParameters[info.GetData1()],addon);
+		
+		if (addon && info.m_info == SYSTEM_ADDON_TITLE)
+			return addon->Name();
+		
+		if (addon && info.m_info == SYSTEM_ADDON_ICON)
+			return addon->Icon();
+	}
 
-  return StringUtils::EmptyString;
+	return StringUtils::EmptyString;
 }
 
 /// \brief Obtains the filename of the image to show from whichever subsystem is needed
 CStdString CGUIInfoManager::GetImage(int info, int contextWindow)
 {
-  if (info >= CONDITIONAL_LABEL_START && info <= CONDITIONAL_LABEL_END)
-    return GetSkinVariableString(info, true);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (info >= CONDITIONAL_LABEL_START && info <= CONDITIONAL_LABEL_END)
+		return GetSkinVariableString(info, true);
 
-  if (info >= MULTI_INFO_START && info <= MULTI_INFO_END)
-  {
-    return GetMultiInfoLabel(m_multiInfo[info - MULTI_INFO_START], contextWindow);
-  }
-  else if (info == WEATHER_CONDITIONS)
-    return g_weatherManager.GetInfo(WEATHER_IMAGE_CURRENT_ICON);
-  else if (info == SYSTEM_PROFILETHUMB)
-  {
-    CStdString thumb = g_settings.GetCurrentProfile().getThumb();
-    if (thumb.IsEmpty())
-      thumb = "unknown-user.png";
-    return thumb;
-  }
-  else if (info == MUSICPLAYER_COVER)
-  {
-    if (!g_application.IsPlayingAudio()) return "";
-    return m_currentFile->HasThumbnail() ? m_currentFile->GetThumbnailImage() : "DefaultAlbumCover.png";
-  }
-  else if (info == MUSICPLAYER_RATING)
-  {
-    if (!g_application.IsPlayingAudio()) return "";
-    return GetItemImage(m_currentFile, LISTITEM_RATING);
-  }
-  else if (info == PLAYER_STAR_RATING)
-  {
-    if (!g_application.IsPlaying()) return "";
-    return GetItemImage(m_currentFile, LISTITEM_STAR_RATING);
-  }
-  else if (info == VIDEOPLAYER_COVER)
-  {
-    if (!g_application.IsPlayingVideo()) return "";
-    if(m_currentMovieThumb.IsEmpty())
-      return m_currentFile->HasThumbnail() ? m_currentFile->GetThumbnailImage() : "DefaultVideoCover.png";
-    else return m_currentMovieThumb;
-  }
-  else if (info == CONTAINER_FOLDERTHUMB)
-  {
-    CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
-    if (window)
-      return GetItemImage(&const_cast<CFileItemList&>(((CGUIMediaWindow*)window)->CurrentDirectory()), LISTITEM_THUMB);
-  }
-  else if (info == CONTAINER_TVSHOWTHUMB)
-  {
-    CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
-    if (window)
-      return ((CGUIMediaWindow *)window)->CurrentDirectory().GetProperty("tvshowthumb").asString();
-  }
-  else if (info == CONTAINER_SEASONTHUMB)
-  {
-    CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
-    if (window)
-      return ((CGUIMediaWindow *)window)->CurrentDirectory().GetProperty("seasonthumb").asString();
-  }
-  else if (info == LISTITEM_THUMB || info == LISTITEM_ICON || info == LISTITEM_ACTUAL_ICON ||
-          info == LISTITEM_OVERLAY || info == LISTITEM_RATING || info == LISTITEM_STAR_RATING)
-  {
-    CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_HAS_LIST_ITEMS);
-    if (window)
-    {
-      CFileItemPtr item = window->GetCurrentListItem();
-      if (item)
-        return GetItemImage(item.get(), info);
-    }
-  }
-  return GetLabel(info, contextWindow);
+	if (info >= MULTI_INFO_START && info <= MULTI_INFO_END)
+	{
+		return GetMultiInfoLabel(m_multiInfo[info - MULTI_INFO_START], contextWindow);
+	}
+	else if (info == WEATHER_CONDITIONS)
+		return g_weatherManager.GetInfo(WEATHER_IMAGE_CURRENT_ICON);
+	else if (info == SYSTEM_PROFILETHUMB)
+	{
+		CStdString thumb = g_settings.GetCurrentProfile().getThumb();
+		if (thumb.IsEmpty())
+			thumb = "unknown-user.png";
+		return thumb;
+	}
+	else if (info == MUSICPLAYER_COVER)
+	{
+		if (!g_application.IsPlayingAudio()) return "";
+			return m_currentFile->HasThumbnail() ? m_currentFile->GetThumbnailImage() : "DefaultAlbumCover.png";
+	}
+	else if (info == MUSICPLAYER_RATING)
+	{
+		if (!g_application.IsPlayingAudio()) return "";
+			return GetItemImage(m_currentFile, LISTITEM_RATING);
+	}
+	else if (info == PLAYER_STAR_RATING)
+	{
+		if (!g_application.IsPlaying()) return "";
+			return GetItemImage(m_currentFile, LISTITEM_STAR_RATING);
+	}
+	else if (info == VIDEOPLAYER_COVER)
+	{
+		if (!g_application.IsPlayingVideo())
+			return "";
+		if(m_currentMovieThumb.IsEmpty())
+			return m_currentFile->HasThumbnail() ? m_currentFile->GetThumbnailImage() : "DefaultVideoCover.png";
+		else 
+			return m_currentMovieThumb;
+	}
+	else if (info == CONTAINER_FOLDERTHUMB)
+	{
+		CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
+		if (window)
+			return GetItemImage(&const_cast<CFileItemList&>(((CGUIMediaWindow*)window)->CurrentDirectory()), LISTITEM_THUMB);
+	}
+	else if (info == CONTAINER_TVSHOWTHUMB)
+	{
+		CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
+		if (window)
+			return ((CGUIMediaWindow *)window)->CurrentDirectory().GetProperty("tvshowthumb").asString();
+	}
+	else if (info == CONTAINER_SEASONTHUMB)
+	{
+		CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
+		if (window)
+			return ((CGUIMediaWindow *)window)->CurrentDirectory().GetProperty("seasonthumb").asString();
+	}
+	else if (info == LISTITEM_THUMB || info == LISTITEM_ICON || info == LISTITEM_ACTUAL_ICON ||info == LISTITEM_OVERLAY || info == LISTITEM_RATING || info == LISTITEM_STAR_RATING)
+	{
+		CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_HAS_LIST_ITEMS);
+		if (window)
+		{
+			CFileItemPtr item = window->GetCurrentListItem();
+			if (item)
+				return GetItemImage(item.get(), info);
+		}
+	}
+	return GetLabel(info, contextWindow);
 }
 
 CStdString CGUIInfoManager::GetDate(bool bNumbersOnly)
 {
-  CDateTime time=CDateTime::GetCurrentDateTime();
-  return time.GetAsLocalizedDate(!bNumbersOnly);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CDateTime time=CDateTime::GetCurrentDateTime();
+	return time.GetAsLocalizedDate(!bNumbersOnly);
 }
 
 CStdString CGUIInfoManager::GetTime(TIME_FORMAT format) const
 {
-  CDateTime time=CDateTime::GetCurrentDateTime();
-  return LocalizeTime(time, format);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CDateTime time=CDateTime::GetCurrentDateTime();
+	return LocalizeTime(time, format);
 }
 
 CStdString CGUIInfoManager::GetLcdTime( int _eInfo ) const
 {
-  CDateTime time=CDateTime::GetCurrentDateTime();
-  CStdString strLcdTime;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CDateTime time=CDateTime::GetCurrentDateTime();
+	CStdString strLcdTime;
 
 #ifdef HAS_LCD
 
-  UINT       nCharset;
-  UINT       nLine;
-  CStdString strTimeMarker;
+	UINT       nCharset;
+	UINT       nLine;
+	CStdString strTimeMarker;
 
-  nCharset = 0;
-  nLine = 0;
+	nCharset = 0;
+	nLine = 0;
 
-  switch ( _eInfo )
-  {
-    case LCD_TIME_21:
-      nCharset = 1; // CUSTOM_CHARSET_SMALLCHAR;
-      nLine = 0;
-      strTimeMarker = ".";
-    break;
-    case LCD_TIME_22:
-      nCharset = 1; // CUSTOM_CHARSET_SMALLCHAR;
-      nLine = 1;
-      strTimeMarker = ".";
-    break;
+	switch ( _eInfo )
+	{
+		case LCD_TIME_21:
+			nCharset = 1; // CUSTOM_CHARSET_SMALLCHAR;
+			nLine = 0;
+			strTimeMarker = ".";
+			break;
+		case LCD_TIME_22:
+			nCharset = 1; // CUSTOM_CHARSET_SMALLCHAR;
+			nLine = 1;
+			strTimeMarker = ".";
+			break;
 
-    case LCD_TIME_W21:
-      nCharset = 2; // CUSTOM_CHARSET_MEDIUMCHAR;
-      nLine = 0;
-      strTimeMarker = ".";
-    break;
-    case LCD_TIME_W22:
-      nCharset = 2; // CUSTOM_CHARSET_MEDIUMCHAR;
-      nLine = 1;
-      strTimeMarker = ".";
-    break;
+		case LCD_TIME_W21:
+			nCharset = 2; // CUSTOM_CHARSET_MEDIUMCHAR;
+			nLine = 0;
+			strTimeMarker = ".";
+			break;
+		case LCD_TIME_W22:
+			nCharset = 2; // CUSTOM_CHARSET_MEDIUMCHAR;
+			nLine = 1;
+			strTimeMarker = ".";
+			break;
 
-    case LCD_TIME_41:
-      nCharset = 3; // CUSTOM_CHARSET_BIGCHAR;
-      nLine = 0;
-      strTimeMarker = " ";
-    break;
-    case LCD_TIME_42:
-      nCharset = 3; // CUSTOM_CHARSET_BIGCHAR;
-      nLine = 1;
-      strTimeMarker = "o";
-    break;
-    case LCD_TIME_43:
-      nCharset = 3; // CUSTOM_CHARSET_BIGCHAR;
-      nLine = 2;
-      strTimeMarker = "o";
-    break;
-    case LCD_TIME_44:
-      nCharset = 3; // CUSTOM_CHARSET_BIGCHAR;
-      nLine = 3;
-      strTimeMarker = " ";
-    break;
-  }
+		case LCD_TIME_41:
+			nCharset = 3; // CUSTOM_CHARSET_BIGCHAR;
+			nLine = 0;
+			strTimeMarker = " ";
+			break;
+		case LCD_TIME_42:
+			nCharset = 3; // CUSTOM_CHARSET_BIGCHAR;
+			nLine = 1;
+			strTimeMarker = "o";
+			break;
+		case LCD_TIME_43:
+			nCharset = 3; // CUSTOM_CHARSET_BIGCHAR;
+			nLine = 2;
+			strTimeMarker = "o";
+			break;
+		case LCD_TIME_44:
+			nCharset = 3; // CUSTOM_CHARSET_BIGCHAR;
+			nLine = 3;
+			strTimeMarker = " ";
+			break;
+	}
 
-  strLcdTime += g_lcd->GetBigDigit( nCharset, time.GetHour()  , nLine, 2, 2, true );
-  strLcdTime += strTimeMarker;
-  strLcdTime += g_lcd->GetBigDigit( nCharset, time.GetMinute(), nLine, 2, 2, false );
-  strLcdTime += strTimeMarker;
-  strLcdTime += g_lcd->GetBigDigit( nCharset, time.GetSecond(), nLine, 2, 2, false );
+	strLcdTime += g_lcd->GetBigDigit( nCharset, time.GetHour()  , nLine, 2, 2, true );
+	strLcdTime += strTimeMarker;
+	strLcdTime += g_lcd->GetBigDigit( nCharset, time.GetMinute(), nLine, 2, 2, false );
+	strLcdTime += strTimeMarker;
+	strLcdTime += g_lcd->GetBigDigit( nCharset, time.GetSecond(), nLine, 2, 2, false );
 
 #endif
 
-  return strLcdTime;
+	return strLcdTime;
 }
 
 CStdString CGUIInfoManager::LocalizeTime(const CDateTime &time, TIME_FORMAT format) const
 {
-  const CStdString timeFormat = g_langInfo.GetTimeFormat();
-  bool use12hourclock = timeFormat.Find('h') != -1;
-  switch (format)
-  {
-  case TIME_FORMAT_GUESS:
-    return time.GetAsLocalizedTime("", false);
-  case TIME_FORMAT_SS:
-    return time.GetAsLocalizedTime("ss", true);
-  case TIME_FORMAT_MM:
-    return time.GetAsLocalizedTime("mm", true);
-  case TIME_FORMAT_MM_SS:
-    return time.GetAsLocalizedTime("mm:ss", true);
-  case TIME_FORMAT_HH:  // this forces it to a 12 hour clock
-    return time.GetAsLocalizedTime(use12hourclock ? "h" : "HH", false);
-  case TIME_FORMAT_HH_MM:
-    return time.GetAsLocalizedTime(use12hourclock ? "h:mm" : "HH:mm", false);
-  case TIME_FORMAT_HH_MM_XX:
-      return time.GetAsLocalizedTime(use12hourclock ? "h:mm xx" : "HH:mm", false);
-  case TIME_FORMAT_HH_MM_SS:
-    return time.GetAsLocalizedTime("", true);
-  case TIME_FORMAT_H:
-    return time.GetAsLocalizedTime("h", false);
-  case TIME_FORMAT_H_MM_SS:
-    return time.GetAsLocalizedTime("h:mm:ss", true);
-  case TIME_FORMAT_XX:
-    return use12hourclock ? time.GetAsLocalizedTime("xx", false) : "";
-  default:
-    break;
-  }
-  return time.GetAsLocalizedTime("", false);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	const CStdString timeFormat = g_langInfo.GetTimeFormat();
+	bool use12hourclock = timeFormat.Find('h') != -1;
+	switch (format)
+	{
+		case TIME_FORMAT_GUESS:
+			return time.GetAsLocalizedTime("", false);
+		case TIME_FORMAT_SS:
+			return time.GetAsLocalizedTime("ss", true);
+		case TIME_FORMAT_MM:
+			return time.GetAsLocalizedTime("mm", true);
+		case TIME_FORMAT_MM_SS:
+			return time.GetAsLocalizedTime("mm:ss", true);
+		case TIME_FORMAT_HH:  // this forces it to a 12 hour clock
+			return time.GetAsLocalizedTime(use12hourclock ? "h" : "HH", false);
+		case TIME_FORMAT_HH_MM:
+			return time.GetAsLocalizedTime(use12hourclock ? "h:mm" : "HH:mm", false);
+		case TIME_FORMAT_HH_MM_XX:
+			return time.GetAsLocalizedTime(use12hourclock ? "h:mm xx" : "HH:mm", false);
+		case TIME_FORMAT_HH_MM_SS:
+			return time.GetAsLocalizedTime("", true);
+		case TIME_FORMAT_H:
+			return time.GetAsLocalizedTime("h", false);
+		case TIME_FORMAT_H_MM_SS:
+			return time.GetAsLocalizedTime("h:mm:ss", true);
+		case TIME_FORMAT_XX:
+			return use12hourclock ? time.GetAsLocalizedTime("xx", false) : "";
+		default:
+			break;
+	}
+	return time.GetAsLocalizedTime("", false);
 }
 
 CStdString CGUIInfoManager::GetDuration(TIME_FORMAT format) const
 {
-  if (g_application.IsPlayingAudio() && m_currentFile->HasMusicInfoTag())
-  {
-    const CMusicInfoTag& tag = *m_currentFile->GetMusicInfoTag();
-    if (tag.GetDuration() > 0)
-      return StringUtils::SecondsToTimeString(tag.GetDuration(), format);
-  }
-  if (g_application.IsPlayingVideo() && !m_currentMovieDuration.IsEmpty())
-    return m_currentMovieDuration;  // for tuxbox
-  unsigned int iTotal = (unsigned int)g_application.GetTotalTime();
-  if (iTotal > 0)
-    return StringUtils::SecondsToTimeString(iTotal, format);
-  return "";
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (g_application.IsPlayingAudio() && m_currentFile->HasMusicInfoTag())
+	{
+		const CMusicInfoTag& tag = *m_currentFile->GetMusicInfoTag();
+		if (tag.GetDuration() > 0)
+			return StringUtils::SecondsToTimeString(tag.GetDuration(), format);
+	}
+	
+	if (g_application.IsPlayingVideo() && !m_currentMovieDuration.IsEmpty())
+		return m_currentMovieDuration;  // for tuxbox
+		
+	unsigned int iTotal = (unsigned int)g_application.GetTotalTime();
+	
+	if (iTotal > 0)
+		return StringUtils::SecondsToTimeString(iTotal, format);
+	
+	return "";
 }
 
 CStdString CGUIInfoManager::GetMusicPartyModeLabel(int item)
 {
-  // get song counts
-  if (item >= MUSICPM_SONGSPLAYED && item <= MUSICPM_RANDOMSONGSPICKED)
-  {
-    int iSongs = -1;
-    switch (item)
-    {
-    case MUSICPM_SONGSPLAYED:
-      {
-        iSongs = g_partyModeManager.GetSongsPlayed();
-        break;
-      }
-    case MUSICPM_MATCHINGSONGS:
-      {
-        iSongs = g_partyModeManager.GetMatchingSongs();
-        break;
-      }
-    case MUSICPM_MATCHINGSONGSPICKED:
-      {
-        iSongs = g_partyModeManager.GetMatchingSongsPicked();
-        break;
-      }
-    case MUSICPM_MATCHINGSONGSLEFT:
-      {
-        iSongs = g_partyModeManager.GetMatchingSongsLeft();
-        break;
-      }
-    case MUSICPM_RELAXEDSONGSPICKED:
-      {
-        iSongs = g_partyModeManager.GetRelaxedSongs();
-        break;
-      }
-    case MUSICPM_RANDOMSONGSPICKED:
-      {
-        iSongs = g_partyModeManager.GetRandomSongs();
-        break;
-      }
-    }
-    if (iSongs < 0)
-      return "";
-    CStdString strLabel;
-    strLabel.Format("%i", iSongs);
-    return strLabel;
-  }
-  return "";
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// get song counts
+	if (item >= MUSICPM_SONGSPLAYED && item <= MUSICPM_RANDOMSONGSPICKED)
+	{
+		int iSongs = -1;
+		switch (item)
+		{
+			case MUSICPM_SONGSPLAYED:
+				{
+					iSongs = g_partyModeManager.GetSongsPlayed();
+					break;
+				}
+			case MUSICPM_MATCHINGSONGS:
+				{
+					iSongs = g_partyModeManager.GetMatchingSongs();
+					break;
+				}
+			case MUSICPM_MATCHINGSONGSPICKED:
+				{
+					iSongs = g_partyModeManager.GetMatchingSongsPicked();
+					break;
+				}
+			case MUSICPM_MATCHINGSONGSLEFT:
+				{
+					iSongs = g_partyModeManager.GetMatchingSongsLeft();
+					break;
+				}
+			case MUSICPM_RELAXEDSONGSPICKED:
+				{
+					iSongs = g_partyModeManager.GetRelaxedSongs();
+					break;
+				}
+			case MUSICPM_RANDOMSONGSPICKED:
+				{
+					iSongs = g_partyModeManager.GetRandomSongs();
+					break;
+				}
+		}
+		
+		if (iSongs < 0)
+			return "";
+		
+		CStdString strLabel;
+		strLabel.Format("%i", iSongs);
+		return strLabel;
+	}
+	return "";
 }
 
 const CStdString CGUIInfoManager::GetMusicPlaylistInfo(const GUIInfo& info)
 {
-  PLAYLIST::CPlayList& playlist = g_playlistPlayer.GetPlaylist(PLAYLIST_MUSIC);
-  if (playlist.size() < 1)
-    return "";
-  int index = info.GetData2();
-  if (info.GetData1() == 1)
-  { // relative index (requires current playlist is PLAYLIST_MUSIC)
-    if (g_playlistPlayer.GetCurrentPlaylist() != PLAYLIST_MUSIC)
-      return "";
-    index = g_playlistPlayer.GetNextSong(index);
-  }
-  if (index < 0 || index >= playlist.size())
-    return "";
-  CFileItemPtr playlistItem = playlist[index];
-  if (!playlistItem->GetMusicInfoTag()->Loaded())
-  {
-    playlistItem->LoadMusicTag();
-    playlistItem->GetMusicInfoTag()->SetLoaded();
-  }
-  // try to set a thumbnail
-  if (!playlistItem->HasThumbnail())
-  {
-    playlistItem->SetMusicThumb();
-    // still no thumb? then just the set the default cover
-    if (!playlistItem->HasThumbnail())
-      playlistItem->SetThumbnailImage("DefaultAlbumCover.png");
-  }
-  if (info.m_info == MUSICPLAYER_PLAYLISTPOS)
-  {
-    CStdString strPosition = "";
-    strPosition.Format("%i", index + 1);
-    return strPosition;
-  }
-  else if (info.m_info == MUSICPLAYER_COVER)
-    return playlistItem->GetThumbnailImage();
-  return GetMusicTagLabel(info.m_info, playlistItem.get());
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	PLAYLIST::CPlayList& playlist = g_playlistPlayer.GetPlaylist(PLAYLIST_MUSIC);
+	if (playlist.size() < 1)
+		return "";
+	int index = info.GetData2();
+	if (info.GetData1() == 1)
+	{ // relative index (requires current playlist is PLAYLIST_MUSIC)
+		if (g_playlistPlayer.GetCurrentPlaylist() != PLAYLIST_MUSIC)
+			return "";
+		index = g_playlistPlayer.GetNextSong(index);
+	}
+	
+	if (index < 0 || index >= playlist.size())
+		return "";
+	CFileItemPtr playlistItem = playlist[index];
+	if (!playlistItem->GetMusicInfoTag()->Loaded())
+	{
+		playlistItem->LoadMusicTag();
+		playlistItem->GetMusicInfoTag()->SetLoaded();
+	}
+	// try to set a thumbnail
+	if (!playlistItem->HasThumbnail())
+	{
+		playlistItem->SetMusicThumb();
+		// still no thumb? then just the set the default cover
+		if (!playlistItem->HasThumbnail())
+			playlistItem->SetThumbnailImage("DefaultAlbumCover.png");
+	}
+	
+	if (info.m_info == MUSICPLAYER_PLAYLISTPOS)
+	{
+		CStdString strPosition = "";
+		strPosition.Format("%i", index + 1);
+		return strPosition;
+	}
+	else if (info.m_info == MUSICPLAYER_COVER)
+		return playlistItem->GetThumbnailImage();
+	return GetMusicTagLabel(info.m_info, playlistItem.get());
 }
 
 CStdString CGUIInfoManager::GetPlaylistLabel(int item) const
 {
-  if (!g_application.IsPlaying()) return "";
-  int iPlaylist = g_playlistPlayer.GetCurrentPlaylist();
-  switch (item)
-  {
-  case PLAYLIST_LENGTH:
-    {
-      CStdString strLength = "";
-      strLength.Format("%i", g_playlistPlayer.GetPlaylist(iPlaylist).size());
-      return strLength;
-    }
-  case PLAYLIST_POSITION:
-    {
-      CStdString strPosition = "";
-      strPosition.Format("%i", g_playlistPlayer.GetCurrentSong() + 1);
-      return strPosition;
-    }
-  case PLAYLIST_RANDOM:
-    {
-      if (g_playlistPlayer.IsShuffled(iPlaylist))
-        return g_localizeStrings.Get(590); // 590: Random
-      else
-        return g_localizeStrings.Get(591); // 591: Off
-    }
-  case PLAYLIST_REPEAT:
-    {
-      PLAYLIST::REPEAT_STATE state = g_playlistPlayer.GetRepeat(iPlaylist);
-      if (state == PLAYLIST::REPEAT_ONE)
-        return g_localizeStrings.Get(592); // 592: One
-      else if (state == PLAYLIST::REPEAT_ALL)
-        return g_localizeStrings.Get(593); // 593: All
-      else
-        return g_localizeStrings.Get(594); // 594: Off
-    }
-  }
-  return "";
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (!g_application.IsPlaying()) 
+		return "";
+	
+	int iPlaylist = g_playlistPlayer.GetCurrentPlaylist();
+	switch (item)
+	{
+		case PLAYLIST_LENGTH:
+			{
+				CStdString strLength = "";
+				strLength.Format("%i", g_playlistPlayer.GetPlaylist(iPlaylist).size());
+				return strLength;
+			}
+		case PLAYLIST_POSITION:
+			{
+				CStdString strPosition = "";
+				strPosition.Format("%i", g_playlistPlayer.GetCurrentSong() + 1);
+				return strPosition;
+			}
+		case PLAYLIST_RANDOM:
+			{
+				if (g_playlistPlayer.IsShuffled(iPlaylist))
+					return g_localizeStrings.Get(590); // 590: Random
+				else
+					return g_localizeStrings.Get(591); // 591: Off
+			}
+		case PLAYLIST_REPEAT:
+			{
+				PLAYLIST::REPEAT_STATE state = g_playlistPlayer.GetRepeat(iPlaylist);
+				if (state == PLAYLIST::REPEAT_ONE)
+					return g_localizeStrings.Get(592); // 592: One
+				else if (state == PLAYLIST::REPEAT_ALL)
+					return g_localizeStrings.Get(593); // 593: All
+				else
+					return g_localizeStrings.Get(594); // 594: Off
+			}
+	}
+	return "";
 }
 
 CStdString CGUIInfoManager::GetMusicLabel(int item)
 {
-  if (!g_application.IsPlayingAudio() || !m_currentFile->HasMusicInfoTag()) return "";
-  switch (item)
-  {
-  case MUSICPLAYER_PLAYLISTLEN:
-    {
-      if (g_playlistPlayer.GetCurrentPlaylist() == PLAYLIST_MUSIC)
-        return GetPlaylistLabel(PLAYLIST_LENGTH);
-    }
-    break;
-  case MUSICPLAYER_PLAYLISTPOS:
-    {
-      if (g_playlistPlayer.GetCurrentPlaylist() == PLAYLIST_MUSIC)
-        return GetPlaylistLabel(PLAYLIST_POSITION);
-    }
-    break;
-  case MUSICPLAYER_BITRATE:
-    {
-      float fTimeSpan = (float)(CTimeUtils::GetFrameTime() - m_lastMusicBitrateTime);
-      if (fTimeSpan >= 500.0f)
-      {
-        m_MusicBitrate = g_application.m_pPlayer->GetAudioBitrate();
-        m_lastMusicBitrateTime = CTimeUtils::GetFrameTime();
-      }
-      CStdString strBitrate = "";
-      if (m_MusicBitrate > 0)
-        strBitrate.Format("%i", MathUtils::round_int((double)m_MusicBitrate / 1000.0));
-      return strBitrate;
-    }
-    break;
-  case MUSICPLAYER_CHANNELS:
-    {
-      CStdString strChannels = "";
-      if (g_application.m_pPlayer->GetChannels() > 0)
-      {
-        strChannels.Format("%i", g_application.m_pPlayer->GetChannels());
-      }
-      return strChannels;
-    }
-    break;
-  case MUSICPLAYER_BITSPERSAMPLE:
-    {
-      CStdString strBitsPerSample = "";
-      if (g_application.m_pPlayer->GetBitsPerSample() > 0)
-      {
-        strBitsPerSample.Format("%i", g_application.m_pPlayer->GetBitsPerSample());
-      }
-      return strBitsPerSample;
-    }
-    break;
-  case MUSICPLAYER_SAMPLERATE:
-    {
-      CStdString strSampleRate = "";
-      if (g_application.m_pPlayer->GetSampleRate() > 0)
-      {
-        strSampleRate.Format("%i",g_application.m_pPlayer->GetSampleRate());
-      }
-      return strSampleRate;
-    }
-    break;
-  case MUSICPLAYER_CODEC:
-    {
-      CStdString strCodec;
-      strCodec.Format("%s", g_application.m_pPlayer->GetAudioCodecName().c_str());
-      return strCodec;
-    }
-    break;
-  case MUSICPLAYER_LYRICS:
-    return GetItemLabel(m_currentFile, AddListItemProp("lyrics"));
-  }
-  return GetMusicTagLabel(item, m_currentFile);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (!g_application.IsPlayingAudio() || !m_currentFile->HasMusicInfoTag()) 
+		return "";
+	
+	switch (item)
+	{
+		case MUSICPLAYER_PLAYLISTLEN:
+			{
+				if (g_playlistPlayer.GetCurrentPlaylist() == PLAYLIST_MUSIC)
+					return GetPlaylistLabel(PLAYLIST_LENGTH);
+			}
+			break;
+		case MUSICPLAYER_PLAYLISTPOS:
+			{
+				if (g_playlistPlayer.GetCurrentPlaylist() == PLAYLIST_MUSIC)
+					return GetPlaylistLabel(PLAYLIST_POSITION);
+			}
+			break;
+		case MUSICPLAYER_BITRATE:
+			{
+				float fTimeSpan = (float)(CTimeUtils::GetFrameTime() - m_lastMusicBitrateTime);
+				if (fTimeSpan >= 500.0f)
+				{
+					m_MusicBitrate = g_application.m_pPlayer->GetAudioBitrate();
+					m_lastMusicBitrateTime = CTimeUtils::GetFrameTime();
+				}
+				CStdString strBitrate = "";
+				if (m_MusicBitrate > 0)
+					strBitrate.Format("%i", MathUtils::round_int((double)m_MusicBitrate / 1000.0));
+				return strBitrate;
+			}
+			break;
+		case MUSICPLAYER_CHANNELS:
+			{
+				CStdString strChannels = "";
+				if (g_application.m_pPlayer->GetChannels() > 0)
+				{
+					strChannels.Format("%i", g_application.m_pPlayer->GetChannels());
+				}
+				return strChannels;
+			}
+			break;
+		case MUSICPLAYER_BITSPERSAMPLE:
+			{
+				CStdString strBitsPerSample = "";
+				if (g_application.m_pPlayer->GetBitsPerSample() > 0)
+				{
+					strBitsPerSample.Format("%i", g_application.m_pPlayer->GetBitsPerSample());
+				}
+				return strBitsPerSample;
+			}
+			break;
+		case MUSICPLAYER_SAMPLERATE:
+			{
+				CStdString strSampleRate = "";
+				if (g_application.m_pPlayer->GetSampleRate() > 0)
+				{
+					strSampleRate.Format("%i",g_application.m_pPlayer->GetSampleRate());
+				}
+				return strSampleRate;
+			}
+			break;
+		case MUSICPLAYER_CODEC:
+			{
+				CStdString strCodec;
+				strCodec.Format("%s", g_application.m_pPlayer->GetAudioCodecName().c_str());
+				return strCodec;
+			}
+			break;
+		case MUSICPLAYER_LYRICS:
+			return GetItemLabel(m_currentFile, AddListItemProp("lyrics"));
+	}
+	return GetMusicTagLabel(item, m_currentFile);
 }
 
 CStdString CGUIInfoManager::GetMusicTagLabel(int info, const CFileItem *item)
 {
-  if (!item->HasMusicInfoTag()) return "";
-  const CMusicInfoTag &tag = *item->GetMusicInfoTag();
-  switch (info)
-  {
-  case MUSICPLAYER_TITLE:
-    if (tag.GetTitle().size()) { return tag.GetTitle(); }
-    break;
-  case MUSICPLAYER_ALBUM:
-    if (tag.GetAlbum().size()) { return tag.GetAlbum(); }
-    break;
-  case MUSICPLAYER_ARTIST:
-    if (tag.GetArtist().size()) { return tag.GetArtist(); }
-    break;
-  case MUSICPLAYER_ALBUM_ARTIST:
-    if (tag.GetAlbumArtist().size()) { return tag.GetAlbumArtist(); }
-    break;
-  case MUSICPLAYER_YEAR:
-    if (tag.GetYear()) { return tag.GetYearString(); }
-    break;
-  case MUSICPLAYER_GENRE:
-    if (tag.GetGenre().size()) { return tag.GetGenre(); }
-    break;
-  case MUSICPLAYER_LYRICS:
-    if (tag.GetLyrics().size()) { return tag.GetLyrics(); }
-  break;
-  case MUSICPLAYER_TRACK_NUMBER:
-    {
-      CStdString strTrack;
-      if (tag.Loaded() && tag.GetTrackNumber() > 0)
-      {
-        strTrack.Format("%02i", tag.GetTrackNumber());
-        return strTrack;
-      }
-    }
-    break;
-  case MUSICPLAYER_DISC_NUMBER:
-    return GetItemLabel(item, LISTITEM_DISC_NUMBER);
-  case MUSICPLAYER_RATING:
-    return GetItemLabel(item, LISTITEM_RATING);
-  case MUSICPLAYER_COMMENT:
-    return GetItemLabel(item, LISTITEM_COMMENT);
-  case MUSICPLAYER_DURATION:
-    return GetItemLabel(item, LISTITEM_DURATION);
-  case MUSICPLAYER_PLAYCOUNT:
-    return GetItemLabel(item, LISTITEM_PLAYCOUNT);
-  case MUSICPLAYER_LASTPLAYED:
-    return GetItemLabel(item, LISTITEM_LASTPLAYED);
-  }
-  return "";
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (!item->HasMusicInfoTag())
+		return "";
+
+	const CMusicInfoTag &tag = *item->GetMusicInfoTag();
+		
+	switch (info)
+	{
+		case MUSICPLAYER_TITLE:
+			if (tag.GetTitle().size()) { return tag.GetTitle(); }
+			break;
+		case MUSICPLAYER_ALBUM:
+			if (tag.GetAlbum().size()) { return tag.GetAlbum(); }
+			break;
+		case MUSICPLAYER_ARTIST:
+			if (tag.GetArtist().size()) { return tag.GetArtist(); }
+			break;
+		case MUSICPLAYER_ALBUM_ARTIST:
+			if (tag.GetAlbumArtist().size()) { return tag.GetAlbumArtist(); }
+			break;
+		case MUSICPLAYER_YEAR:
+			if (tag.GetYear()) { return tag.GetYearString(); }
+			break;
+		case MUSICPLAYER_GENRE:
+			if (tag.GetGenre().size()) { return tag.GetGenre(); }
+			break;
+		case MUSICPLAYER_LYRICS:
+			if (tag.GetLyrics().size()) { return tag.GetLyrics(); }
+			break;
+		case MUSICPLAYER_TRACK_NUMBER:
+			{
+				CStdString strTrack;
+				if (tag.Loaded() && tag.GetTrackNumber() > 0)
+				{
+					strTrack.Format("%02i", tag.GetTrackNumber());
+					return strTrack;
+				}
+			}
+			break;
+		case MUSICPLAYER_DISC_NUMBER:
+			return GetItemLabel(item, LISTITEM_DISC_NUMBER);
+		case MUSICPLAYER_RATING:
+			return GetItemLabel(item, LISTITEM_RATING);
+		case MUSICPLAYER_COMMENT:
+			return GetItemLabel(item, LISTITEM_COMMENT);
+		case MUSICPLAYER_DURATION:
+			return GetItemLabel(item, LISTITEM_DURATION);
+		case MUSICPLAYER_PLAYCOUNT:
+			return GetItemLabel(item, LISTITEM_PLAYCOUNT);
+		case MUSICPLAYER_LASTPLAYED:
+			return GetItemLabel(item, LISTITEM_LASTPLAYED);
+	}
+	return "";
 }
 
 CStdString CGUIInfoManager::GetVideoLabel(int item)
 {
-  if (!g_application.IsPlayingVideo())
-    return "";
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (!g_application.IsPlayingVideo())
+		return "";
 
-  if (item == VIDEOPLAYER_TITLE)
-  {
-    if (m_currentFile->HasVideoInfoTag() && !m_currentFile->GetVideoInfoTag()->m_strTitle.IsEmpty())
-      return m_currentFile->GetVideoInfoTag()->m_strTitle;
-    // don't have the title, so use dvdplayer, label, or drop down to title from path
-    if (!g_application.m_pPlayer->GetPlayingTitle().IsEmpty())
-      return g_application.m_pPlayer->GetPlayingTitle();
-    if (!m_currentFile->GetLabel().IsEmpty())
-      return m_currentFile->GetLabel();
-    return CUtil::GetTitleFromPath(m_currentFile->GetPath());
-  }
-  else if (item == VIDEOPLAYER_PLAYLISTLEN)
-  {
-    if (g_playlistPlayer.GetCurrentPlaylist() == PLAYLIST_VIDEO)
-      return GetPlaylistLabel(PLAYLIST_LENGTH);
-  }
-  else if (item == VIDEOPLAYER_PLAYLISTPOS)
-  {
-    if (g_playlistPlayer.GetCurrentPlaylist() == PLAYLIST_VIDEO)
-      return GetPlaylistLabel(PLAYLIST_POSITION);
-  }
-  else if (m_currentFile->HasVideoInfoTag())
-  {
-    switch (item)
-    {
-    case VIDEOPLAYER_ORIGINALTITLE:
-      return m_currentFile->GetVideoInfoTag()->m_strOriginalTitle;
-      break;
-    case VIDEOPLAYER_GENRE:
-      return m_currentFile->GetVideoInfoTag()->m_strGenre;
-      break;
-    case VIDEOPLAYER_DIRECTOR:
-      return m_currentFile->GetVideoInfoTag()->m_strDirector;
-      break;
-    case VIDEOPLAYER_RATING:
-      {
-        CStdString strRating;
-        if (m_currentFile->GetVideoInfoTag()->m_fRating > 0.f)
-          strRating.Format("%.1f", m_currentFile->GetVideoInfoTag()->m_fRating);
-        return strRating;
-      }
-      break;
-    case VIDEOPLAYER_RATING_AND_VOTES:
-      {
-        CStdString strRatingAndVotes;
-        if (m_currentFile->GetVideoInfoTag()->m_fRating > 0.f)
-        {
-          if (m_currentFile->GetVideoInfoTag()->m_strVotes.IsEmpty())
-            strRatingAndVotes.Format("%.1f", m_currentFile->GetVideoInfoTag()->m_fRating);
-          else
-            strRatingAndVotes.Format("%.1f (%s %s)", m_currentFile->GetVideoInfoTag()->m_fRating, m_currentFile->GetVideoInfoTag()->m_strVotes, g_localizeStrings.Get(20350));
-        }
-        return strRatingAndVotes;
-      }
-      break;
-    case VIDEOPLAYER_YEAR:
-      {
-        CStdString strYear;
-        if (m_currentFile->GetVideoInfoTag()->m_iYear > 0)
-          strYear.Format("%i", m_currentFile->GetVideoInfoTag()->m_iYear);
-        return strYear;
-      }
-      break;
-    case VIDEOPLAYER_PREMIERED:
-      {
-        if (!m_currentFile->GetVideoInfoTag()->m_strFirstAired.IsEmpty())
-          return m_currentFile->GetVideoInfoTag()->m_strFirstAired;
-        if (!m_currentFile->GetVideoInfoTag()->m_strPremiered.IsEmpty())
-          return m_currentFile->GetVideoInfoTag()->m_strPremiered;
-      }
-      break;
-    case VIDEOPLAYER_PLOT:
-      return m_currentFile->GetVideoInfoTag()->m_strPlot;
-    case VIDEOPLAYER_TRAILER:
-      return m_currentFile->GetVideoInfoTag()->m_strTrailer;
-    case VIDEOPLAYER_PLOT_OUTLINE:
-      return m_currentFile->GetVideoInfoTag()->m_strPlotOutline;
-    case VIDEOPLAYER_EPISODE:
-      {
-        CStdString strEpisode;
-        if (m_currentFile->GetVideoInfoTag()->m_iSpecialSortEpisode > 0)
-          strEpisode.Format("S%i", m_currentFile->GetVideoInfoTag()->m_iSpecialSortEpisode);
-        else if(m_currentFile->GetVideoInfoTag()->m_iEpisode > 0)
-          strEpisode.Format("%i", m_currentFile->GetVideoInfoTag()->m_iEpisode);
-        return strEpisode;
-      }
-      break;
-    case VIDEOPLAYER_SEASON:
-      {
-        CStdString strSeason;
-        if (m_currentFile->GetVideoInfoTag()->m_iSpecialSortSeason > 0)
-          strSeason.Format("%i", m_currentFile->GetVideoInfoTag()->m_iSpecialSortSeason);
-        else if(m_currentFile->GetVideoInfoTag()->m_iSeason > 0)
-          strSeason.Format("%i", m_currentFile->GetVideoInfoTag()->m_iSeason);
-        return strSeason;
-      }
-      break;
-    case VIDEOPLAYER_TVSHOW:
-      return m_currentFile->GetVideoInfoTag()->m_strShowTitle;
+	if (item == VIDEOPLAYER_TITLE)
+	{
+		if (m_currentFile->HasVideoInfoTag() && !m_currentFile->GetVideoInfoTag()->m_strTitle.IsEmpty())
+			return m_currentFile->GetVideoInfoTag()->m_strTitle;
+		// don't have the title, so use dvdplayer, label, or drop down to title from path
+		if (!g_application.m_pPlayer->GetPlayingTitle().IsEmpty())
+			return g_application.m_pPlayer->GetPlayingTitle();
+		if (!m_currentFile->GetLabel().IsEmpty())
+			return m_currentFile->GetLabel();
+		return CUtil::GetTitleFromPath(m_currentFile->GetPath());
+	}
+	else if (item == VIDEOPLAYER_PLAYLISTLEN)
+	{
+		if (g_playlistPlayer.GetCurrentPlaylist() == PLAYLIST_VIDEO)
+			return GetPlaylistLabel(PLAYLIST_LENGTH);
+	}
+	else if (item == VIDEOPLAYER_PLAYLISTPOS)
+	{
+		if (g_playlistPlayer.GetCurrentPlaylist() == PLAYLIST_VIDEO)
+			return GetPlaylistLabel(PLAYLIST_POSITION);
+	}
+	else if (m_currentFile->HasVideoInfoTag())
+	{
+		switch (item)
+		{
+			case VIDEOPLAYER_ORIGINALTITLE:
+				return m_currentFile->GetVideoInfoTag()->m_strOriginalTitle;
+				break;
+			case VIDEOPLAYER_GENRE:
+				return m_currentFile->GetVideoInfoTag()->m_strGenre;
+				break;
+			case VIDEOPLAYER_DIRECTOR:
+				return m_currentFile->GetVideoInfoTag()->m_strDirector;
+				break;
+			case VIDEOPLAYER_RATING:
+				{
+					CStdString strRating;
+					if (m_currentFile->GetVideoInfoTag()->m_fRating > 0.f)
+						strRating.Format("%.1f", m_currentFile->GetVideoInfoTag()->m_fRating);
+					return strRating;
+				}
+				break;
+			case VIDEOPLAYER_RATING_AND_VOTES:
+				{
+					CStdString strRatingAndVotes;
+					if (m_currentFile->GetVideoInfoTag()->m_fRating > 0.f)
+					{
+						if (m_currentFile->GetVideoInfoTag()->m_strVotes.IsEmpty())
+							strRatingAndVotes.Format("%.1f", m_currentFile->GetVideoInfoTag()->m_fRating);
+						else
+							strRatingAndVotes.Format("%.1f (%s %s)", m_currentFile->GetVideoInfoTag()->m_fRating, m_currentFile->GetVideoInfoTag()->m_strVotes, g_localizeStrings.Get(20350));
+					}
+					return strRatingAndVotes;
+				}
+				break;
+			case VIDEOPLAYER_YEAR:
+				{
+					CStdString strYear;
+					if (m_currentFile->GetVideoInfoTag()->m_iYear > 0)
+						strYear.Format("%i", m_currentFile->GetVideoInfoTag()->m_iYear);
+					return strYear;
+				}
+				break;
+			case VIDEOPLAYER_PREMIERED:
+				{
+					if (!m_currentFile->GetVideoInfoTag()->m_strFirstAired.IsEmpty())
+						return m_currentFile->GetVideoInfoTag()->m_strFirstAired;
+					if (!m_currentFile->GetVideoInfoTag()->m_strPremiered.IsEmpty())
+						return m_currentFile->GetVideoInfoTag()->m_strPremiered;
+				}
+				break;
+			case VIDEOPLAYER_PLOT:
+				return m_currentFile->GetVideoInfoTag()->m_strPlot;
+			case VIDEOPLAYER_TRAILER:
+				return m_currentFile->GetVideoInfoTag()->m_strTrailer;
+			case VIDEOPLAYER_PLOT_OUTLINE:
+				return m_currentFile->GetVideoInfoTag()->m_strPlotOutline;
+			case VIDEOPLAYER_EPISODE:
+				{
+					CStdString strEpisode;
+					if (m_currentFile->GetVideoInfoTag()->m_iSpecialSortEpisode > 0)
+						strEpisode.Format("S%i", m_currentFile->GetVideoInfoTag()->m_iSpecialSortEpisode);
+					else if(m_currentFile->GetVideoInfoTag()->m_iEpisode > 0)
+						strEpisode.Format("%i", m_currentFile->GetVideoInfoTag()->m_iEpisode);
+					return strEpisode;
+				}
+				break;
+			case VIDEOPLAYER_SEASON:
+				{
+					CStdString strSeason;
+					if (m_currentFile->GetVideoInfoTag()->m_iSpecialSortSeason > 0)
+						strSeason.Format("%i", m_currentFile->GetVideoInfoTag()->m_iSpecialSortSeason);
+					else if(m_currentFile->GetVideoInfoTag()->m_iSeason > 0)
+						strSeason.Format("%i", m_currentFile->GetVideoInfoTag()->m_iSeason);
+					return strSeason;
+				}
+				break;
+			case VIDEOPLAYER_TVSHOW:
+				return m_currentFile->GetVideoInfoTag()->m_strShowTitle;
 
-    case VIDEOPLAYER_STUDIO:
-      return m_currentFile->GetVideoInfoTag()->m_strStudio;
-    case VIDEOPLAYER_COUNTRY:
-      return m_currentFile->GetVideoInfoTag()->m_strCountry;
-    case VIDEOPLAYER_MPAA:
-      return m_currentFile->GetVideoInfoTag()->m_strMPAARating;
-    case VIDEOPLAYER_TOP250:
-      {
-        CStdString strTop250;
-        if (m_currentFile->GetVideoInfoTag()->m_iTop250 > 0)
-          strTop250.Format("%i", m_currentFile->GetVideoInfoTag()->m_iTop250);
-        return strTop250;
-      }
-      break;
-    case VIDEOPLAYER_CAST:
-      return m_currentFile->GetVideoInfoTag()->GetCast();
-    case VIDEOPLAYER_CAST_AND_ROLE:
-      return m_currentFile->GetVideoInfoTag()->GetCast(true);
-    case VIDEOPLAYER_ARTIST:
-      return m_currentFile->GetVideoInfoTag()->m_strArtist;
-    case VIDEOPLAYER_ALBUM:
-      return m_currentFile->GetVideoInfoTag()->m_strAlbum;
-    case VIDEOPLAYER_WRITER:
-      return m_currentFile->GetVideoInfoTag()->m_strWritingCredits;
-    case VIDEOPLAYER_TAGLINE:
-      return m_currentFile->GetVideoInfoTag()->m_strTagLine;
-    case VIDEOPLAYER_LASTPLAYED:
-      return m_currentFile->GetVideoInfoTag()->m_lastPlayed;
-    case VIDEOPLAYER_PLAYCOUNT:
-      {
-        CStdString strPlayCount;
-        if (m_currentFile->GetVideoInfoTag()->m_playCount > 0)
-          strPlayCount.Format("%i", m_currentFile->GetVideoInfoTag()->m_playCount);
-        return strPlayCount;
-      }
-    }
-  }
-  return "";
+			case VIDEOPLAYER_STUDIO:
+				return m_currentFile->GetVideoInfoTag()->m_strStudio;
+			case VIDEOPLAYER_COUNTRY:
+				return m_currentFile->GetVideoInfoTag()->m_strCountry;
+			case VIDEOPLAYER_MPAA:
+				return m_currentFile->GetVideoInfoTag()->m_strMPAARating;
+			case VIDEOPLAYER_TOP250:
+				{
+					CStdString strTop250;
+					if (m_currentFile->GetVideoInfoTag()->m_iTop250 > 0)
+						strTop250.Format("%i", m_currentFile->GetVideoInfoTag()->m_iTop250);
+					return strTop250;
+				}
+				break;
+			case VIDEOPLAYER_CAST:
+				return m_currentFile->GetVideoInfoTag()->GetCast();
+			case VIDEOPLAYER_CAST_AND_ROLE:
+				return m_currentFile->GetVideoInfoTag()->GetCast(true);
+			case VIDEOPLAYER_ARTIST:
+				return m_currentFile->GetVideoInfoTag()->m_strArtist;
+			case VIDEOPLAYER_ALBUM:
+				return m_currentFile->GetVideoInfoTag()->m_strAlbum;
+			case VIDEOPLAYER_WRITER:
+				return m_currentFile->GetVideoInfoTag()->m_strWritingCredits;
+			case VIDEOPLAYER_TAGLINE:
+				return m_currentFile->GetVideoInfoTag()->m_strTagLine;
+			case VIDEOPLAYER_LASTPLAYED:
+				return m_currentFile->GetVideoInfoTag()->m_lastPlayed;
+			case VIDEOPLAYER_PLAYCOUNT:
+				{
+					CStdString strPlayCount;
+					if (m_currentFile->GetVideoInfoTag()->m_playCount > 0)
+						strPlayCount.Format("%i", m_currentFile->GetVideoInfoTag()->m_playCount);
+					return strPlayCount;
+				}
+		}
+	}
+	return "";
 }
 
 __int64 CGUIInfoManager::GetPlayTime() const
 {
-  if (g_application.IsPlaying())
-  {
-    __int64 lPTS = (__int64)(g_application.GetTime() * 1000);
-    if (lPTS < 0) lPTS = 0;
-    return lPTS;
-  }
-  return 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (g_application.IsPlaying())
+	{
+		__int64 lPTS = (__int64)(g_application.GetTime() * 1000);
+		if (lPTS < 0)
+			lPTS = 0;
+		return lPTS;
+	}
+	return 0;
 }
 
 CStdString CGUIInfoManager::GetCurrentPlayTime(TIME_FORMAT format) const
 {
-  if (format == TIME_FORMAT_GUESS && GetTotalPlayTime() >= 3600)
-    format = TIME_FORMAT_HH_MM_SS;
-  if (g_application.IsPlayingAudio() || g_application.IsPlayingVideo())
-    return StringUtils::SecondsToTimeString((int)(GetPlayTime()/1000), format);
-  return "";
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (format == TIME_FORMAT_GUESS && GetTotalPlayTime() >= 3600)
+		format = TIME_FORMAT_HH_MM_SS;
+	if (g_application.IsPlayingAudio() || g_application.IsPlayingVideo())
+		return StringUtils::SecondsToTimeString((int)(GetPlayTime()/1000), format);
+	return "";
 }
 
 int CGUIInfoManager::GetTotalPlayTime() const
 {
-  int iTotalTime = (int)g_application.GetTotalTime();
-  return iTotalTime > 0 ? iTotalTime : 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int iTotalTime = (int)g_application.GetTotalTime();
+	return iTotalTime > 0 ? iTotalTime : 0;
 }
 
 int CGUIInfoManager::GetPlayTimeRemaining() const
 {
-  int iReverse = GetTotalPlayTime() - (int)g_application.GetTime();
-  return iReverse > 0 ? iReverse : 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int iReverse = GetTotalPlayTime() - (int)g_application.GetTime();
+	return iReverse > 0 ? iReverse : 0;
 }
 
 CStdString CGUIInfoManager::GetCurrentPlayTimeRemaining(TIME_FORMAT format) const
 {
-  if (format == TIME_FORMAT_GUESS && GetTotalPlayTime() >= 3600)
-    format = TIME_FORMAT_HH_MM_SS;
-  int timeRemaining = GetPlayTimeRemaining();
-  if (timeRemaining && (g_application.IsPlayingAudio() || g_application.IsPlayingVideo()))
-    return StringUtils::SecondsToTimeString(timeRemaining, format);
-  return "";
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (format == TIME_FORMAT_GUESS && GetTotalPlayTime() >= 3600)
+		format = TIME_FORMAT_HH_MM_SS;
+	int timeRemaining = GetPlayTimeRemaining();
+	if (timeRemaining && (g_application.IsPlayingAudio() || g_application.IsPlayingVideo()))
+		return StringUtils::SecondsToTimeString(timeRemaining, format);
+	return "";
 }
 
 void CGUIInfoManager::ResetCurrentItem()
 {
-  m_currentFile->Reset();
-  m_currentMovieThumb = "";
-  m_currentMovieDuration = "";
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	m_currentFile->Reset();
+	m_currentMovieThumb = "";
+	m_currentMovieDuration = "";
 }
 
 void CGUIInfoManager::SetCurrentItem(CFileItem &item)
 {
-  ResetCurrentItem();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	ResetCurrentItem();
 
-  if (item.IsAudio())
-    SetCurrentSong(item);
-  else
-    SetCurrentMovie(item);
+	if (item.IsAudio())
+		SetCurrentSong(item);
+	else
+		SetCurrentMovie(item);
 }
 
 void CGUIInfoManager::SetCurrentAlbumThumb(const CStdString thumbFileName)
 {
-  if (CFile::Exists(thumbFileName))
-    m_currentFile->SetThumbnailImage(thumbFileName);
-  else
-  {
-    m_currentFile->SetThumbnailImage("");
-    m_currentFile->FillInDefaultIcon();
-  }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (CFile::Exists(thumbFileName))
+		m_currentFile->SetThumbnailImage(thumbFileName);
+	else
+	{
+		m_currentFile->SetThumbnailImage("");
+		m_currentFile->FillInDefaultIcon();
+	}
 }
 
 void CGUIInfoManager::SetCurrentSong(CFileItem &item)
 {
-  CLog::Log(LOGDEBUG,"CGUIInfoManager::SetCurrentSong(%s)",item.GetPath().c_str());
-  *m_currentFile = item;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CLog::Log(LOGDEBUG,"CGUIInfoManager::SetCurrentSong(%s)",item.GetPath().c_str());
+	*m_currentFile = item;
 
-  m_currentFile->LoadMusicTag();
-  if (m_currentFile->GetMusicInfoTag()->GetTitle().IsEmpty())
-  {
-    // No title in tag, show filename only
-    m_currentFile->GetMusicInfoTag()->SetTitle(CUtil::GetTitleFromPath(m_currentFile->GetPath()));
-  }
-  m_currentFile->GetMusicInfoTag()->SetLoaded(true);
+	m_currentFile->LoadMusicTag();
+	if (m_currentFile->GetMusicInfoTag()->GetTitle().IsEmpty())
+	{
+		// No title in tag, show filename only
+		m_currentFile->GetMusicInfoTag()->SetTitle(CUtil::GetTitleFromPath(m_currentFile->GetPath()));
+	}
+	m_currentFile->GetMusicInfoTag()->SetLoaded(true);
 
-  // find a thumb for this file.
-  if (m_currentFile->IsInternetStream())
-  {
-    if (!g_application.m_strPlayListFile.IsEmpty())
-    {
-      CLog::Log(LOGDEBUG,"Streaming media detected... using %s to find a thumb", g_application.m_strPlayListFile.c_str());
-      CFileItem streamingItem(g_application.m_strPlayListFile,false);
-      streamingItem.SetMusicThumb();
-      CStdString strThumb = streamingItem.GetThumbnailImage();
-      if (CFile::Exists(strThumb))
-        m_currentFile->SetThumbnailImage(strThumb);
-    }
-  }
-  else
-    m_currentFile->SetMusicThumb();
-    if (!m_currentFile->HasProperty("fanart_image"))
-    {
-      if (m_currentFile->CacheLocalFanart())
-        m_currentFile->SetProperty("fanart_image", m_currentFile->GetCachedFanart());
-    }
-  m_currentFile->FillInDefaultIcon();
+	// find a thumb for this file.
+	if (m_currentFile->IsInternetStream())
+	{
+		if (!g_application.m_strPlayListFile.IsEmpty())
+		{
+			CLog::Log(LOGDEBUG,"Streaming media detected... using %s to find a thumb", g_application.m_strPlayListFile.c_str());
+			CFileItem streamingItem(g_application.m_strPlayListFile,false);
+			streamingItem.SetMusicThumb();
+			CStdString strThumb = streamingItem.GetThumbnailImage();
+			if (CFile::Exists(strThumb))
+				m_currentFile->SetThumbnailImage(strThumb);
+		}
+	}
+	else
+		m_currentFile->SetMusicThumb();
+	
+	if (!m_currentFile->HasProperty("fanart_image"))
+	{
+		if (m_currentFile->CacheLocalFanart())
+			m_currentFile->SetProperty("fanart_image", m_currentFile->GetCachedFanart());
+	}
+	m_currentFile->FillInDefaultIcon();
 
-  CMusicInfoLoader::LoadAdditionalTagInfo(m_currentFile);
+	CMusicInfoLoader::LoadAdditionalTagInfo(m_currentFile);
 }
 
 void CGUIInfoManager::SetCurrentMovie(CFileItem &item)
 {
-  CLog::Log(LOGDEBUG,"CGUIInfoManager::SetCurrentMovie(%s)",item.GetPath().c_str());
-  *m_currentFile = item;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CLog::Log(LOGDEBUG,"CGUIInfoManager::SetCurrentMovie(%s)",item.GetPath().c_str());
+	*m_currentFile = item;
 
-  CVideoDatabase dbs;
-  if (dbs.Open())
-  {
-    dbs.LoadVideoInfo(item.GetPath(), *m_currentFile->GetVideoInfoTag());
-    dbs.Close();
-  }
+	CVideoDatabase dbs;
+	if (dbs.Open())
+	{
+		dbs.LoadVideoInfo(item.GetPath(), *m_currentFile->GetVideoInfoTag());
+		dbs.Close();
+	}
 
-  // Find a thumb for this file.
-  item.SetVideoThumb();
-  if (!item.HasThumbnail())
-  {
-    CStdString strPath, strFileName;
-    URIUtils::Split(item.GetCachedVideoThumb(), strPath, strFileName);
+	// Find a thumb for this file.
+	item.SetVideoThumb();
+	if (!item.HasThumbnail())
+	{
+		CStdString strPath, strFileName;
+		URIUtils::Split(item.GetCachedVideoThumb(), strPath, strFileName);
 
-    // create unique thumb for auto generated thumbs
-    CStdString cachedThumb = strPath + "auto-" + strFileName;
-    if (CFile::Exists(cachedThumb))
-      item.SetThumbnailImage(cachedThumb);
-  }
+		// create unique thumb for auto generated thumbs
+		CStdString cachedThumb = strPath + "auto-" + strFileName;
+		if (CFile::Exists(cachedThumb))
+			item.SetThumbnailImage(cachedThumb);
+	}
 
-  // find a thumb for this stream
-  if (item.IsInternetStream())
-  {
-    // case where .strm is used to start an audio stream
-    if (g_application.IsPlayingAudio())
-    {
-      SetCurrentSong(item);
-      return;
-    }
+	// find a thumb for this stream
+	if (item.IsInternetStream())
+	{
+		// case where .strm is used to start an audio stream
+		if (g_application.IsPlayingAudio())
+		{
+			SetCurrentSong(item);
+			return;
+		}
 
-    // else its a video
-    if (!g_application.m_strPlayListFile.IsEmpty())
-    {
-      CLog::Log(LOGDEBUG,"Streaming media detected... using %s to find a thumb", g_application.m_strPlayListFile.c_str());
-      CFileItem thumbItem(g_application.m_strPlayListFile,false);
-      thumbItem.SetVideoThumb();
-      if (thumbItem.HasThumbnail())
-        item.SetThumbnailImage(thumbItem.GetThumbnailImage());
-    }
-  }
+		// else its a video
+		if (!g_application.m_strPlayListFile.IsEmpty())
+		{
+			CLog::Log(LOGDEBUG,"Streaming media detected... using %s to find a thumb", g_application.m_strPlayListFile.c_str());
+			CFileItem thumbItem(g_application.m_strPlayListFile,false);
+			thumbItem.SetVideoThumb();
+			if (thumbItem.HasThumbnail())
+				item.SetThumbnailImage(thumbItem.GetThumbnailImage());
+		}
+	}
 
-  item.FillInDefaultIcon();
-  m_currentMovieThumb = item.GetThumbnailImage();
+	item.FillInDefaultIcon();
+	m_currentMovieThumb = item.GetThumbnailImage();
 }
 
 string CGUIInfoManager::GetSystemHeatInfo(int info)
 {
-  if (CTimeUtils::GetFrameTime() - m_lastSysHeatInfoTime >= SYSHEATUPDATEINTERVAL)
-  { // update our variables
-    m_lastSysHeatInfoTime = CTimeUtils::GetFrameTime();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (CTimeUtils::GetFrameTime() - m_lastSysHeatInfoTime >= SYSHEATUPDATEINTERVAL)
+	{ // update our variables
+		m_lastSysHeatInfoTime = CTimeUtils::GetFrameTime();
 #if defined(_LINUX)
-    m_cpuTemp = g_cpuInfo.getTemperature();
-    m_gpuTemp = GetGPUTemperature();
+		m_cpuTemp = g_cpuInfo.getTemperature();
+		m_gpuTemp = GetGPUTemperature();
 #endif
-  }
+	}
 
-  CStdString text;
-  switch(info)
-  {
-    case LCD_CPU_TEMPERATURE:
-    case SYSTEM_CPU_TEMPERATURE:
-      return m_cpuTemp.IsValid() ? m_cpuTemp.ToString() : "?";
-      break;
-    case LCD_GPU_TEMPERATURE:
-    case SYSTEM_GPU_TEMPERATURE:
-      return m_gpuTemp.IsValid() ? m_gpuTemp.ToString() : "?";
-      break;
-    case LCD_FAN_SPEED:
-    case SYSTEM_FAN_SPEED:
-      text.Format("%i%%", m_fanSpeed * 2);
-      break;
-    case SYSTEM_CPU_USAGE:
+	CStdString text;
+	switch(info)
+	{
+		case LCD_CPU_TEMPERATURE:
+		case SYSTEM_CPU_TEMPERATURE:
+			return m_cpuTemp.IsValid() ? m_cpuTemp.ToString() : "?";
+			break;
+		case LCD_GPU_TEMPERATURE:
+		case SYSTEM_GPU_TEMPERATURE:
+			return m_gpuTemp.IsValid() ? m_gpuTemp.ToString() : "?";
+			break;
+		case LCD_FAN_SPEED:
+		case SYSTEM_FAN_SPEED:
+			text.Format("%i%%", m_fanSpeed * 2);
+			break;
+		case SYSTEM_CPU_USAGE:
 #if defined(__APPLE__) || defined(_WIN32)
-      text.Format("%d%%", g_cpuInfo.getUsedPercentage());
+			text.Format("%d%%", g_cpuInfo.getUsedPercentage());
 #else
-      text.Format("%s", g_cpuInfo.GetCoresUsageString());
+			text.Format("%s", g_cpuInfo.GetCoresUsageString());
 #endif
-      break;
-  }
-  return text;
+			break;
+	}
+	return text;
 }
 
 CTemperature CGUIInfoManager::GetGPUTemperature()
 {
-  CStdString  cmd   = g_advancedSettings.m_gpuTempCmd;
-  int         value = 0,
-              ret   = 0;
-  char        scale = 0;
-  FILE        *p    = NULL;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CStdString  cmd   = g_advancedSettings.m_gpuTempCmd;
+	int         value = 0,
+	ret   = 0;
+	char        scale = 0;
+	FILE        *p    = NULL;
 
-  if (cmd.IsEmpty() || !(p = popen(cmd.c_str(), "r")))
-    return CTemperature();
+	if (cmd.IsEmpty() || !(p = popen(cmd.c_str(), "r")))
+		return CTemperature();
 
-  ret = fscanf(p, "%d %c", &value, &scale);
-  pclose(p);
+	ret = fscanf(p, "%d %c", &value, &scale);
+	pclose(p);
 
-  if (ret != 2)
-    return CTemperature();
+	if (ret != 2)
+		return CTemperature();
 
-  if (scale == 'C' || scale == 'c')
-    return CTemperature::CreateFromCelsius(value);
-  if (scale == 'F' || scale == 'f')
-    return CTemperature::CreateFromFahrenheit(value);
-  return CTemperature();
+	if (scale == 'C' || scale == 'c')
+		return CTemperature::CreateFromCelsius(value);
+	if (scale == 'F' || scale == 'f')
+		return CTemperature::CreateFromFahrenheit(value);
+	return CTemperature();
 }
 
 // Version string MUST NOT contain spaces.  It is used
 // in the HTTP request user agent.
 CStdString CGUIInfoManager::GetVersion()
 {
-  CStdString tmp;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CStdString tmp;
 #ifdef GIT_REV
-  tmp.Format("%d.%d%s Git:%s", VERSION_MAJOR, VERSION_MINOR, VERSION_TAG, GIT_REV);
+	tmp.Format("%d.%d%s Git:%s", VERSION_MAJOR, VERSION_MINOR, VERSION_TAG, GIT_REV);
 #else
-  tmp.Format("%d.%d%s", VERSION_MAJOR, VERSION_MINOR, VERSION_TAG);
+	tmp.Format("%d.%d%s", VERSION_MAJOR, VERSION_MINOR, VERSION_TAG);
 #endif
-  return tmp;
+	return tmp;
 }
 
 CStdString CGUIInfoManager::GetBuild()
 {
-  CStdString tmp;
-  tmp.Format("%s", __DATE__);
-  return tmp;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CStdString tmp;
+	tmp.Format("%s", __DATE__);
+	return tmp;
 }
 
 void CGUIInfoManager::SetDisplayAfterSeek(unsigned int timeOut, int seekOffset)
 {
-  if (timeOut>0)
-  {
-    m_AfterSeekTimeout = CTimeUtils::GetFrameTime() +  timeOut;
-    if (seekOffset)
-      m_seekOffset = seekOffset;
-  }
-  else
-    m_AfterSeekTimeout = 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (timeOut>0)
+	{
+		m_AfterSeekTimeout = CTimeUtils::GetFrameTime() +  timeOut;
+		if (seekOffset)
+			m_seekOffset = seekOffset;
+	}
+	else
+		m_AfterSeekTimeout = 0;
 }
 
 bool CGUIInfoManager::GetDisplayAfterSeek()
 {
-  if (CTimeUtils::GetFrameTime() < m_AfterSeekTimeout)
-    return true;
-  m_seekOffset = 0;
-  return false;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (CTimeUtils::GetFrameTime() < m_AfterSeekTimeout)
+		return true;
+	m_seekOffset = 0;
+	return false;
 }
 
 CStdString CGUIInfoManager::GetAudioScrobblerLabel(int item)
 {
-  switch (item)
-  {
-  case AUDIOSCROBBLER_CONN_STATE:
-    return CLastfmScrobbler::GetInstance()->GetConnectionState();
-    break;
-  case AUDIOSCROBBLER_SUBMIT_INT:
-    return CLastfmScrobbler::GetInstance()->GetSubmitInterval();
-    break;
-  case AUDIOSCROBBLER_FILES_CACHED:
-    return CLastfmScrobbler::GetInstance()->GetFilesCached();
-    break;
-  case AUDIOSCROBBLER_SUBMIT_STATE:
-    return CLastfmScrobbler::GetInstance()->GetSubmitState();
-    break;
-  }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	switch (item)
+	{
+		case AUDIOSCROBBLER_CONN_STATE:
+			return CLastfmScrobbler::GetInstance()->GetConnectionState();
+			break;
+		case AUDIOSCROBBLER_SUBMIT_INT:
+			return CLastfmScrobbler::GetInstance()->GetSubmitInterval();
+			break;
+		case AUDIOSCROBBLER_FILES_CACHED:
+			return CLastfmScrobbler::GetInstance()->GetFilesCached();
+			break;
+		case AUDIOSCROBBLER_SUBMIT_STATE:
+			return CLastfmScrobbler::GetInstance()->GetSubmitState();
+			break;
+	}
 
-  return "";
+	return "";
 }
 
 void CGUIInfoManager::Clear()
 {
-  CSingleLock lock(m_critInfo);
-  for (unsigned int i = 0; i < m_bools.size(); ++i)
-    delete m_bools[i];
-  m_bools.clear();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CSingleLock lock(m_critInfo);
+	for (unsigned int i = 0; i < m_bools.size(); ++i)
+		delete m_bools[i];
+	m_bools.clear();
 
-  m_skinVariableStrings.clear();
+	m_skinVariableStrings.clear();
 }
 
 void CGUIInfoManager::UpdateFPS()
 {
-  m_frameCounter++;
-  unsigned int curTime = CTimeUtils::GetFrameTime();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	m_frameCounter++;
+	unsigned int curTime = CTimeUtils::GetFrameTime();
 
-  float fTimeSpan = (float)(curTime - m_lastFPSTime);
-  if (fTimeSpan >= 1000.0f)
-  {
-    fTimeSpan /= 1000.0f;
-    m_fps = m_frameCounter / fTimeSpan;
-    m_lastFPSTime = curTime;
-    m_frameCounter = 0;
-  }
+	float fTimeSpan = (float)(curTime - m_lastFPSTime);
+	if (fTimeSpan >= 1000.0f)
+	{
+		fTimeSpan /= 1000.0f;
+		m_fps = m_frameCounter / fTimeSpan;
+		m_lastFPSTime = curTime;
+		m_frameCounter = 0;
+	}
 }
 
 int CGUIInfoManager::AddListItemProp(const CStdString &str, int offset)
 {
-  for (int i=0; i < (int)m_listitemProperties.size(); i++)
-    if (m_listitemProperties[i] == str)
-      return (LISTITEM_PROPERTY_START+offset + i);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	for (int i=0; i < (int)m_listitemProperties.size(); i++)
+		if (m_listitemProperties[i] == str)
+			return (LISTITEM_PROPERTY_START+offset + i);
 
-  if (m_listitemProperties.size() < LISTITEM_PROPERTY_END - LISTITEM_PROPERTY_START)
-  {
-    m_listitemProperties.push_back(str);
-    return LISTITEM_PROPERTY_START + offset + m_listitemProperties.size() - 1;
-  }
+	if (m_listitemProperties.size() < LISTITEM_PROPERTY_END - LISTITEM_PROPERTY_START)
+	{
+		m_listitemProperties.push_back(str);
+		return LISTITEM_PROPERTY_START + offset + m_listitemProperties.size() - 1;
+	}
 
-  CLog::Log(LOGERROR,"%s - not enough listitem property space!", __FUNCTION__);
-  return 0;
+	CLog::Log(LOGERROR,"%s - not enough listitem property space!", __FUNCTION__);
+	return 0;
 }
 
 int CGUIInfoManager::AddMultiInfo(const GUIInfo &info)
 {
-  // check to see if we have this info already
-  for (unsigned int i = 0; i < m_multiInfo.size(); i++)
-    if (m_multiInfo[i] == info)
-      return (int)i + MULTI_INFO_START;
-  // return the new offset
-  m_multiInfo.push_back(info);
-  int id = (int)m_multiInfo.size() + MULTI_INFO_START - 1;
-  if (id > MULTI_INFO_END)
-    CLog::Log(LOGERROR, "%s - too many multiinfo bool/labels in this skin", __FUNCTION__);
-  return id;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// check to see if we have this info already
+	for (unsigned int i = 0; i < m_multiInfo.size(); i++)
+		if (m_multiInfo[i] == info)
+			return (int)i + MULTI_INFO_START;
+	// return the new offset
+	m_multiInfo.push_back(info);
+	int id = (int)m_multiInfo.size() + MULTI_INFO_START - 1;
+	if (id > MULTI_INFO_END)
+		CLog::Log(LOGERROR, "%s - too many multiinfo bool/labels in this skin", __FUNCTION__);
+	return id;
 }
 
 int CGUIInfoManager::ConditionalStringParameter(const CStdString &parameter, bool caseSensitive /*= false*/)
 {
-  // check to see if we have this parameter already
-  for (unsigned int i = 0; i < m_stringParameters.size(); i++)
-    if (parameter.Equals(m_stringParameters[i], caseSensitive))
-      return (int)i;
-  // return the new offset
-  m_stringParameters.push_back(parameter);
-  return (int)m_stringParameters.size() - 1;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// check to see if we have this parameter already
+	for (unsigned int i = 0; i < m_stringParameters.size(); i++)
+		if (parameter.Equals(m_stringParameters[i], caseSensitive))
+			return (int)i;
+	// return the new offset
+	m_stringParameters.push_back(parameter);
+	return (int)m_stringParameters.size() - 1;
 }
 
 bool CGUIInfoManager::GetItemInt(int &value, const CGUIListItem *item, int info) const
 {
-  if (!item)
-  {
-    value = 0;
-    return false;
-  }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (!item)
+	{
+		value = 0;
+		return false;
+	}
 
-  if (info >= LISTITEM_PROPERTY_START && info - LISTITEM_PROPERTY_START < (int)m_listitemProperties.size())
-  { // grab the property
-    CStdString property = m_listitemProperties[info - LISTITEM_PROPERTY_START];
-    CStdString val = item->GetProperty(property).asString();
-    value = atoi(val);
-    return true;
-  }
+	if (info >= LISTITEM_PROPERTY_START && info - LISTITEM_PROPERTY_START < (int)m_listitemProperties.size())
+	{ // grab the property
+		CStdString property = m_listitemProperties[info - LISTITEM_PROPERTY_START];
+		CStdString val = item->GetProperty(property).asString();
+		value = atoi(val);
+		return true;
+	}
 
-  switch (info)
-  {
-  case LISTITEM_PERCENT_PLAYED:
-    if (item->IsFileItem() && ((const CFileItem *)item)->HasVideoInfoTag() && ((const CFileItem *)item)->GetVideoInfoTag()->m_resumePoint.totalTimeInSeconds > 0)
-      value = (int)(100 * ((const CFileItem *)item)->GetVideoInfoTag()->m_resumePoint.timeInSeconds / ((const CFileItem *)item)->GetVideoInfoTag()->m_resumePoint.totalTimeInSeconds);
-    else
-      value = 0;
-    return true;
-  }
+	switch (info)
+	{
+		case LISTITEM_PERCENT_PLAYED:
+			if (item->IsFileItem() && ((const CFileItem *)item)->HasVideoInfoTag() && ((const CFileItem *)item)->GetVideoInfoTag()->m_resumePoint.totalTimeInSeconds > 0)
+				value = (int)(100 * ((const CFileItem *)item)->GetVideoInfoTag()->m_resumePoint.timeInSeconds / ((const CFileItem *)item)->GetVideoInfoTag()->m_resumePoint.totalTimeInSeconds);
+			else
+				value = 0;
+			return true;
+	}
 
-  value = 0;
-  return false;
+	value = 0;
+	return false;
 }
 
 CStdString CGUIInfoManager::GetItemLabel(const CFileItem *item, int info)
 {
-  if (!item) return "";
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (!item) 
+		return "";
 
-  if (info >= CONDITIONAL_LABEL_START && info <= CONDITIONAL_LABEL_END)
-    return GetSkinVariableString(info, false, item);
+	if (info >= CONDITIONAL_LABEL_START && info <= CONDITIONAL_LABEL_END)
+		return GetSkinVariableString(info, false, item);
 
-  if (info >= LISTITEM_PROPERTY_START && info - LISTITEM_PROPERTY_START < (int)m_listitemProperties.size())
-  { // grab the property
-    CStdString property = m_listitemProperties[info - LISTITEM_PROPERTY_START];
-    return item->GetProperty(property).asString();
-  }
+	if (info >= LISTITEM_PROPERTY_START && info - LISTITEM_PROPERTY_START < (int)m_listitemProperties.size())
+	{ // grab the property
+		CStdString property = m_listitemProperties[info - LISTITEM_PROPERTY_START];
+		return item->GetProperty(property).asString();
+	}
 
-  switch (info)
-  {
-  case LISTITEM_LABEL:
-    return item->GetLabel();
-  case LISTITEM_LABEL2:
-    return item->GetLabel2();
-  case LISTITEM_TITLE:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_strTitle;
-    if (item->HasMusicInfoTag())
-      return item->GetMusicInfoTag()->GetTitle();
-    break;
-  case LISTITEM_ORIGINALTITLE:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_strOriginalTitle;
-    break;
-  case LISTITEM_PLAYCOUNT:
-    {
-      CStdString strPlayCount;
-      if (item->HasVideoInfoTag() && item->GetVideoInfoTag()->m_playCount > 0)
-        strPlayCount.Format("%i", item->GetVideoInfoTag()->m_playCount);
-      if (item->HasMusicInfoTag() && item->GetMusicInfoTag()->GetPlayCount() > 0)
-        strPlayCount.Format("%i", item->GetMusicInfoTag()->GetPlayCount());
-      return strPlayCount;
-    }
-  case LISTITEM_LASTPLAYED:
-    {
-      CStdString strLastPlayed;
-      if (item->HasVideoInfoTag())
-        return item->GetVideoInfoTag()->m_lastPlayed;
-      if (item->HasMusicInfoTag())
-        return item->GetMusicInfoTag()->GetLastPlayed();
-      break;
-    }
-  case LISTITEM_TRACKNUMBER:
-    {
-      CStdString track;
-      if (item->HasMusicInfoTag())
-        track.Format("%i", item->GetMusicInfoTag()->GetTrackNumber());
+	switch (info)
+	{
+		case LISTITEM_LABEL:
+			return item->GetLabel();
+		case LISTITEM_LABEL2:
+			return item->GetLabel2();
+		case LISTITEM_TITLE:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_strTitle;
+			if (item->HasMusicInfoTag())
+				return item->GetMusicInfoTag()->GetTitle();
+			break;
+		case LISTITEM_ORIGINALTITLE:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_strOriginalTitle;
+			break;
+		case LISTITEM_PLAYCOUNT:
+			{
+				CStdString strPlayCount;
+				if (item->HasVideoInfoTag() && item->GetVideoInfoTag()->m_playCount > 0)
+					strPlayCount.Format("%i", item->GetVideoInfoTag()->m_playCount);
+				if (item->HasMusicInfoTag() && item->GetMusicInfoTag()->GetPlayCount() > 0)
+					strPlayCount.Format("%i", item->GetMusicInfoTag()->GetPlayCount());
+				return strPlayCount;
+			}
+		case LISTITEM_LASTPLAYED:
+			{
+				CStdString strLastPlayed;
+				if (item->HasVideoInfoTag())
+					return item->GetVideoInfoTag()->m_lastPlayed;
+				if (item->HasMusicInfoTag())
+					return item->GetMusicInfoTag()->GetLastPlayed();
+				break;
+			}
+		case LISTITEM_TRACKNUMBER:
+			{
+				CStdString track;
+				if (item->HasMusicInfoTag())
+					track.Format("%i", item->GetMusicInfoTag()->GetTrackNumber());
 
-      return track;
-    }
-  case LISTITEM_DISC_NUMBER:
-    {
-      CStdString disc;
-      if (item->HasMusicInfoTag() && item->GetMusicInfoTag()->GetDiscNumber() > 0)
-        disc.Format("%i", item->GetMusicInfoTag()->GetDiscNumber());
-      return disc;
-    }
-  case LISTITEM_ARTIST:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_strArtist;
-    if (item->HasMusicInfoTag())
-      return item->GetMusicInfoTag()->GetArtist();
-    break;
-  case LISTITEM_ALBUM_ARTIST:
-    if (item->HasMusicInfoTag())
-      return item->GetMusicInfoTag()->GetAlbumArtist();
-    break;
-  case LISTITEM_DIRECTOR:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_strDirector;
-  case LISTITEM_ALBUM:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_strAlbum;
-    if (item->HasMusicInfoTag())
-      return item->GetMusicInfoTag()->GetAlbum();
-    break;
-  case LISTITEM_YEAR:
-    if (item->HasVideoInfoTag())
-    {
-      CStdString strResult;
-      if (item->GetVideoInfoTag()->m_iYear > 0)
-        strResult.Format("%i",item->GetVideoInfoTag()->m_iYear);
-      return strResult;
-    }
-    if (item->HasMusicInfoTag())
-      return item->GetMusicInfoTag()->GetYearString();
-    break;
-  case LISTITEM_PREMIERED:
-    if (item->HasVideoInfoTag())
-    {
-      if (!item->GetVideoInfoTag()->m_strFirstAired.IsEmpty())
-        return item->GetVideoInfoTag()->m_strFirstAired;
-      if (!item->GetVideoInfoTag()->m_strPremiered.IsEmpty())
-        return item->GetVideoInfoTag()->m_strPremiered;
-    }
-    break;
-  case LISTITEM_GENRE:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_strGenre;
-    if (item->HasMusicInfoTag())
-      return item->GetMusicInfoTag()->GetGenre();
-    break;
-  case LISTITEM_FILENAME:
-  case LISTITEM_FILE_EXTENSION:
-    {
-      CStdString strFile;
-      if (item->IsMusicDb() && item->HasMusicInfoTag())
-        strFile = URIUtils::GetFileName(item->GetMusicInfoTag()->GetURL());
-      else if (item->IsVideoDb() && item->HasVideoInfoTag())
-        strFile = URIUtils::GetFileName(item->GetVideoInfoTag()->m_strFileNameAndPath);
-      else
-        strFile = URIUtils::GetFileName(item->GetPath());
+				return track;
+			}
+		case LISTITEM_DISC_NUMBER:
+			{
+				CStdString disc;
+				if (item->HasMusicInfoTag() && item->GetMusicInfoTag()->GetDiscNumber() > 0)
+					disc.Format("%i", item->GetMusicInfoTag()->GetDiscNumber());
+				return disc;
+			}
+		case LISTITEM_ARTIST:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_strArtist;
+			if (item->HasMusicInfoTag())
+				return item->GetMusicInfoTag()->GetArtist();
+			break;
+		case LISTITEM_ALBUM_ARTIST:
+			if (item->HasMusicInfoTag())
+				return item->GetMusicInfoTag()->GetAlbumArtist();
+			break;
+		case LISTITEM_DIRECTOR:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_strDirector;
+		case LISTITEM_ALBUM:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_strAlbum;
+			if (item->HasMusicInfoTag())
+				return item->GetMusicInfoTag()->GetAlbum();
+			break;
+		case LISTITEM_YEAR:
+			if (item->HasVideoInfoTag())
+			{
+				CStdString strResult;
+				if (item->GetVideoInfoTag()->m_iYear > 0)
+					strResult.Format("%i",item->GetVideoInfoTag()->m_iYear);
+				return strResult;
+			}
+			if (item->HasMusicInfoTag())
+				return item->GetMusicInfoTag()->GetYearString();
+			break;
+		case LISTITEM_PREMIERED:
+			if (item->HasVideoInfoTag())
+			{
+				if (!item->GetVideoInfoTag()->m_strFirstAired.IsEmpty())
+					return item->GetVideoInfoTag()->m_strFirstAired;
+				if (!item->GetVideoInfoTag()->m_strPremiered.IsEmpty())
+					return item->GetVideoInfoTag()->m_strPremiered;
+			}
+			break;
+		case LISTITEM_GENRE:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_strGenre;
+			if (item->HasMusicInfoTag())
+				return item->GetMusicInfoTag()->GetGenre();
+			break;
+		case LISTITEM_FILENAME:
+		case LISTITEM_FILE_EXTENSION:
+			{
+				CStdString strFile;
+				if (item->IsMusicDb() && item->HasMusicInfoTag())
+					strFile = URIUtils::GetFileName(item->GetMusicInfoTag()->GetURL());
+				else if (item->IsVideoDb() && item->HasVideoInfoTag())
+					strFile = URIUtils::GetFileName(item->GetVideoInfoTag()->m_strFileNameAndPath);
+				else
+					strFile = URIUtils::GetFileName(item->GetPath());
 
-      if (info==LISTITEM_FILE_EXTENSION)
-      {
-        CStdString strExtension = URIUtils::GetExtension(strFile);
-        return strExtension.TrimLeft(".");
-      }
-      return strFile;
-    }
-    break;
-  case LISTITEM_DATE:
-    if (item->m_dateTime.IsValid())
-      return item->m_dateTime.GetAsLocalizedDate();
-    break;
-  case LISTITEM_SIZE:
-    if (!item->m_bIsFolder || item->m_dwSize)
-      return StringUtils::SizeToString(item->m_dwSize);
-    break;
-  case LISTITEM_RATING:
-    {
-      CStdString rating;
-      if (item->HasVideoInfoTag() && item->GetVideoInfoTag()->m_fRating > 0.f) // movie rating
-        rating.Format("%.1f", item->GetVideoInfoTag()->m_fRating);
-      else if (item->HasMusicInfoTag() && item->GetMusicInfoTag()->GetRating() > '0')
-      { // song rating.  Images will probably be better than numbers for this in the long run
-        rating = item->GetMusicInfoTag()->GetRating();
-      }
-      return rating;
-    }
-  case LISTITEM_RATING_AND_VOTES:
-    {
-      if (item->HasVideoInfoTag() && item->GetVideoInfoTag()->m_fRating > 0.f) // movie rating
-      {
-        CStdString strRatingAndVotes;
-        if (item->GetVideoInfoTag()->m_strVotes.IsEmpty())
-          strRatingAndVotes.Format("%.1f", item->GetVideoInfoTag()->m_fRating);
-        else
-          strRatingAndVotes.Format("%.1f (%s %s)", item->GetVideoInfoTag()->m_fRating, item->GetVideoInfoTag()->m_strVotes, g_localizeStrings.Get(20350));
-        return strRatingAndVotes;
-      }
-    }
-    break;
-  case LISTITEM_PROGRAM_COUNT:
-    {
-      CStdString count;
-      count.Format("%i", item->m_iprogramCount);
-      return count;
-    }
-  case LISTITEM_DURATION:
-    {
-      CStdString duration;
-      if (item->HasVideoInfoTag())
-      {
-        if (!item->GetVideoInfoTag()->m_strRuntime.IsEmpty())
-          duration = item->GetVideoInfoTag()->m_strRuntime;
-      }
-      if (item->HasMusicInfoTag())
-      {
-        if (item->GetMusicInfoTag()->GetDuration() > 0)
-          duration = StringUtils::SecondsToTimeString(item->GetMusicInfoTag()->GetDuration());
-      }
-      return duration;
-    }
-  case LISTITEM_PLOT:
-    if (item->HasVideoInfoTag())
-    {
-      if (!(!item->GetVideoInfoTag()->m_strShowTitle.IsEmpty() && item->GetVideoInfoTag()->m_iSeason == -1)) // dont apply to tvshows
-        if (item->GetVideoInfoTag()->m_playCount == 0 && !g_guiSettings.GetBool("videolibrary.showunwatchedplots"))
-          return g_localizeStrings.Get(20370);
+				if (info==LISTITEM_FILE_EXTENSION)
+				{
+					CStdString strExtension = URIUtils::GetExtension(strFile);
+					return strExtension.TrimLeft(".");
+				}
+				return strFile;
+			}
+			break;
+		case LISTITEM_DATE:
+			if (item->m_dateTime.IsValid())
+				return item->m_dateTime.GetAsLocalizedDate();
+			break;
+		case LISTITEM_SIZE:
+			if (!item->m_bIsFolder || item->m_dwSize)
+				return StringUtils::SizeToString(item->m_dwSize);
+			break;
+		case LISTITEM_RATING:
+			{
+				CStdString rating;
+				if (item->HasVideoInfoTag() && item->GetVideoInfoTag()->m_fRating > 0.f) // movie rating
+					rating.Format("%.1f", item->GetVideoInfoTag()->m_fRating);
+				else if (item->HasMusicInfoTag() && item->GetMusicInfoTag()->GetRating() > '0')
+				{ // song rating.  Images will probably be better than numbers for this in the long run
+					rating = item->GetMusicInfoTag()->GetRating();
+				}
+				return rating;
+			}
+		case LISTITEM_RATING_AND_VOTES:
+			{
+				if (item->HasVideoInfoTag() && item->GetVideoInfoTag()->m_fRating > 0.f) // movie rating
+				{
+					CStdString strRatingAndVotes;
+					if (item->GetVideoInfoTag()->m_strVotes.IsEmpty())
+						strRatingAndVotes.Format("%.1f", item->GetVideoInfoTag()->m_fRating);
+					else
+						strRatingAndVotes.Format("%.1f (%s %s)", item->GetVideoInfoTag()->m_fRating, item->GetVideoInfoTag()->m_strVotes, g_localizeStrings.Get(20350));
+					return strRatingAndVotes;
+				}
+			}
+			break;
+		case LISTITEM_PROGRAM_COUNT:
+			{
+				CStdString count;
+				count.Format("%i", item->m_iprogramCount);
+				return count;
+			}
+		case LISTITEM_DURATION:
+			{
+				CStdString duration;
+				if (item->HasVideoInfoTag())
+				{
+					if (!item->GetVideoInfoTag()->m_strRuntime.IsEmpty())
+						duration = item->GetVideoInfoTag()->m_strRuntime;
+				}
+				if (item->HasMusicInfoTag())
+				{
+					if (item->GetMusicInfoTag()->GetDuration() > 0)
+						duration = StringUtils::SecondsToTimeString(item->GetMusicInfoTag()->GetDuration());
+				}
+				return duration;
+			}
+		case LISTITEM_PLOT:
+			if (item->HasVideoInfoTag())
+			{
+				if (!(!item->GetVideoInfoTag()->m_strShowTitle.IsEmpty() && item->GetVideoInfoTag()->m_iSeason == -1)) // dont apply to tvshows
+					if (item->GetVideoInfoTag()->m_playCount == 0 && !g_guiSettings.GetBool("videolibrary.showunwatchedplots"))
+						return g_localizeStrings.Get(20370);
 
-      return item->GetVideoInfoTag()->m_strPlot;
-    }
-    break;
-  case LISTITEM_PLOT_OUTLINE:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_strPlotOutline;
-    break;
-  case LISTITEM_EPISODE:
-    if (item->HasVideoInfoTag())
-    {
-      CStdString strResult;
-      if (item->GetVideoInfoTag()->m_iSpecialSortEpisode > 0)
-        strResult.Format("S%d",item->GetVideoInfoTag()->m_iEpisode);
-      else if (item->GetVideoInfoTag()->m_iEpisode > 0) // if m_iEpisode = -1 there's no episode detail
-        strResult.Format("%d",item->GetVideoInfoTag()->m_iEpisode);
-      return strResult;
-    }
-    break;
-  case LISTITEM_SEASON:
-    if (item->HasVideoInfoTag())
-    {
-      CStdString strResult;
-      if (item->GetVideoInfoTag()->m_iSpecialSortSeason > 0)
-        strResult.Format("%d",item->GetVideoInfoTag()->m_iSpecialSortSeason);
-      else if (item->GetVideoInfoTag()->m_iSeason > 0) // if m_iSeason = -1 there's no season detail
-        strResult.Format("%d",item->GetVideoInfoTag()->m_iSeason);
-      return strResult;
-    }
-    break;
-  case LISTITEM_TVSHOW:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_strShowTitle;
-    break;
-  case LISTITEM_COMMENT:
-    if (item->HasMusicInfoTag())
-      return item->GetMusicInfoTag()->GetComment();
-    break;
-  case LISTITEM_ACTUAL_ICON:
-    return item->GetIconImage();
-  case LISTITEM_ICON:
-    {
-      CStdString strThumb = item->GetThumbnailImage();
-      if(!strThumb.IsEmpty() && !g_TextureManager.CanLoad(strThumb))
-        strThumb = "";
+				return item->GetVideoInfoTag()->m_strPlot;
+			}
+			break;
+		case LISTITEM_PLOT_OUTLINE:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_strPlotOutline;
+			break;
+		case LISTITEM_EPISODE:
+			if (item->HasVideoInfoTag())
+			{
+				CStdString strResult;
+				if (item->GetVideoInfoTag()->m_iSpecialSortEpisode > 0)
+					strResult.Format("S%d",item->GetVideoInfoTag()->m_iEpisode);
+				else if (item->GetVideoInfoTag()->m_iEpisode > 0) // if m_iEpisode = -1 there's no episode detail
+					strResult.Format("%d",item->GetVideoInfoTag()->m_iEpisode);
+				return strResult;
+			}
+			break;
+		case LISTITEM_SEASON:
+			if (item->HasVideoInfoTag())
+			{
+				CStdString strResult;
+				if (item->GetVideoInfoTag()->m_iSpecialSortSeason > 0)
+					strResult.Format("%d",item->GetVideoInfoTag()->m_iSpecialSortSeason);
+				else if (item->GetVideoInfoTag()->m_iSeason > 0) // if m_iSeason = -1 there's no season detail
+					strResult.Format("%d",item->GetVideoInfoTag()->m_iSeason);
+				return strResult;
+			}
+			break;
+		case LISTITEM_TVSHOW:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_strShowTitle;
+			break;
+		case LISTITEM_COMMENT:
+			if (item->HasMusicInfoTag())
+				return item->GetMusicInfoTag()->GetComment();
+			break;
+		case LISTITEM_ACTUAL_ICON:
+			return item->GetIconImage();
+		case LISTITEM_ICON:
+			{
+				CStdString strThumb = item->GetThumbnailImage();
+				if(!strThumb.IsEmpty() && !g_TextureManager.CanLoad(strThumb))
+					strThumb = "";
 
-      if(strThumb.IsEmpty() && !item->GetIconImage().IsEmpty())
-        strThumb = item->GetIconImage();
-      return strThumb;
-    }
-  case LISTITEM_OVERLAY:
-    return item->GetOverlayImage();
-  case LISTITEM_THUMB:
-    return item->GetThumbnailImage();
-  case LISTITEM_FOLDERPATH:
-    return CURL(item->GetPath()).GetWithoutUserDetails();
-  case LISTITEM_FOLDERNAME:
-  case LISTITEM_PATH:
-    {
-      CStdString path;
-      if (item->IsMusicDb() && item->HasMusicInfoTag())
-        URIUtils::GetDirectory(item->GetMusicInfoTag()->GetURL(), path);
-      else if (item->IsVideoDb() && item->HasVideoInfoTag())
-      {
-        if( item->m_bIsFolder )
-          path = item->GetVideoInfoTag()->m_strPath;
-        else
-          URIUtils::GetParentPath(item->GetVideoInfoTag()->m_strFileNameAndPath, path);
-      }
-      else
-        URIUtils::GetParentPath(item->GetPath(), path);
-      path = CURL(path).GetWithoutUserDetails();
-      if (info==LISTITEM_FOLDERNAME)
-      {
-        URIUtils::RemoveSlashAtEnd(path);
-        path=URIUtils::GetFileName(path);
-      }
-      CURL::Decode(path);
-      return path;
-    }
-  case LISTITEM_FILENAME_AND_PATH:
-    {
-      CStdString path;
-      if (item->IsMusicDb() && item->HasMusicInfoTag())
-        path = item->GetMusicInfoTag()->GetURL();
-      else if (item->IsVideoDb() && item->HasVideoInfoTag())
-        path = item->GetVideoInfoTag()->m_strFileNameAndPath;
-      else
-        path = item->GetPath();
-      path = CURL(path).GetWithoutUserDetails();
-      CURL::Decode(path);
-      return path;
-    }
-  case LISTITEM_PICTURE_PATH:
-    if (item->IsPicture() && (!item->IsZIP() || item->IsRAR() || item->IsCBZ() || item->IsCBR()))
-      return item->GetPath();
-    break;
-  case LISTITEM_PICTURE_DATETIME:
-    if (item->HasPictureInfoTag())
-      return item->GetPictureInfoTag()->GetInfo(SLIDE_EXIF_DATE_TIME);
-    break;
-  case LISTITEM_PICTURE_RESOLUTION:
-    if (item->HasPictureInfoTag())
-      return item->GetPictureInfoTag()->GetInfo(SLIDE_RESOLUTION);
-    break;
-  case LISTITEM_STUDIO:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_strStudio;
-    break;
-  case LISTITEM_COUNTRY:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_strCountry;
-    break;
-  case LISTITEM_MPAA:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_strMPAARating;
-    break;
-  case LISTITEM_CAST:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->GetCast();
-    break;
-  case LISTITEM_CAST_AND_ROLE:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->GetCast(true);
-    break;
-  case LISTITEM_WRITER:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_strWritingCredits;
-    break;
-  case LISTITEM_TAGLINE:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_strTagLine;
-    break;
-  case LISTITEM_TRAILER:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_strTrailer;
-    break;
-  case LISTITEM_TOP250:
-    if (item->HasVideoInfoTag())
-    {
-      CStdString strResult;
-      if (item->GetVideoInfoTag()->m_iTop250 > 0)
-        strResult.Format("%i",item->GetVideoInfoTag()->m_iTop250);
-      return strResult;
-    }
-    break;
-  case LISTITEM_SORT_LETTER:
-    {
-      CStdString letter;
-      g_charsetConverter.wToUTF8(item->GetSortLabel().Left(1).ToUpper(), letter);
-      return letter;
-    }
-    break;
-  case LISTITEM_VIDEO_CODEC:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_streamDetails.GetVideoCodec();
-    break;
-  case LISTITEM_VIDEO_RESOLUTION:
-    if (item->HasVideoInfoTag())
-      return CStreamDetails::VideoDimsToResolutionDescription(item->GetVideoInfoTag()->m_streamDetails.GetVideoWidth(), item->GetVideoInfoTag()->m_streamDetails.GetVideoHeight());
-    break;
-  case LISTITEM_VIDEO_ASPECT:
-    if (item->HasVideoInfoTag())
-      return CStreamDetails::VideoAspectToAspectDescription(item->GetVideoInfoTag()->m_streamDetails.GetVideoAspect());
-    break;
-  case LISTITEM_AUDIO_CODEC:
-    if (item->HasVideoInfoTag())
-    {
-      return item->GetVideoInfoTag()->m_streamDetails.GetAudioCodec();
-    }
-    break;
-  case LISTITEM_AUDIO_CHANNELS:
-    if (item->HasVideoInfoTag())
-    {
-      CStdString strResult;
-      int iChannels = item->GetVideoInfoTag()->m_streamDetails.GetAudioChannels();
-      if (iChannels > -1)
-        strResult.Format("%i", iChannels);
-      return strResult;
-    }
-    break;
-  case LISTITEM_AUDIO_LANGUAGE:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_streamDetails.GetAudioLanguage();
-    break;
-  case LISTITEM_SUBTITLE_LANGUAGE:
-    if (item->HasVideoInfoTag())
-      return item->GetVideoInfoTag()->m_streamDetails.GetSubtitleLanguage();
-    break;
-  case LISTITEM_PERCENT_PLAYED:
-    {
-      int val;
-      if (GetItemInt(val, item, info))
-      {
-        CStdString str;
-        str.Format("%d", val);
-        return str;
-      }
-    }
-  }
-  return "";
+				if(strThumb.IsEmpty() && !item->GetIconImage().IsEmpty())
+					strThumb = item->GetIconImage();
+				return strThumb;
+			}
+		case LISTITEM_OVERLAY:
+			return item->GetOverlayImage();
+		case LISTITEM_THUMB:
+			return item->GetThumbnailImage();
+		case LISTITEM_FOLDERPATH:
+			return CURL(item->GetPath()).GetWithoutUserDetails();
+		case LISTITEM_FOLDERNAME:
+		case LISTITEM_PATH:
+			{
+				CStdString path;
+				if (item->IsMusicDb() && item->HasMusicInfoTag())
+					URIUtils::GetDirectory(item->GetMusicInfoTag()->GetURL(), path);
+				else if (item->IsVideoDb() && item->HasVideoInfoTag())
+				{
+					if( item->m_bIsFolder )
+						path = item->GetVideoInfoTag()->m_strPath;
+					else
+						URIUtils::GetParentPath(item->GetVideoInfoTag()->m_strFileNameAndPath, path);
+				}
+				else
+					URIUtils::GetParentPath(item->GetPath(), path);
+				path = CURL(path).GetWithoutUserDetails();
+				if (info==LISTITEM_FOLDERNAME)
+				{
+					URIUtils::RemoveSlashAtEnd(path);
+					path=URIUtils::GetFileName(path);
+				}
+				CURL::Decode(path);
+				return path;
+			}
+		case LISTITEM_FILENAME_AND_PATH:
+			{
+				CStdString path;
+				if (item->IsMusicDb() && item->HasMusicInfoTag())
+					path = item->GetMusicInfoTag()->GetURL();
+				else if (item->IsVideoDb() && item->HasVideoInfoTag())
+					path = item->GetVideoInfoTag()->m_strFileNameAndPath;
+				else
+					path = item->GetPath();
+				path = CURL(path).GetWithoutUserDetails();
+				CURL::Decode(path);
+				return path;
+			}
+		case LISTITEM_PICTURE_PATH:
+			if (item->IsPicture() && (!item->IsZIP() || item->IsRAR() || item->IsCBZ() || item->IsCBR()))
+				return item->GetPath();
+			break;
+		case LISTITEM_PICTURE_DATETIME:
+			if (item->HasPictureInfoTag())
+				return item->GetPictureInfoTag()->GetInfo(SLIDE_EXIF_DATE_TIME);
+			break;
+		case LISTITEM_PICTURE_RESOLUTION:
+			if (item->HasPictureInfoTag())
+				return item->GetPictureInfoTag()->GetInfo(SLIDE_RESOLUTION);
+			break;
+		case LISTITEM_STUDIO:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_strStudio;
+			break;
+		case LISTITEM_COUNTRY:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_strCountry;
+			break;
+		case LISTITEM_MPAA:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_strMPAARating;
+			break;
+		case LISTITEM_CAST:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->GetCast();
+			break;
+		case LISTITEM_CAST_AND_ROLE:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->GetCast(true);
+			break;
+		case LISTITEM_WRITER:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_strWritingCredits;
+			break;
+		case LISTITEM_TAGLINE:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_strTagLine;
+			break;
+		case LISTITEM_TRAILER:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_strTrailer;
+			break;
+		case LISTITEM_TOP250:
+			if (item->HasVideoInfoTag())
+			{
+				CStdString strResult;
+				if (item->GetVideoInfoTag()->m_iTop250 > 0)
+					strResult.Format("%i",item->GetVideoInfoTag()->m_iTop250);
+				return strResult;
+			}
+			break;
+		case LISTITEM_SORT_LETTER:
+			{
+				CStdString letter;
+				g_charsetConverter.wToUTF8(item->GetSortLabel().Left(1).ToUpper(), letter);
+				return letter;
+			}
+			break;
+		case LISTITEM_VIDEO_CODEC:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_streamDetails.GetVideoCodec();
+			break;
+		case LISTITEM_VIDEO_RESOLUTION:
+			if (item->HasVideoInfoTag())
+				return CStreamDetails::VideoDimsToResolutionDescription(item->GetVideoInfoTag()->m_streamDetails.GetVideoWidth(), item->GetVideoInfoTag()->m_streamDetails.GetVideoHeight());
+			break;
+		case LISTITEM_VIDEO_ASPECT:
+			if (item->HasVideoInfoTag())
+				return CStreamDetails::VideoAspectToAspectDescription(item->GetVideoInfoTag()->m_streamDetails.GetVideoAspect());
+			break;
+		case LISTITEM_AUDIO_CODEC:
+			if (item->HasVideoInfoTag())
+			{
+				return item->GetVideoInfoTag()->m_streamDetails.GetAudioCodec();
+			}
+			break;
+		case LISTITEM_AUDIO_CHANNELS:
+			if (item->HasVideoInfoTag())
+			{
+				CStdString strResult;
+				int iChannels = item->GetVideoInfoTag()->m_streamDetails.GetAudioChannels();
+				if (iChannels > -1)
+					strResult.Format("%i", iChannels);
+				return strResult;
+			}
+			break;
+		case LISTITEM_AUDIO_LANGUAGE:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_streamDetails.GetAudioLanguage();
+			break;
+		case LISTITEM_SUBTITLE_LANGUAGE:
+			if (item->HasVideoInfoTag())
+				return item->GetVideoInfoTag()->m_streamDetails.GetSubtitleLanguage();
+			break;
+		case LISTITEM_PERCENT_PLAYED:
+			{
+				int val;
+				if (GetItemInt(val, item, info))
+				{
+					CStdString str;
+					str.Format("%d", val);
+					return str;
+				}
+			}
+		}
+	return "";
 }
 
 CStdString CGUIInfoManager::GetItemImage(const CFileItem *item, int info)
 {
-  if (info >= CONDITIONAL_LABEL_START && info <= CONDITIONAL_LABEL_END)
-    return GetSkinVariableString(info, true, item);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (info >= CONDITIONAL_LABEL_START && info <= CONDITIONAL_LABEL_END)
+		return GetSkinVariableString(info, true, item);
 
-  switch (info)
-  {
-  case LISTITEM_RATING:  // old song rating format
-    {
-      CStdString rating;
-      if (item->HasMusicInfoTag())
-      {
-        rating.Format("songrating%c.png", item->GetMusicInfoTag()->GetRating());
-        return rating;
-      }
-    }
-    break;
-  case LISTITEM_STAR_RATING:
-    {
-      CStdString rating;
-      if (item->HasVideoInfoTag())
-      { // rating for videos is assumed 0..10, so convert to 0..5
-        rating.Format("rating%d.png", (long)((item->GetVideoInfoTag()->m_fRating * 0.5f) + 0.5f));
-      }
-      else if (item->HasMusicInfoTag())
-      { // song rating.
-        rating.Format("rating%c.png", item->GetMusicInfoTag()->GetRating());
-      }
-      return rating;
-    }
-    break;
-  }  /* switch (info) */
+	switch (info)
+	{
+		case LISTITEM_RATING:  // old song rating format
+			{
+				CStdString rating;
+				if (item->HasMusicInfoTag())
+				{
+					rating.Format("songrating%c.png", item->GetMusicInfoTag()->GetRating());
+					return rating;
+				}
+			}
+			break;
+		case LISTITEM_STAR_RATING:
+			{
+				CStdString rating;
+				if (item->HasVideoInfoTag())
+				{ // rating for videos is assumed 0..10, so convert to 0..5
+					rating.Format("rating%d.png", (long)((item->GetVideoInfoTag()->m_fRating * 0.5f) + 0.5f));
+				}
+				else if (item->HasMusicInfoTag())
+				{ // song rating.
+					rating.Format("rating%c.png", item->GetMusicInfoTag()->GetRating());
+				}
+				return rating;
+			}
+			break;
+	}  /* switch (info) */
 
-  return GetItemLabel(item, info);
+	return GetItemLabel(item, info);
 }
 
 bool CGUIInfoManager::GetItemBool(const CGUIListItem *item, int condition) const
 {
-  if (!item) return false;
-  if (condition >= LISTITEM_PROPERTY_START && condition - LISTITEM_PROPERTY_START < (int)m_listitemProperties.size())
-  { // grab the property
-    CStdString property = m_listitemProperties[condition - LISTITEM_PROPERTY_START];
-    return item->GetProperty(property).asBoolean();
-  }
-  else if (condition == LISTITEM_ISPLAYING)
-  {
-    if (item->HasProperty("playlistposition"))
-      return (int)item->GetProperty("playlisttype").asInteger() == g_playlistPlayer.GetCurrentPlaylist() && (int)item->GetProperty("playlistposition").asInteger() == g_playlistPlayer.GetCurrentSong();
-    else if (item->IsFileItem() && !m_currentFile->GetPath().IsEmpty())
-    {
-      if (!g_application.m_strPlayListFile.IsEmpty())
-      {
-        //playlist file that is currently playing or the playlistitem that is currently playing.
-        return g_application.m_strPlayListFile.Equals(((const CFileItem *)item)->GetPath()) || m_currentFile->IsSamePath((const CFileItem *)item);
-      }
-      return m_currentFile->IsSamePath((const CFileItem *)item);
-    }
-  }
-  else if (condition == LISTITEM_ISSELECTED)
-    return item->IsSelected();
-  else if (condition == LISTITEM_IS_FOLDER)
-    return item->m_bIsFolder;
-  else if (condition == LISTITEM_IS_RESUMABLE)
-    return (item->IsFileItem() && ((const CFileItem *)item)->HasVideoInfoTag() && ((const CFileItem *)item)->GetVideoInfoTag()->m_resumePoint.totalTimeInSeconds > 0);
-  return false;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (!item) 
+		return false;
+	if (condition >= LISTITEM_PROPERTY_START && condition - LISTITEM_PROPERTY_START < (int)m_listitemProperties.size())
+	{ // grab the property
+		CStdString property = m_listitemProperties[condition - LISTITEM_PROPERTY_START];
+		return item->GetProperty(property).asBoolean();
+	}
+	else if (condition == LISTITEM_ISPLAYING)
+	{
+		if (item->HasProperty("playlistposition"))
+			return (int)item->GetProperty("playlisttype").asInteger() == g_playlistPlayer.GetCurrentPlaylist() && (int)item->GetProperty("playlistposition").asInteger() == g_playlistPlayer.GetCurrentSong();
+		else if (item->IsFileItem() && !m_currentFile->GetPath().IsEmpty())
+		{
+			if (!g_application.m_strPlayListFile.IsEmpty())
+			{
+				//playlist file that is currently playing or the playlistitem that is currently playing.
+				return g_application.m_strPlayListFile.Equals(((const CFileItem *)item)->GetPath()) || m_currentFile->IsSamePath((const CFileItem *)item);
+			}
+			return m_currentFile->IsSamePath((const CFileItem *)item);
+		}
+	}
+	else if (condition == LISTITEM_ISSELECTED)
+		return item->IsSelected();
+	else if (condition == LISTITEM_IS_FOLDER)
+		return item->m_bIsFolder;
+	else if (condition == LISTITEM_IS_RESUMABLE)
+		return (item->IsFileItem() && ((const CFileItem *)item)->HasVideoInfoTag() && ((const CFileItem *)item)->GetVideoInfoTag()->m_resumePoint.totalTimeInSeconds > 0);
+	
+	return false;
 }
 
 void CGUIInfoManager::ResetCache()
 {
-  // reset any animation triggers as well
-  m_containerMoves.clear();
-  m_updateTime++;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// reset any animation triggers as well
+	m_containerMoves.clear();
+	m_updateTime++;
 }
 
 // Called from tuxbox service thread to update current status
 void CGUIInfoManager::UpdateFromTuxBox()
 {
-  if(g_tuxbox.vVideoSubChannel.mode)
-    m_currentFile->GetVideoInfoTag()->m_strTitle = g_tuxbox.vVideoSubChannel.current_name;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if(g_tuxbox.vVideoSubChannel.mode)
+		m_currentFile->GetVideoInfoTag()->m_strTitle = g_tuxbox.vVideoSubChannel.current_name;
 
-  // Set m_currentMovieDuration
-  if(!g_tuxbox.sCurSrvData.current_event_duration.IsEmpty() &&
-    !g_tuxbox.sCurSrvData.next_event_description.IsEmpty() &&
-    !g_tuxbox.sCurSrvData.current_event_duration.Equals("-") &&
-    !g_tuxbox.sCurSrvData.next_event_description.Equals("-"))
-  {
-    g_tuxbox.sCurSrvData.current_event_duration.Replace("(","");
-    g_tuxbox.sCurSrvData.current_event_duration.Replace(")","");
+	// Set m_currentMovieDuration
+	if(!g_tuxbox.sCurSrvData.current_event_duration.IsEmpty() &&
+						!g_tuxbox.sCurSrvData.next_event_description.IsEmpty() &&
+						!g_tuxbox.sCurSrvData.current_event_duration.Equals("-") &&
+						!g_tuxbox.sCurSrvData.next_event_description.Equals("-"))
+	{
+		g_tuxbox.sCurSrvData.current_event_duration.Replace("(","");
+		g_tuxbox.sCurSrvData.current_event_duration.Replace(")","");
 
-    m_currentMovieDuration.Format("%s: %s %s (%s - %s)",
-      g_localizeStrings.Get(180),
-      g_tuxbox.sCurSrvData.current_event_duration,
-      g_localizeStrings.Get(12391),
-      g_tuxbox.sCurSrvData.current_event_time,
-      g_tuxbox.sCurSrvData.next_event_time);
-  }
+		m_currentMovieDuration.Format("%s: %s %s (%s - %s)",
+		g_localizeStrings.Get(180),
+		g_tuxbox.sCurSrvData.current_event_duration,
+		g_localizeStrings.Get(12391),
+		g_tuxbox.sCurSrvData.current_event_time,
+		g_tuxbox.sCurSrvData.next_event_time);
+	}
 
-  //Set strVideoGenre
-  if (!g_tuxbox.sCurSrvData.current_event_description.IsEmpty() &&
-    !g_tuxbox.sCurSrvData.next_event_description.IsEmpty() &&
-    !g_tuxbox.sCurSrvData.current_event_description.Equals("-") &&
-    !g_tuxbox.sCurSrvData.next_event_description.Equals("-"))
-  {
-    m_currentFile->GetVideoInfoTag()->m_strGenre.Format("%s %s  -  (%s: %s)",
-      g_localizeStrings.Get(143),
-      g_tuxbox.sCurSrvData.current_event_description,
-      g_localizeStrings.Get(209),
-      g_tuxbox.sCurSrvData.next_event_description);
-  }
+	//Set strVideoGenre
+	if (!g_tuxbox.sCurSrvData.current_event_description.IsEmpty() &&
+						!g_tuxbox.sCurSrvData.next_event_description.IsEmpty() &&
+						!g_tuxbox.sCurSrvData.current_event_description.Equals("-") &&
+						!g_tuxbox.sCurSrvData.next_event_description.Equals("-"))
+	{
+		m_currentFile->GetVideoInfoTag()->m_strGenre.Format("%s %s  -  (%s: %s)",
+		g_localizeStrings.Get(143),
+		g_tuxbox.sCurSrvData.current_event_description,
+		g_localizeStrings.Get(209),
+		g_tuxbox.sCurSrvData.next_event_description);
+	}
 
-  //Set m_currentMovie.m_strDirector
-  if (!g_tuxbox.sCurSrvData.current_event_details.Equals("-") &&
-    !g_tuxbox.sCurSrvData.current_event_details.IsEmpty())
-  {
-    m_currentFile->GetVideoInfoTag()->m_strDirector = g_tuxbox.sCurSrvData.current_event_details;
-  }
+	//Set m_currentMovie.m_strDirector
+	if (!g_tuxbox.sCurSrvData.current_event_details.Equals("-") &&!g_tuxbox.sCurSrvData.current_event_details.IsEmpty())
+	{
+		m_currentFile->GetVideoInfoTag()->m_strDirector = g_tuxbox.sCurSrvData.current_event_details;
+	}
 }
 
 CStdString CGUIInfoManager::GetPictureLabel(int info)
 {
-  if (info == SLIDE_FILE_NAME)
-    return GetItemLabel(m_currentSlide, LISTITEM_FILENAME);
-  else if (info == SLIDE_FILE_PATH)
-  {
-    CStdString path;
-    URIUtils::GetDirectory(m_currentSlide->GetPath(), path);
-    return CURL(path).GetWithoutUserDetails();
-  }
-  else if (info == SLIDE_FILE_SIZE)
-    return GetItemLabel(m_currentSlide, LISTITEM_SIZE);
-  else if (info == SLIDE_FILE_DATE)
-    return GetItemLabel(m_currentSlide, LISTITEM_DATE);
-  else if (info == SLIDE_INDEX)
-  {
-    CGUIWindowSlideShow *slideshow = (CGUIWindowSlideShow *)g_windowManager.GetWindow(WINDOW_SLIDESHOW);
-    if (slideshow && slideshow->NumSlides())
-    {
-      CStdString index;
-      index.Format("%d/%d", slideshow->CurrentSlide(), slideshow->NumSlides());
-      return index;
-    }
-  }
-  if (m_currentSlide->HasPictureInfoTag())
-    return m_currentSlide->GetPictureInfoTag()->GetInfo(info);
-  return "";
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (info == SLIDE_FILE_NAME)
+		return GetItemLabel(m_currentSlide, LISTITEM_FILENAME);
+	else if (info == SLIDE_FILE_PATH)
+	{
+		CStdString path;
+		URIUtils::GetDirectory(m_currentSlide->GetPath(), path);
+		return CURL(path).GetWithoutUserDetails();
+	}
+	else if (info == SLIDE_FILE_SIZE)
+		return GetItemLabel(m_currentSlide, LISTITEM_SIZE);
+	else if (info == SLIDE_FILE_DATE)
+		return GetItemLabel(m_currentSlide, LISTITEM_DATE);
+	else if (info == SLIDE_INDEX)
+	{
+		CGUIWindowSlideShow *slideshow = (CGUIWindowSlideShow *)g_windowManager.GetWindow(WINDOW_SLIDESHOW);
+		if (slideshow && slideshow->NumSlides())
+		{
+			CStdString index;
+			index.Format("%d/%d", slideshow->CurrentSlide(), slideshow->NumSlides());
+			return index;
+		}
+	}
+	
+	if (m_currentSlide->HasPictureInfoTag())
+		return m_currentSlide->GetPictureInfoTag()->GetInfo(info);
+	
+	return "";
 }
 
 void CGUIInfoManager::SetCurrentSlide(CFileItem &item)
 {
-  if (m_currentSlide->GetPath() != item.GetPath())
-  {
-    if (!item.HasPictureInfoTag() && !item.GetPictureInfoTag()->Loaded())
-      item.GetPictureInfoTag()->Load(item.GetPath());
-    *m_currentSlide = item;
-  }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (m_currentSlide->GetPath() != item.GetPath())
+	{
+		if (!item.HasPictureInfoTag() && !item.GetPictureInfoTag()->Loaded())
+			item.GetPictureInfoTag()->Load(item.GetPath());
+		*m_currentSlide = item;
+	}
 }
 
 void CGUIInfoManager::ResetCurrentSlide()
 {
-  m_currentSlide->Reset();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	m_currentSlide->Reset();
 }
 
 bool CGUIInfoManager::CheckWindowCondition(CGUIWindow *window, int condition) const
 {
-  // check if it satisfies our condition
-  if (!window) return false;
-  if ((condition & WINDOW_CONDITION_HAS_LIST_ITEMS) && !window->HasListItems())
-    return false;
-  if ((condition & WINDOW_CONDITION_IS_MEDIA_WINDOW) && !window->IsMediaWindow())
-    return false;
-  return true;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// check if it satisfies our condition
+	if (!window) 
+		return false;
+	if ((condition & WINDOW_CONDITION_HAS_LIST_ITEMS) && !window->HasListItems())
+		return false;
+	if ((condition & WINDOW_CONDITION_IS_MEDIA_WINDOW) && !window->IsMediaWindow())
+		return false;
+	return true;
 }
 
 CGUIWindow *CGUIInfoManager::GetWindowWithCondition(int contextWindow, int condition) const
 {
-  CGUIWindow *window = g_windowManager.GetWindow(contextWindow);
-  if (CheckWindowCondition(window, condition))
-    return window;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CGUIWindow *window = g_windowManager.GetWindow(contextWindow);
+	if (CheckWindowCondition(window, condition))
+		return window;
 
-  // try topmost dialog
-  window = g_windowManager.GetWindow(g_windowManager.GetTopMostModalDialogID());
-  if (CheckWindowCondition(window, condition))
-    return window;
+	// try topmost dialog
+	window = g_windowManager.GetWindow(g_windowManager.GetTopMostModalDialogID());
+	if (CheckWindowCondition(window, condition))
+		return window;
 
-  // try active window
-  window = g_windowManager.GetWindow(g_windowManager.GetActiveWindow());
-  if (CheckWindowCondition(window, condition))
-    return window;
+	// try active window
+	window = g_windowManager.GetWindow(g_windowManager.GetActiveWindow());
+	if (CheckWindowCondition(window, condition))
+		return window;
 
-  return NULL;
+	return NULL;
 }
 
 void CGUIInfoManager::SetCurrentVideoTag(const CVideoInfoTag &tag)
 {
-  *m_currentFile->GetVideoInfoTag() = tag;
-  m_currentFile->m_lStartOffset = 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	*m_currentFile->GetVideoInfoTag() = tag;
+	m_currentFile->m_lStartOffset = 0;
 }
 
 void CGUIInfoManager::SetCurrentSongTag(const MUSIC_INFO::CMusicInfoTag &tag)
 {
-  //CLog::Log(LOGDEBUG, "Asked to SetCurrentTag");
-  *m_currentFile->GetMusicInfoTag() = tag;
-  m_currentFile->m_lStartOffset = 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	//CLog::Log(LOGDEBUG, "Asked to SetCurrentTag");
+	*m_currentFile->GetMusicInfoTag() = tag;
+	m_currentFile->m_lStartOffset = 0;
 }
 
 const CFileItem& CGUIInfoManager::GetCurrentSlide() const
 {
-  return *m_currentSlide;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return *m_currentSlide;
 }
 
 const MUSIC_INFO::CMusicInfoTag* CGUIInfoManager::GetCurrentSongTag() const
 {
-  if (m_currentFile->HasMusicInfoTag())
-    return m_currentFile->GetMusicInfoTag();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (m_currentFile->HasMusicInfoTag())
+		return m_currentFile->GetMusicInfoTag();
 
-  return NULL;
+	return NULL;
 }
 
 const CVideoInfoTag* CGUIInfoManager::GetCurrentMovieTag() const
 {
-  if (m_currentFile->HasVideoInfoTag())
-    return m_currentFile->GetVideoInfoTag();
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (m_currentFile->HasVideoInfoTag())
+		return m_currentFile->GetVideoInfoTag();
 
-  return NULL;
+	return NULL;
 }
 
 void GUIInfo::SetInfoFlag(uint32_t flag)
 {
-  assert(flag >= (1 << 24));
-  m_data1 |= flag;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	assert(flag >= (1 << 24));
+	m_data1 |= flag;
 }
 
 uint32_t GUIInfo::GetInfoFlag() const
 {
-  // we strip out the bottom 24 bits, where we keep data
-  // and return the flag only
-  return m_data1 & 0xff000000;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// we strip out the bottom 24 bits, where we keep data
+	// and return the flag only
+	return m_data1 & 0xff000000;
 }
 
 uint32_t GUIInfo::GetData1() const
 {
-  // we strip out the top 8 bits, where we keep flags
-  // and return the unflagged data
-  return m_data1 & ((1 << 24) -1);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	// we strip out the top 8 bits, where we keep flags
+	// and return the unflagged data
+	return m_data1 & ((1 << 24) -1);
 }
 
 int GUIInfo::GetData2() const
 {
-  return m_data2;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return m_data2;
 }
 
 void CGUIInfoManager::SetLibraryBool(int condition, bool value)
 {
-  switch (condition)
-  {
-    case LIBRARY_HAS_MUSIC:
-      m_libraryHasMusic = value ? 1 : 0;
-      break;
-    case LIBRARY_HAS_MOVIES:
-      m_libraryHasMovies = value ? 1 : 0;
-      break;
-    case LIBRARY_HAS_TVSHOWS:
-      m_libraryHasTVShows = value ? 1 : 0;
-      break;
-    case LIBRARY_HAS_MUSICVIDEOS:
-      m_libraryHasMusicVideos = value ? 1 : 0;
-      break;
-    default:
-      break;
-  }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	switch (condition)
+	{
+		case LIBRARY_HAS_MUSIC:
+			m_libraryHasMusic = value ? 1 : 0;
+			break;
+		case LIBRARY_HAS_MOVIES:
+			m_libraryHasMovies = value ? 1 : 0;
+			break;
+		case LIBRARY_HAS_TVSHOWS:
+			m_libraryHasTVShows = value ? 1 : 0;
+			break;
+		case LIBRARY_HAS_MUSICVIDEOS:
+			m_libraryHasMusicVideos = value ? 1 : 0;
+			break;
+		default:
+			break;
+	}
 }
 
 void CGUIInfoManager::ResetLibraryBools()
 {
-  m_libraryHasMusic = -1;
-  m_libraryHasMovies = -1;
-  m_libraryHasTVShows = -1;
-  m_libraryHasMusicVideos = -1;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	m_libraryHasMusic = -1;
+	m_libraryHasMovies = -1;
+	m_libraryHasTVShows = -1;
+	m_libraryHasMusicVideos = -1;
 }
 
 bool CGUIInfoManager::GetLibraryBool(int condition)
 {
-  if (condition == LIBRARY_HAS_MUSIC)
-  {
-    if (m_libraryHasMusic < 0)
-    { // query
-      CMusicDatabase db;
-      if (db.Open())
-      {
-        m_libraryHasMusic = (db.GetSongsCount() > 0) ? 1 : 0;
-        db.Close();
-      }
-    }
-    return m_libraryHasMusic > 0;
-  }
-  else if (condition == LIBRARY_HAS_MOVIES)
-  {
-    if (m_libraryHasMovies < 0)
-    {
-      CVideoDatabase db;
-      if (db.Open())
-      {
-        m_libraryHasMovies = db.HasContent(VIDEODB_CONTENT_MOVIES) ? 1 : 0;
-        db.Close();
-      }
-    }
-    return m_libraryHasMovies > 0;
-  }
-  else if (condition == LIBRARY_HAS_TVSHOWS)
-  {
-    if (m_libraryHasTVShows < 0)
-    {
-      CVideoDatabase db;
-      if (db.Open())
-      {
-        m_libraryHasTVShows = db.HasContent(VIDEODB_CONTENT_TVSHOWS) ? 1 : 0;
-        db.Close();
-      }
-    }
-    return m_libraryHasTVShows > 0;
-  }
-  else if (condition == LIBRARY_HAS_MUSICVIDEOS)
-  {
-    if (m_libraryHasMusicVideos < 0)
-    {
-      CVideoDatabase db;
-      if (db.Open())
-      {
-        m_libraryHasMusicVideos = db.HasContent(VIDEODB_CONTENT_MUSICVIDEOS) ? 1 : 0;
-        db.Close();
-      }
-    }
-    return m_libraryHasMusicVideos > 0;
-  }
-  else if (condition == LIBRARY_HAS_VIDEO)
-  {
-    return (GetLibraryBool(LIBRARY_HAS_MOVIES) ||
-            GetLibraryBool(LIBRARY_HAS_TVSHOWS) ||
-            GetLibraryBool(LIBRARY_HAS_MUSICVIDEOS));
-  }
-  return false;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (condition == LIBRARY_HAS_MUSIC)
+	{
+		if (m_libraryHasMusic < 0)
+		{ // query
+			CMusicDatabase db;
+			if (db.Open())
+			{
+				m_libraryHasMusic = (db.GetSongsCount() > 0) ? 1 : 0;
+				db.Close();
+			}
+		}
+		return m_libraryHasMusic > 0;
+	}
+	else if (condition == LIBRARY_HAS_MOVIES)
+	{
+		if (m_libraryHasMovies < 0)
+		{
+			CVideoDatabase db;
+			if (db.Open())
+			{
+				m_libraryHasMovies = db.HasContent(VIDEODB_CONTENT_MOVIES) ? 1 : 0;
+				db.Close();
+			}
+		}
+		return m_libraryHasMovies > 0;
+	}
+	else if (condition == LIBRARY_HAS_TVSHOWS)
+	{
+		if (m_libraryHasTVShows < 0)
+		{
+			CVideoDatabase db;
+			if (db.Open())
+			{
+				m_libraryHasTVShows = db.HasContent(VIDEODB_CONTENT_TVSHOWS) ? 1 : 0;
+				db.Close();
+			}
+		}
+		return m_libraryHasTVShows > 0;
+	}
+	else if (condition == LIBRARY_HAS_MUSICVIDEOS)
+	{
+		if (m_libraryHasMusicVideos < 0)
+		{
+			CVideoDatabase db;
+			if (db.Open())
+			{
+				m_libraryHasMusicVideos = db.HasContent(VIDEODB_CONTENT_MUSICVIDEOS) ? 1 : 0;
+				db.Close();
+			}
+		}
+		return m_libraryHasMusicVideos > 0;
+	}
+	else if (condition == LIBRARY_HAS_VIDEO)
+	{
+		return (GetLibraryBool(LIBRARY_HAS_MOVIES) ||GetLibraryBool(LIBRARY_HAS_TVSHOWS) ||GetLibraryBool(LIBRARY_HAS_MUSICVIDEOS));
+	}
+	return false;
 }
 
 int CGUIInfoManager::RegisterSkinVariableString(const CSkinVariableString* info)
 {
-  if (!info)
-    return 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (!info)
+		return 0;
 
-  CSingleLock lock(m_critInfo);
-  m_skinVariableStrings.push_back(*info);
-  delete info;
-  return CONDITIONAL_LABEL_START + m_skinVariableStrings.size() - 1;
+	CSingleLock lock(m_critInfo);
+	m_skinVariableStrings.push_back(*info);
+	delete info;
+	return CONDITIONAL_LABEL_START + m_skinVariableStrings.size() - 1;
 }
 
 int CGUIInfoManager::TranslateSkinVariableString(const CStdString& name, int context)
 {
-  for (vector<CSkinVariableString>::const_iterator it = m_skinVariableStrings.begin();
-       it != m_skinVariableStrings.end(); ++it)
-  {
-    if (it->GetName().Equals(name) && it->GetContext() == context)
-      return it - m_skinVariableStrings.begin() + CONDITIONAL_LABEL_START;
-  }
-  return 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	for (vector<CSkinVariableString>::const_iterator it = m_skinVariableStrings.begin(); it != m_skinVariableStrings.end(); ++it)
+	{
+		if (it->GetName().Equals(name) && it->GetContext() == context)
+			return it - m_skinVariableStrings.begin() + CONDITIONAL_LABEL_START;
+	}
+	return 0;
 }
 
 CStdString CGUIInfoManager::GetSkinVariableString(int info,
-                                                  bool preferImage /*= false*/,
-                                                  const CGUIListItem *item /*= NULL*/)
+												bool preferImage /*= false*/,
+												const CGUIListItem *item /*= NULL*/)
 {
-  info -= CONDITIONAL_LABEL_START;
-  if (info >= 0 && info < (int)m_skinVariableStrings.size())
-    return m_skinVariableStrings[info].GetValue(preferImage, item);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	info -= CONDITIONAL_LABEL_START;
+	if (info >= 0 && info < (int)m_skinVariableStrings.size())
+		return m_skinVariableStrings[info].GetValue(preferImage, item);
 
-  return "";
+	return "";
 }

@@ -156,7 +156,8 @@ private:
 
 	std::stack<int> m_windowHistory; /* 窗体操作栈，即窗体操作的历史记录，即窗体被激活先后顺序的容器，保存的是窗体的id 号*/
 
-	IWindowManagerCallback* m_pCallback;
+	IWindowManagerCallback* m_pCallback; /* 见方法SetCallback 的调用*/
+	
 	std::vector < std::pair<CGUIMessage*,int> > m_vecThreadMessages;
 	CCriticalSection m_critSection;
 	

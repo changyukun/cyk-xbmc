@@ -476,6 +476,7 @@ void CGUIWindowManager::PreviousWindow()
 	
 	// ok to go to the previous window now
 
+	//-------------------------------------------------------->>> 调用SetNextWindow 开始
 	// tell our info manager which window we are going to
 	g_infoManager.SetNextWindow(previousWindow);
 
@@ -485,6 +486,7 @@ void CGUIWindowManager::PreviousWindow()
 	// deinitialize our window
 	CloseWindowSync(pCurrentWindow);
 
+	//-------------------------------------------------------->>> 调用SetNextWindow 结束
 	g_infoManager.SetNextWindow(WINDOW_INVALID);
 	g_infoManager.SetPreviousWindow(currentWindow);
 
@@ -510,10 +512,11 @@ void CGUIWindowManager::ChangeActiveWindow(int newWindow, const CStdString& strP
 		1、
 
 	说明:
-		1、
+		1、注意此函数与ActivateWindow 的区别，参看ActivateWindow_Internal 的说明
 */
 	vector<CStdString> params;
-	if (!strPath.IsEmpty())
+
+	if (!strPath.IsEmpty()) /* 传入的参数不为空，则将其添加到参数的容器中，通常参数为提示的消息之类的文本*/
 		params.push_back(strPath);
 	
 	ActivateWindow(newWindow, params, true);
@@ -529,10 +532,11 @@ void CGUIWindowManager::ActivateWindow(int iWindowID, const CStdString& strPath)
 		1、
 
 	说明:
-		1、
+		1、参看ActivateWindow_Internal 的说明
 */
 	vector<CStdString> params;
-	if (!strPath.IsEmpty())
+
+	if (!strPath.IsEmpty())  /* 传入的参数不为空，则将其添加到参数的容器中，通常参数为提示的消息之类的文本*/
 		params.push_back(strPath);
 	
 	ActivateWindow(iWindowID, params, false);
@@ -542,13 +546,15 @@ void CGUIWindowManager::ActivateWindow(int iWindowID, const vector<CStdString>& 
 {
 /*
 	参数:
-		1、
+		1、iWindowID 		: 要激活的窗体id 号
+		2、params			: 传递给窗体的参数
+		3、swappingWindows	: 是否交换激活窗体
 
 	返回:
 		1、
 
 	说明:
-		1、
+		1、参看ActivateWindow_Internal 的说明
 */
 	if (!g_application.IsCurrentThread())
 	{
@@ -567,13 +573,33 @@ void CGUIWindowManager::ActivateWindow_Internal(int iWindowID, const vector<CStd
 {
 /*
 	参数:
-		1、
+		1、iWindowID 		: 要激活的窗体id 号
+		2、params			: 传递给窗体的参数
+		3、swappingWindows	: 是否交换激活窗体( 见下面对此参数的说明)
 
 	返回:
 		1、
 
 	说明:
-		1、
+		1、激活窗体的原则:
+		
+			A、根据传入的窗体id 找到要激活的窗体指针
+				1) 没找到
+						a、直接出错返回
+				2) 找到了
+						a、如果是一个对话框，则调用对话框的DoModal  方法将对话框显示，然后返回
+						b、执行下面的B 步骤
+			B、
+			C、
+
+		2、参数swappingWindows 的作用:
+				假设:
+					AAA : 原来激活的窗体，即当前激活窗体
+					BBB : 要激活的窗体
+
+				true 	 : 将BBB 窗体激活，将AAA 窗体从窗体操作栈出栈，将BBB 窗体添加到窗体操作栈
+				false : 将BBB 窗体激活，不将AAA 窗体从窗体操作栈出栈，将BBB 窗体添加到窗体操作栈
+			
 */
 	// translate virtual windows
 	// virtual music window which returns the last open music window (aka the music start window)
@@ -629,7 +655,8 @@ void CGUIWindowManager::ActivateWindow_Internal(int iWindowID, const vector<CStd
 		return;
 	}
 
-	g_infoManager.SetNextWindow(iWindowID);
+	//-------------------------------------------------------->>> 调用SetNextWindow 开始
+	g_infoManager.SetNextWindow(iWindowID); /* 设定要激活的窗体的id  为下一个窗体id ，即相当于全局变量保存这个值*/
 
 	// set our overlay state
 	HideOverlay(pNewWindow->GetOverlayState());
@@ -639,23 +666,28 @@ void CGUIWindowManager::ActivateWindow_Internal(int iWindowID, const vector<CStd
 	CGUIWindow *pWindow = GetWindow(currentWindow);
 	if (pWindow)
 		CloseWindowSync(pWindow, iWindowID);
-	
-	g_infoManager.SetNextWindow(WINDOW_INVALID);
+
+	//-------------------------------------------------------->>> 调用SetNextWindow 结束
+	g_infoManager.SetNextWindow(WINDOW_INVALID); /* 设定下一个窗体id  为无效的*/
 
 	// Add window to the history list (we must do this before we activate it,
 	// as all messages done in WINDOW_INIT will want to be sent to the new
 	// topmost window).  If we are swapping windows, we pop the old window
 	// off the history stack
 	if (swappingWindows && m_windowHistory.size())
-		m_windowHistory.pop();
+		m_windowHistory.pop(); /* 将当前激活的窗体从窗体操作栈中出栈*/
 	
-	AddToWindowHistory(iWindowID);
+	AddToWindowHistory(iWindowID); /* 将要激活的窗体id 号添加入窗体操作栈*/ 
 
 	g_infoManager.SetPreviousWindow(currentWindow);
+	
+	/* 向要激活的窗体发送init 消息，即直接调用要激活窗体的OnMessage 方法*/
 	// Send the init message
 	CGUIMessage msg(GUI_MSG_WINDOW_INIT, 0, 0, currentWindow, iWindowID);
 	msg.SetStringParams(params);
 	pNewWindow->OnMessage(msg);
+
+	
 	//  g_infoManager.SetPreviousWindow(WINDOW_INVALID);
 }
 
@@ -725,9 +757,11 @@ bool CGUIWindowManager::OnAction(const CAction &action)
 			topMost = m_activeDialogs.size();
 	}
 	lock.Leave();
+	
 	CGUIWindow* window = GetWindow(GetActiveWindow());
 	if (window)
 		return window->OnAction(action);
+	
 	return false;
 }
 
@@ -943,7 +977,9 @@ CGUIWindow* CGUIWindowManager::GetWindow(int id) const
 	}
 
 	CSingleLock lock(g_graphicsContext);
+	
 	WindowMap::const_iterator it = m_mapWindows.find(id);
+	
 	if (it != m_mapWindows.end())
 		return (*it).second;
 	
@@ -1585,15 +1621,17 @@ void CGUIWindowManager::CloseWindowSync(CGUIWindow *window, int nextWindowID /*=
 {
 /*
 	参数:
-		1、
+		1、window			: 传入一个窗体的指针( 通常为当前激活的窗体)
+		2、nextWindowID	: 传入下一个窗体的id 号( 通常为下一个要激活的窗体)
 
 	返回:
 		1、
 
 	说明:
-		1、
+		1、此函数实现将参数1 ( window ) 指向的窗体关闭，将参数1 ( nextWindowID ) 所代表的窗体激活
 */
 	window->Close(false, nextWindowID);
+
 	while (window->IsAnimating(ANIM_TYPE_WINDOW_CLOSE))
 		g_windowManager.ProcessRenderLoop(true);
 }
