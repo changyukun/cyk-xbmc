@@ -661,6 +661,7 @@ LRESULT CALLBACK CWinEventsWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 					newEvent.type = XBMC_KEYDOWN;
 				else
 					newEvent.type = XBMC_KEYUP;
+				
 				newEvent.key.keysym = keysym;
 				m_pEventFunc(newEvent);
 			}

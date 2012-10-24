@@ -3429,6 +3429,7 @@ bool CApplication::ProcessMouse()
 		iWin = g_windowManager.GetTopMostModalDialogID() & WINDOW_ID_MASK;
 	else
 		iWin = g_windowManager.GetActiveWindow() & WINDOW_ID_MASK;
+	
 	CAction mouseaction = CButtonTranslator::GetInstance().GetAction(iWin, key);
 
 	// If we couldn't find an action return false to indicate we have not

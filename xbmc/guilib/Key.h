@@ -436,65 +436,65 @@ class CKey;
 class CAction
 {
 public:
-  CAction(int actionID, float amount1 = 1.0f, float amount2 = 0.0f, const CStdString &name = "");
-  CAction(int actionID, wchar_t unicode);
-  CAction(int actionID, unsigned int state, float posX, float posY, float offsetX, float offsetY, const CStdString &name = "");
-  CAction(int actionID, const CStdString &name, const CKey &key);
+	CAction(int actionID, float amount1 = 1.0f, float amount2 = 0.0f, const CStdString &name = "");
+	CAction(int actionID, wchar_t unicode);
+	CAction(int actionID, unsigned int state, float posX, float posY, float offsetX, float offsetY, const CStdString &name = "");
+	CAction(int actionID, const CStdString &name, const CKey &key);
 
-  /*! \brief Identifier of the action
-   \return id of the action
-   */
-  int GetID() const { return m_id; };
+	/*! \brief Identifier of the action
+	\return id of the action
+	*/
+	int GetID() const { return m_id; };
 
-  /*! \brief Is this an action from the mouse
-   \return true if this is a mouse action, false otherwise
-   */
-  bool IsMouse() const { return (m_id >= ACTION_MOUSE_START && m_id <= ACTION_MOUSE_END); };
+	/*! \brief Is this an action from the mouse
+	\return true if this is a mouse action, false otherwise
+	*/
+	bool IsMouse() const { return (m_id >= ACTION_MOUSE_START && m_id <= ACTION_MOUSE_END); };
 
-  bool IsGesture() const { return (m_id >= ACTION_GESTURE_NOTIFY && m_id <= ACTION_GESTURE_END); };
+	bool IsGesture() const { return (m_id >= ACTION_GESTURE_NOTIFY && m_id <= ACTION_GESTURE_END); };
 
-  /*! \brief Human-readable name of the action
-   \return name of the action
-   */
-  const CStdString &GetName() const { return m_name; };
+	/*! \brief Human-readable name of the action
+	\return name of the action
+	*/
+	const CStdString &GetName() const { return m_name; };
 
-  /*! \brief Get an amount associated with this action
-   \param zero-based index of amount to retrieve, defaults to 0
-   \return an amount associated with this action
-   */
-  float GetAmount(unsigned int index = 0) const { return (index < max_amounts) ? m_amount[index] : 0; };
+	/*! \brief Get an amount associated with this action
+	\param zero-based index of amount to retrieve, defaults to 0
+	\return an amount associated with this action
+	*/
+	float GetAmount(unsigned int index = 0) const { return (index < max_amounts) ? m_amount[index] : 0; };
 
-  /*! \brief Unicode value associated with this action
-   \return unicode value associated with this action, for keyboard input.
-   */
-  wchar_t GetUnicode() const { return m_unicode; };
+	/*! \brief Unicode value associated with this action
+	\return unicode value associated with this action, for keyboard input.
+	*/
+	wchar_t GetUnicode() const { return m_unicode; };
 
-  /*! \brief Time in ms that the key has been held
-   \return time that the key has been held down in ms.
-   */
-  unsigned int GetHoldTime() const { return m_holdTime; };
+	/*! \brief Time in ms that the key has been held
+	\return time that the key has been held down in ms.
+	*/
+	unsigned int GetHoldTime() const { return m_holdTime; };
 
-  /*! \brief Time since last repeat in ms
-   \return time since last repeat in ms. Returns 0 if unknown.
-   */
-  float GetRepeat() const { return m_repeat; };
+	/*! \brief Time since last repeat in ms
+	\return time since last repeat in ms. Returns 0 if unknown.
+	*/
+	float GetRepeat() const { return m_repeat; };
 
-  /*! \brief Button code that triggered this action
-   \return button code
-   */
-  unsigned int GetButtonCode() const { return m_buttonCode; };
+	/*! \brief Button code that triggered this action
+	\return button code
+	*/
+	unsigned int GetButtonCode() const { return m_buttonCode; };
 
 private:
-  int          m_id;
-  CStdString   m_name;
+	int          m_id;
+	CStdString   m_name;
 
-  static const unsigned int max_amounts = 4; // Must be at least 4.
-  float        m_amount[max_amounts];
+	static const unsigned int max_amounts = 4; // Must be at least 4.
+	float        m_amount[max_amounts];
 
-  float        m_repeat;
-  unsigned int m_holdTime;
-  unsigned int m_buttonCode;
-  wchar_t      m_unicode;
+	float        m_repeat;
+	unsigned int m_holdTime;
+	unsigned int m_buttonCode;
+	wchar_t      m_unicode;
 };
 
 /*!
