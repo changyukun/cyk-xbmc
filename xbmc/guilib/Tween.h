@@ -62,17 +62,18 @@ enum TweenerType
 class Tweener
 {
 public:
-  Tweener(TweenerType tweenerType = EASE_OUT) { m_tweenerType = tweenerType; _ref=1; }
-  virtual ~Tweener() {};
+	Tweener(TweenerType tweenerType = EASE_OUT) { m_tweenerType = tweenerType; _ref=1; }
+	virtual ~Tweener() {};
 
-  void SetEasing(TweenerType type) { m_tweenerType = type; }
-  virtual float Tween(float time, float start, float change, float duration)=0;
-  void Free() { _ref--; if (_ref==0) delete this; }
-  void IncRef() { _ref++; }
-  virtual bool HasResumePoint() const { return m_tweenerType == EASE_INOUT; }
+	void SetEasing(TweenerType type) { m_tweenerType = type; }
+	virtual float Tween(float time, float start, float change, float duration)=0;
+	void Free() { _ref--; if (_ref==0) delete this; }
+	void IncRef() { _ref++; }
+	virtual bool HasResumePoint() const { return m_tweenerType == EASE_INOUT; }
+
 protected:
-  int _ref;
-  TweenerType m_tweenerType;
+	int _ref;
+	TweenerType m_tweenerType;
 };
 
 

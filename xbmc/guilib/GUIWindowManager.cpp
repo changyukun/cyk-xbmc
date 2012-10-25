@@ -998,11 +998,13 @@ void CGUIWindowManager::ProcessRenderLoop(bool renderOnly /*= false*/)
 	说明:
 		1、
 */
+	/* 见方法SetCallback  被调用的参数，此m_pCallback  的值通常就是g_application  实例*/
+
 	if (g_application.IsCurrentThread() && m_pCallback)
 	{
 		m_iNested++;
 		if (!renderOnly)
-			m_pCallback->Process(); /* cyk @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
+			m_pCallback->Process(); 
 		m_pCallback->FrameMove(!renderOnly);
 		m_pCallback->Render();
 		m_iNested--;
@@ -1190,7 +1192,13 @@ void CGUIWindowManager::SendThreadMessage(CGUIMessage& message)
 		1、
 
 	说明:
-		1、
+		1、此函数实现将一个消息添加到m_vecThreadMessages 容器中，此容器中的每个单元都是由
+			两个元素组成，一个是消息本身，一个是消息所对应的窗口号，构成一个匹配的
+			对
+
+		2、此函数中统统将传入的消息与0 值进行配对，然后插入到m_vecThreadMessages 容器中的
+		
+		3、m_vecThreadMessages  容器中的消息都是在方法DispatchThreadMessages  中处理的
 */
 	CSingleLock lock(m_critSection);
 
@@ -1208,7 +1216,13 @@ void CGUIWindowManager::SendThreadMessage(CGUIMessage& message, int window)
 		1、
 
 	说明:
-		1、
+		1、此函数实现将一个消息添加到m_vecThreadMessages 容器中，此容器中的每个单元都是由
+			两个元素组成，一个是消息本身，一个是消息所对应的窗口号，构成一个匹配的
+			对
+
+		2、此函数中将传入的消息与传入的window 值进行配对，然后插入到m_vecThreadMessages 容器中的
+		
+		3、m_vecThreadMessages  容器中的消息都是在方法DispatchThreadMessages  中处理的
 */
 	CSingleLock lock(m_critSection);
 
@@ -1226,7 +1240,9 @@ void CGUIWindowManager::DispatchThreadMessages()
 		1、
 
 	说明:
-		1、
+		1、首先参见SendThreadMessage 方法的说明
+		2、实质就是遍历m_vecThreadMessages  容器中的每个消息，然后对其
+			调用方法SendMessage  进行处理，见SendMessage  方法说明
 */
 	CSingleLock lock(m_critSection);
 	vector< pair<CGUIMessage*,int> > messages(m_vecThreadMessages);
@@ -1246,6 +1262,7 @@ void CGUIWindowManager::DispatchThreadMessages()
 			SendMessage( *pMsg, window );
 		else
 			SendMessage( *pMsg );
+		
 		delete pMsg;
 	}
 }

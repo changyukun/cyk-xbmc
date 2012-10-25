@@ -522,12 +522,13 @@ void CGUIControl::SetFocus(bool focus)
 		1、
 
 	说明:
-		1、
+		1、设定此CGUIControl  实例是否为焦点状态
 */
-	if (m_bHasFocus && !focus)
+	if (m_bHasFocus && !focus) /* 原先此实例为焦点状态，并且需要设定为非焦点状态*/
 		QueueAnimation(ANIM_TYPE_UNFOCUS);
-	else if (!m_bHasFocus && focus)
+	else if (!m_bHasFocus && focus) /* 原先此实例为非焦点状态，并且需要设定为焦点状态*/
 		QueueAnimation(ANIM_TYPE_FOCUS);
+	
 	m_bHasFocus = focus;
 }
 
@@ -1257,10 +1258,13 @@ void CGUIControl::QueueAnimation(ANIMATION_TYPE animType)
 		1、
 */
 	MarkDirtyRegion();
+
 	if (!CheckAnimation(animType))
 		return;
+	
 	CAnimation *reverseAnim = GetAnimation((ANIMATION_TYPE)-animType, false);
 	CAnimation *forwardAnim = GetAnimation(animType);
+	
 	// we first check whether the reverse animation is in progress (and reverse it)
 	// then we check for the normal animation, and queue it
 	if (reverseAnim && reverseAnim->IsReversible() && (reverseAnim->GetState() == ANIM_STATE_IN_PROCESS || reverseAnim->GetState() == ANIM_STATE_DELAYED))

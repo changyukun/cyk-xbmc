@@ -31,42 +31,50 @@ class CGUIControl;
 class CGUIAction
 {
 public:
-  CGUIAction();
+	CGUIAction();
 
-  /**
-   * Execute actions, if action is paired with condition - evaluate condition first
-   */
-  bool Execute(int controlID, int parentID, int direction = 0) const;
-  /**
-   * Check if there is any action that meet its condition
-   */
-  bool HasActionsMeetingCondition() const;
-  /**
-   * Check if there is any action
-   */
-  bool HasAnyActions() const { return m_actions.size() > 0; };
-  /**
-   * Get navigation route that meet its conditions first
-   */
-  int GetNavigation() const;
-  /**
-   * Set navigation route
-   */
-  void SetNavigation(int id);
+	/**
+	* Execute actions, if action is paired with condition - evaluate condition first
+	*/
+	bool Execute(int controlID, int parentID, int direction = 0) const;
+	/**
+	* Check if there is any action that meet its condition
+	*/
+	bool HasActionsMeetingCondition() const;
+	/**
+	* Check if there is any action
+	*/
+	bool HasAnyActions() const 
+	{ 
+		return m_actions.size() > 0; 
+	};
+	/**
+	* Get navigation route that meet its conditions first
+	*/
+	int GetNavigation() const;
+	/**
+	* Set navigation route
+	*/
+	void SetNavigation(int id);
 
-  // GetFirstAction is only needed in deprecated http api
-  CStdString GetFirstAction() const { return m_actions.size() > 0 ? m_actions[0].action : ""; };
+	// GetFirstAction is only needed in deprecated http api
+	CStdString GetFirstAction() const 
+	{
+		return m_actions.size() > 0 ? m_actions[0].action : ""; 
+	};
+	
 private:
-  struct cond_action_pair
-  {
-    CStdString condition;
-    CStdString action;
-  };
+	struct cond_action_pair
+	{
+		CStdString condition;
+		CStdString action;
+	};
 
-  std::vector<cond_action_pair> m_actions;
-  bool m_sendThreadMessages;
+	std::vector<cond_action_pair> m_actions; /* 一个动作的容器，此容器的内容为一个动作与条件的匹配对*/
+	bool m_sendThreadMessages; /* 是否发送thread 线程的消息，如果此值为false，则消息*/
 
-  typedef std::vector<cond_action_pair>::const_iterator ciActions;
-  typedef std::vector<cond_action_pair>::iterator iActions;
-  friend class CGUIControlFactory; // no need for setters / adders
+	typedef std::vector<cond_action_pair>::const_iterator ciActions; /* 一个动作的容器，此容器的内容为一个动作与条件的匹配对*/
+	typedef std::vector<cond_action_pair>::iterator iActions;
+	
+	friend class CGUIControlFactory; // no need for setters / adders
 };

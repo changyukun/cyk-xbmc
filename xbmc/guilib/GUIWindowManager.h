@@ -158,7 +158,7 @@ private:
 
 	IWindowManagerCallback* m_pCallback; /* 见方法SetCallback 的调用*/
 	
-	std::vector < std::pair<CGUIMessage*,int> > m_vecThreadMessages;
+	std::vector < std::pair<CGUIMessage*,int> > m_vecThreadMessages; /* 用于保存线程相关信息的容器，具体见方法SendThreadMessage 及DispatchThreadMessages  的说明*/
 	CCriticalSection m_critSection;
 	
 	std::vector <IMsgTargetCallback*> m_vecMsgTargets; /* 	此容器内保存的为所有为非窗体类、并且需要接收gui 消息

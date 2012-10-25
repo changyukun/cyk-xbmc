@@ -322,8 +322,8 @@ protected:
 	CRect m_hitRect;
 	CGUIInfoColor m_diffuseColor;
 	int m_controlID; /* 每个CGuiWindow  实例的id 号，如WINDOW_HOME、WINDOW_PROGRAMS 等值*/
-	int m_parentID;
-	bool m_bHasFocus;
+	int m_parentID; /* 父窗体的id 号*/
+	bool m_bHasFocus; /* 此窗体是否具有焦点，见方法CGUIControl::SetFocus()  的说明*/
 	bool m_bInvalidated;
 	bool m_bAllocated;
 	bool m_pulseOnSelect;
