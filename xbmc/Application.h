@@ -319,7 +319,7 @@ protected:
   CFileItemList* m_currentStack;
   CStdString m_prevMedia;
   CSplash* m_splash;
-  ThreadIdentifier m_threadID;       // application thread ID.  Used in applicationMessanger to know where we are firing a thread with delay from.
+  ThreadIdentifier m_threadID; /* 用于保存application 线程的id，见create 方法中对其赋值*/      // application thread ID.  Used in applicationMessanger to know where we are firing a thread with delay from.
   PLAYERCOREID m_eCurrentPlayer;
   bool m_bSettingsLoaded;
   bool m_bAllSettingsLoaded;

@@ -100,124 +100,123 @@ class CGUIMessage;
 
 typedef struct
 {
-  DWORD dwMessage;
-  DWORD dwParam1;
-  DWORD dwParam2;
-  CStdString strParam;
-  std::vector<CStdString> params;
-  boost::shared_ptr<CEvent> waitEvent;
-  LPVOID lpVoid;
+	DWORD dwMessage;
+	DWORD dwParam1;
+	DWORD dwParam2;
+	CStdString strParam;
+	std::vector<CStdString> params;
+	boost::shared_ptr<CEvent> waitEvent;
+	LPVOID lpVoid;
 }
 ThreadMessage;
 
 class CDelayedMessage : public CThread
 {
-  public:
-    CDelayedMessage(ThreadMessage& msg, unsigned int delay);
-    virtual void Process();
+public:
+	CDelayedMessage(ThreadMessage& msg, unsigned int delay);
+	virtual void Process();
 
-  private:
-    unsigned int   m_delay;
-    ThreadMessage  m_msg;
+private:
+	unsigned int   m_delay;
+	ThreadMessage  m_msg;
 };
 
 struct ThreadMessageCallback
 {
-  void (*callback)(void *userptr);
-  void *userptr;
+	void (*callback)(void *userptr);
+	void *userptr;
 };
 
 class CApplicationMessenger
 {
-
 public:
-  ~CApplicationMessenger();
+	~CApplicationMessenger();
 
-  void Cleanup();
-  // if a message has to be send to the gui, use MSG_TYPE_WINDOW instead
-  void SendMessage(ThreadMessage& msg, bool wait = false);
-  void ProcessMessages(); // only call from main thread.
-  void ProcessWindowMessages();
+	void Cleanup();
+	// if a message has to be send to the gui, use MSG_TYPE_WINDOW instead
+	void SendMessage(ThreadMessage& msg, bool wait = false);
+	void ProcessMessages(); // only call from main thread.
+	void ProcessWindowMessages();
 
 
-  void MediaPlay(std::string filename);
-  void MediaPlay(const CFileItem &item);
-  void MediaPlay(const CFileItemList &item, int song = 0);
-  void MediaPlay(int playlistid, int song = -1);
-  void MediaStop();
-  void MediaPause();
-  void MediaRestart(bool bWait);
+	void MediaPlay(std::string filename);
+	void MediaPlay(const CFileItem &item);
+	void MediaPlay(const CFileItemList &item, int song = 0);
+	void MediaPlay(int playlistid, int song = -1);
+	void MediaStop();
+	void MediaPause();
+	void MediaRestart(bool bWait);
 
-  void PlayListPlayerPlay();
-  void PlayListPlayerPlay(int iSong);
-  bool PlayListPlayerPlaySongId(int songId);
-  void PlayListPlayerNext();
-  void PlayListPlayerPrevious();
-  void PlayListPlayerAdd(int playlist, const CFileItem &item);
-  void PlayListPlayerAdd(int playlist, const CFileItemList &list);
-  void PlayListPlayerClear(int playlist);
-  void PlayListPlayerShuffle(int playlist, bool shuffle);
-  void PlayListPlayerGetItems(int playlist, CFileItemList &list);
-  void PlayListPlayerInsert(int playlist, const CFileItem &item, int position); 
-  void PlayListPlayerInsert(int playlist, const CFileItemList &list, int position);
-  void PlayListPlayerRemove(int playlist, int position);
-  void PlayListPlayerSwap(int playlist, int indexItem1, int indexItem2);
-  void PlayListPlayerRepeat(int playlist, int repeatState);
+	void PlayListPlayerPlay();
+	void PlayListPlayerPlay(int iSong);
+	bool PlayListPlayerPlaySongId(int songId);
+	void PlayListPlayerNext();
+	void PlayListPlayerPrevious();
+	void PlayListPlayerAdd(int playlist, const CFileItem &item);
+	void PlayListPlayerAdd(int playlist, const CFileItemList &list);
+	void PlayListPlayerClear(int playlist);
+	void PlayListPlayerShuffle(int playlist, bool shuffle);
+	void PlayListPlayerGetItems(int playlist, CFileItemList &list);
+	void PlayListPlayerInsert(int playlist, const CFileItem &item, int position); 
+	void PlayListPlayerInsert(int playlist, const CFileItemList &list, int position);
+	void PlayListPlayerRemove(int playlist, int position);
+	void PlayListPlayerSwap(int playlist, int indexItem1, int indexItem2);
+	void PlayListPlayerRepeat(int playlist, int repeatState);
 
-  void PlayFile(const CFileItem &item, bool bRestart = false); // thread safe version of g_application.PlayFile()
-  void PictureShow(std::string filename);
-  void PictureSlideShow(std::string pathname, bool bScreensaver = false, bool addTBN = false);
-  void SetGUILanguage(const std::string &strLanguage);
-  void Shutdown();
-  void Powerdown();
-  void Quit();
-  void Hibernate();
-  void Suspend();
-  void Restart();
-  void RestartApp();
-  void Reset();
-  void SwitchToFullscreen(); //
-  void Minimize(bool wait = false);
-  void ExecOS(const CStdString command, bool waitExit = false);
-  void UserEvent(int code);
+	void PlayFile(const CFileItem &item, bool bRestart = false); // thread safe version of g_application.PlayFile()
+	void PictureShow(std::string filename);
+	void PictureSlideShow(std::string pathname, bool bScreensaver = false, bool addTBN = false);
+	void SetGUILanguage(const std::string &strLanguage);
+	void Shutdown();
+	void Powerdown();
+	void Quit();
+	void Hibernate();
+	void Suspend();
+	void Restart();
+	void RestartApp();
+	void Reset();
+	void SwitchToFullscreen(); //
+	void Minimize(bool wait = false);
+	void ExecOS(const CStdString command, bool waitExit = false);
+	void UserEvent(int code);
 
-  CStdString GetResponse();
-  int SetResponse(CStdString response);
-  void HttpApi(std::string cmd, bool wait = false);
-  void ExecBuiltIn(const CStdString &command, bool wait = false);
+	CStdString GetResponse();
+	int SetResponse(CStdString response);
+	void HttpApi(std::string cmd, bool wait = false);
+	void ExecBuiltIn(const CStdString &command, bool wait = false);
 
-  void NetworkMessage(DWORD dwMessage, DWORD dwParam = 0);
+	void NetworkMessage(DWORD dwMessage, DWORD dwParam = 0);
 
-  void DoModal(CGUIDialog *pDialog, int iWindowID, const CStdString &param = "");
-  void Show(CGUIDialog *pDialog);
-  void Close(CGUIWindow *window, bool forceClose, bool waitResult = true, int nextWindowID = 0, bool enableSound = true);
-  void ActivateWindow(int windowID, const std::vector<CStdString> &params, bool swappingWindows);
-  void SendAction(const CAction &action, int windowID = WINDOW_INVALID, bool waitResult=true);
+	void DoModal(CGUIDialog *pDialog, int iWindowID, const CStdString &param = "");
+	void Show(CGUIDialog *pDialog);
+	void Close(CGUIWindow *window, bool forceClose, bool waitResult = true, int nextWindowID = 0, bool enableSound = true);
+	void ActivateWindow(int windowID, const std::vector<CStdString> &params, bool swappingWindows);
+	void SendAction(const CAction &action, int windowID = WINDOW_INVALID, bool waitResult=true);
 
-  /*! \brief Send a GUIMessage, optionally waiting before it's processed to return.
-   Should be used to send messages to the GUI from other threads.
-   \param msg the GUIMessage to send.
-   \param windowID optional window to send the message to (defaults to no specified window).
-   \param waitResult whether to wait for the result (defaults to false).
-   */
-  void SendGUIMessage(const CGUIMessage &msg, int windowID = WINDOW_INVALID, bool waitResult=false);
+	/*! \brief Send a GUIMessage, optionally waiting before it's processed to return.
+	Should be used to send messages to the GUI from other threads.
+	\param msg the GUIMessage to send.
+	\param windowID optional window to send the message to (defaults to no specified window).
+	\param waitResult whether to wait for the result (defaults to false).
+	*/
+	void SendGUIMessage(const CGUIMessage &msg, int windowID = WINDOW_INVALID, bool waitResult=false);
 
-  std::vector<CStdString> GetInfoLabels(const std::vector<CStdString> &properties);
-  std::vector<bool> GetInfoBooleans(const std::vector<CStdString> &properties);
+	std::vector<CStdString> GetInfoLabels(const std::vector<CStdString> &properties);
+	std::vector<bool> GetInfoBooleans(const std::vector<CStdString> &properties);
 
-  void ShowVolumeBar(bool up);
+	void ShowVolumeBar(bool up);
 
-  void SetSplashMessage(const CStdString& message);
-  void SetSplashMessage(int stringID);
+	void SetSplashMessage(const CStdString& message);
+	void SetSplashMessage(int stringID);
 
 private:
-  void ProcessMessage(ThreadMessage *pMsg);
+	void ProcessMessage(ThreadMessage *pMsg);
 
 
-  std::queue<ThreadMessage*> m_vecMessages;
-  std::queue<ThreadMessage*> m_vecWindowMessages;
-  CCriticalSection m_critSection;
-  CCriticalSection m_critBuffer;
-  CStdString bufferResponse;
+	std::queue<ThreadMessage*> m_vecMessages; 			/* 当调用SendMessage  方法时，如果发送的消息类型为非TMSG_DIALOG_DOMODAL 则将消息插入到此 队列中*/
+	std::queue<ThreadMessage*> m_vecWindowMessages; 	/* 当调用SendMessage  方法时，如果发送的消息类型为TMSG_DIALOG_DOMODAL 则将消息插入到此 队列中*/
+	CCriticalSection m_critSection;
+	CCriticalSection m_critBuffer;
+	CStdString bufferResponse;
 
 };

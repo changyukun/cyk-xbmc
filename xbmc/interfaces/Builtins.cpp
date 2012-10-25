@@ -219,11 +219,13 @@ bool CBuiltins::HasCommand(const CStdString& execString)
 		1、
 		
 	说明:
-		1、
+		1、相当于查找是否含有与传入字符串相匹配的命令
 */
 	CStdString function;
 	vector<CStdString> parameters;
+	
 	CUtil::SplitExecFunction(execString, function, parameters);
+	
 	for (unsigned int i = 0; i < sizeof(commands)/sizeof(BUILT_IN); i++)
 	{
 		if (function.CompareNoCase(commands[i].command) == 0 && (!commands[i].needsParameters || parameters.size()))
@@ -242,7 +244,7 @@ void CBuiltins::GetHelp(CStdString &help)
 		1、
 		
 	说明:
-		1、
+		1、获取所有命令的帮助信息，将其保存到help 中返回
 */
 	help.Empty();
 	for (unsigned int i = 0; i < sizeof(commands)/sizeof(BUILT_IN); i++)
@@ -264,7 +266,8 @@ int CBuiltins::Execute(const CStdString& execString)
 		1、
 		
 	说明:
-		1、
+		1、实质就是传入一个字符串，然后根据字符串的含义
+			拼凑一个命令字符串，然后再调用相应的函数执行
 */
 	// Get the text after the "XBMC."
 	CStdString execute;

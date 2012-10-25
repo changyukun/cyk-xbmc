@@ -139,7 +139,7 @@ void CApplicationMessenger::Cleanup()
 		1、
 		
 	说明:
-		1、
+		1、此函数实质就是清除m_vecMessages、m_vecWindowMessages 两个队列中的消息
 */
 	CSingleLock lock (m_critSection);
 
@@ -170,41 +170,59 @@ void CApplicationMessenger::SendMessage(ThreadMessage& message, bool wait)
 {
 /*
 	参数:
-		1、
+		1、message	: 传入要发送的消息( 即要被处理的消息)
+		2、wait		: 此消息是否允许被等待后在处理( 初步理解如此。。。)
 		
 	返回:
 		1、
 		
 	说明:
-		1、
+		1、发送消息的原理:
+			a、
+			b、
+			c、
 */
 	message.waitEvent.reset();
+
 	boost::shared_ptr<CEvent> waitEvent;
-	if (wait)
-	{ // check that we're not being called from our application thread, else we'll be waiting
+	
+	if (wait) /* 需要等待*/
+	{ 
+		// check that we're not being called from our application thread, else we'll be waiting
 		// forever!
-		if (!g_application.IsCurrentThread())
+		if (!g_application.IsCurrentThread()) /* 如果不是主线程，需要等待*/
 		{
 			message.waitEvent.reset(new CEvent(true));
 			waitEvent = message.waitEvent;
 		}
-		else
+		else /* 是主线程，不需要等待则直接处理消息*/
 		{
 			//OutputDebugString("Attempting to wait on a SendMessage() from our application thread will cause lockup!\n");
 			//OutputDebugString("Sending immediately\n");
-			ProcessMessage(&message);
+			ProcessMessage(&message); 
 			return;
 		}
 	}
 
+	/*
+		程序执行到此处有两种情况
+		1、wait  参数为false，即不需要等待
+		2、wait  参数为true，即需要等待，但不是主线程
+	*/
+
 	CSingleLock lock (m_critSection);
 
-	if (g_application.m_bStop)
+	if(g_application.m_bStop)
 	{
+		/* 主线程已经stop 了，则返回*/
 		if (message.waitEvent)
 			message.waitEvent.reset();
 		return;
 	}
+
+	/*
+		程序执行到此处时，主线程没有stop
+	*/
 
 	ThreadMessage* msg = new ThreadMessage();
 	msg->dwMessage = message.dwMessage;
@@ -215,19 +233,21 @@ void CApplicationMessenger::SendMessage(ThreadMessage& message, bool wait)
 	msg->strParam = message.strParam;
 	msg->params = message.params;
 
+
+	/* 将消息添加到相应的消息队列中，即m_vecWindowMessages、m_vecMessages  中的一个*/
 	if (msg->dwMessage == TMSG_DIALOG_DOMODAL)
 		m_vecWindowMessages.push(msg);
 	else
 		m_vecMessages.push(msg);
 	
 	lock.Leave();  // this releases the lock on the vec of messages and
-	 //   allows the ProcessMessage to execute and therefore
-	 //   delete the message itself. Therefore any accesss
-	 //   of the message itself after this point consittutes
-	 //   a race condition (yarc - "yet another race condition")
-	 //
+	//   allows the ProcessMessage to execute and therefore
+	//   delete the message itself. Therefore any accesss
+	//   of the message itself after this point consittutes
+	//   a race condition (yarc - "yet another race condition")
+	//
 	if (waitEvent) // ... it just so happens we have a spare reference to the
-	 //  waitEvent ... just for such contingencies :)
+	//  waitEvent ... just for such contingencies :)
 	{ 
 		// ensure the thread doesn't hold the graphics lock
 		CSingleExit exit(g_graphicsContext);
@@ -245,7 +265,11 @@ void CApplicationMessenger::ProcessMessages()
 		1、
 		
 	说明:
-		1、
+		1、处理消息，实质就是从m_vecMessages  队列中取出每个消息，然后分别对此
+			消息调用ProcessMessage  进行处理，见消息队列m_vecMessages 的定义
+
+		2、注意此函数与ProcessMessage 方法的区别( 注意此函数多一个s  字母)，此函数
+			是处理m_vecMessages  队列中的所有消息的，而ProcessMessage  只是处理一个消息
 */
 	// process threadmessages
 	CSingleLock lock (m_critSection);
@@ -281,7 +305,13 @@ void CApplicationMessenger::ProcessMessage(ThreadMessage *pMsg)
 		1、
 		
 	说明:
-		1、
+		1、对传入的一条消息进行处理
+
+			此函数通常被调用的路径为:
+				1) CApplicationMessenger::SendMessage() ==>> 此方法
+				2) CApplicationMessenger::ProcessMessages() ==>> 此方法
+				2) CApplicationMessenger::ProcessWindowMessages() ==>> 此方法
+				
 */
 	switch (pMsg->dwMessage)
 	{
@@ -868,7 +898,9 @@ void CApplicationMessenger::ProcessWindowMessages()
 		1、
 		
 	说明:
-		1、
+		1、处理消息，实质就是从m_vecWindowMessages  队列中取出每个消息，然后分别对此
+			消息调用ProcessMessage  进行处理
+		2、见消息队列m_vecWindowMessages 的定义
 */
 	CSingleLock lock (m_critSection);
 	//message type is window, process window messages

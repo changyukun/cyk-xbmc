@@ -597,7 +597,7 @@ bool CApplication::Create()
 #endif
 
 	// Grab a handle to our thread to be used later in identifying the render thread.
-	m_threadID = CThread::GetCurrentThreadId();
+	m_threadID = CThread::GetCurrentThreadId(); /* 获取当前线程的id，将其保存作为application 的线程id */
 
 #ifndef _LINUX
 	//floating point precision to 24 bits (faster performance)
@@ -5734,7 +5734,7 @@ void CApplication::Process()
 
 	// process messages which have to be send to the gui
 	// (this can only be done after g_windowManager.Render())
-	m_applicationMessenger.ProcessWindowMessages();
+	m_applicationMessenger.ProcessWindowMessages(); /* 先处理已经接收到的窗口消息*/
 
 #ifdef HAS_PYTHON
 	// process any Python scripts
