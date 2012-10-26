@@ -35,257 +35,367 @@ using namespace std;
 
 JSON_STATUS CPlaylistOperations::GetPlaylists(const CStdString &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
-  result = CVariant(CVariant::VariantTypeArray);
-  CVariant playlist = CVariant(CVariant::VariantTypeObject);
-  
-  playlist["playlistid"] = PLAYLIST_MUSIC;
-  playlist["type"] = "audio";
-  result.append(playlist);
-  
-  playlist["playlistid"] = PLAYLIST_VIDEO;
-  playlist["type"] = "video";
-  result.append(playlist);
-  
-  playlist["playlistid"] = PLAYLIST_PICTURE;
-  playlist["type"] = "picture";
-  result.append(playlist);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	result = CVariant(CVariant::VariantTypeArray);
+	CVariant playlist = CVariant(CVariant::VariantTypeObject);
 
-  return OK;
+	playlist["playlistid"] = PLAYLIST_MUSIC;
+	playlist["type"] = "audio";
+	result.append(playlist);
+
+	playlist["playlistid"] = PLAYLIST_VIDEO;
+	playlist["type"] = "video";
+	result.append(playlist);
+
+	playlist["playlistid"] = PLAYLIST_PICTURE;
+	playlist["type"] = "picture";
+	result.append(playlist);
+
+	return OK;
 }
 
 JSON_STATUS CPlaylistOperations::GetProperties(const CStdString &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
-  int playlist = GetPlaylist(parameterObject["playlistid"]);
-  for (unsigned int index = 0; index < parameterObject["properties"].size(); index++)
-  {
-    CStdString propertyName = parameterObject["properties"][index].asString();
-    CVariant property;
-    JSON_STATUS ret;
-    if ((ret = GetPropertyValue(playlist, propertyName, property)) != OK)
-      return ret;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int playlist = GetPlaylist(parameterObject["playlistid"]);
+	for (unsigned int index = 0; index < parameterObject["properties"].size(); index++)
+	{
+		CStdString propertyName = parameterObject["properties"][index].asString();
+		CVariant property;
+		JSON_STATUS ret;
+		if ((ret = GetPropertyValue(playlist, propertyName, property)) != OK)
+			return ret;
 
-    result[propertyName] = property;
-  }
+		result[propertyName] = property;
+	}
 
-  return OK;
+	return OK;
 }
 
 JSON_STATUS CPlaylistOperations::GetItems(const CStdString &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
-  CFileItemList list;
-  int playlist = GetPlaylist(parameterObject["playlistid"]);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CFileItemList list;
+	int playlist = GetPlaylist(parameterObject["playlistid"]);
 
-  CGUIWindowSlideShow *slideshow = NULL;
-  switch (playlist)
-  {
-    case PLAYLIST_VIDEO:
-    case PLAYLIST_MUSIC:
-      g_application.getApplicationMessenger().PlayListPlayerGetItems(playlist, list);
-      break;
+	CGUIWindowSlideShow *slideshow = NULL;
+	switch (playlist)
+	{
+		case PLAYLIST_VIDEO:
+		case PLAYLIST_MUSIC:
+			g_application.getApplicationMessenger().PlayListPlayerGetItems(playlist, list);
+			break;
 
-    case PLAYLIST_PICTURE:
-      slideshow = (CGUIWindowSlideShow*)g_windowManager.GetWindow(WINDOW_SLIDESHOW);
-      if (slideshow)
-        slideshow->GetSlideShowContents(list);
-      break;
-  }
+		case PLAYLIST_PICTURE:
+			slideshow = (CGUIWindowSlideShow*)g_windowManager.GetWindow(WINDOW_SLIDESHOW);
+			if (slideshow)
+				slideshow->GetSlideShowContents(list);
+			break;
+	}
 
-  HandleFileItemList("id", true, "items", list, parameterObject, result);
+	HandleFileItemList("id", true, "items", list, parameterObject, result);
 
-  return OK;
+	return OK;
 }
 
 JSON_STATUS CPlaylistOperations::Add(const CStdString &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
-  int playlist = GetPlaylist(parameterObject["playlistid"]);
-  CFileItemList list;
-  CVariant params = parameterObject;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int playlist = GetPlaylist(parameterObject["playlistid"]);
+	CFileItemList list;
+	CVariant params = parameterObject;
 
-  CGUIWindowSlideShow *slideshow = NULL;
-  switch (playlist)
-  {
-    case PLAYLIST_VIDEO:
-    case PLAYLIST_MUSIC:
-      if (playlist == PLAYLIST_VIDEO)
-        params["item"]["media"] = "video";
-      else if (playlist == PLAYLIST_MUSIC)
-        params["item"]["media"] = "music";
-      else
-        return FailedToExecute;
+	CGUIWindowSlideShow *slideshow = NULL;
+	switch (playlist)
+	{
+		case PLAYLIST_VIDEO:
+		case PLAYLIST_MUSIC:
+			if (playlist == PLAYLIST_VIDEO)
+				params["item"]["media"] = "video";
+			else if (playlist == PLAYLIST_MUSIC)
+				params["item"]["media"] = "music";
+			else
+				return FailedToExecute;
 
-      if (!FillFileItemList(params["item"], list))
-        return InvalidParams;
+			if (!FillFileItemList(params["item"], list))
+				return InvalidParams;
 
-      g_application.getApplicationMessenger().PlayListPlayerAdd(playlist, list);
+			g_application.getApplicationMessenger().PlayListPlayerAdd(playlist, list);
 
-      break;
+			break;
 
-    case PLAYLIST_PICTURE:
-      slideshow = (CGUIWindowSlideShow*)g_windowManager.GetWindow(WINDOW_SLIDESHOW);
-      if (!slideshow)
-        return FailedToExecute;
-      
-      params["item"]["media"] = "pictures";
-      if (!FillFileItemList(params["item"], list))
-        return InvalidParams;
+		case PLAYLIST_PICTURE:
+			slideshow = (CGUIWindowSlideShow*)g_windowManager.GetWindow(WINDOW_SLIDESHOW);
+			if (!slideshow)
+				return FailedToExecute;
 
-      for (int index = 0; index < list.Size(); index++)
-      {
-        CPictureInfoTag picture = CPictureInfoTag();
-        if (!picture.Load(list[index]->GetPath()))
-          continue;
+			params["item"]["media"] = "pictures";
+			if (!FillFileItemList(params["item"], list))
+				return InvalidParams;
 
-        *list[index]->GetPictureInfoTag() = picture;
-        slideshow->Add(list[index].get());
-      }
-      break;
-  }
-  
-  NotifyAll();
-  return ACK;
+			for (int index = 0; index < list.Size(); index++)
+			{
+				CPictureInfoTag picture = CPictureInfoTag();
+				if (!picture.Load(list[index]->GetPath()))
+					continue;
+
+				*list[index]->GetPictureInfoTag() = picture;
+				slideshow->Add(list[index].get());
+			}
+			break;
+	}
+
+	NotifyAll();
+	return ACK;
 }
 
 JSON_STATUS CPlaylistOperations::Insert(const CStdString &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
-  int playlist = GetPlaylist(parameterObject["playlistid"]);
-  if (playlist == PLAYLIST_PICTURE)
-    return FailedToExecute;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int playlist = GetPlaylist(parameterObject["playlistid"]);
+	if (playlist == PLAYLIST_PICTURE)
+		return FailedToExecute;
 
-  CFileItemList list;
-  CVariant params = parameterObject;
-  if (playlist == PLAYLIST_VIDEO)
-    params["item"]["media"] = "video";
-  else if (playlist == PLAYLIST_MUSIC)
-    params["item"]["media"] = "music";
-  else
-    return FailedToExecute;
+	CFileItemList list;
+	CVariant params = parameterObject;
+	if (playlist == PLAYLIST_VIDEO)
+		params["item"]["media"] = "video";
+	else if (playlist == PLAYLIST_MUSIC)
+		params["item"]["media"] = "music";
+	else
+		return FailedToExecute;
 
-  if (!FillFileItemList(params["item"], list))
-    return InvalidParams;
+	if (!FillFileItemList(params["item"], list))
+		return InvalidParams;
 
-  g_application.getApplicationMessenger().PlayListPlayerInsert(GetPlaylist(parameterObject["playlistid"]), list, (int)parameterObject["position"].asInteger());
+	g_application.getApplicationMessenger().PlayListPlayerInsert(GetPlaylist(parameterObject["playlistid"]), list, (int)parameterObject["position"].asInteger());
 
-  NotifyAll();
-  return ACK;
+	NotifyAll();
+	return ACK;
 }
 
 JSON_STATUS CPlaylistOperations::Remove(const CStdString &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
-  int playlist = GetPlaylist(parameterObject["playlistid"]);
-  if (playlist == PLAYLIST_PICTURE)
-    return FailedToExecute;
-  
-  int position = (int)parameterObject["position"].asInteger();
-  if (g_playlistPlayer.GetCurrentPlaylist() == playlist && g_playlistPlayer.GetCurrentSong() == position)
-    return InvalidParams;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int playlist = GetPlaylist(parameterObject["playlistid"]);
+	if (playlist == PLAYLIST_PICTURE)
+		return FailedToExecute;
 
-  g_application.getApplicationMessenger().PlayListPlayerRemove(playlist, position);
+	int position = (int)parameterObject["position"].asInteger();
+	if (g_playlistPlayer.GetCurrentPlaylist() == playlist && g_playlistPlayer.GetCurrentSong() == position)
+		return InvalidParams;
 
-  NotifyAll();
-  return ACK;
+	g_application.getApplicationMessenger().PlayListPlayerRemove(playlist, position);
+
+	NotifyAll();
+	return ACK;
 }
 
 JSON_STATUS CPlaylistOperations::Clear(const CStdString &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
-  int playlist = GetPlaylist(parameterObject["playlistid"]);
-  CGUIWindowSlideShow *slideshow = NULL;
-  switch (playlist)
-  {
-    case PLAYLIST_MUSIC:
-    case PLAYLIST_VIDEO:
-      g_application.getApplicationMessenger().PlayListPlayerClear(playlist);
-      break;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int playlist = GetPlaylist(parameterObject["playlistid"]);
+	CGUIWindowSlideShow *slideshow = NULL;
+	switch (playlist)
+	{
+		case PLAYLIST_MUSIC:
+		case PLAYLIST_VIDEO:
+			g_application.getApplicationMessenger().PlayListPlayerClear(playlist);
+			break;
 
-    case PLAYLIST_PICTURE:
-       slideshow = (CGUIWindowSlideShow*)g_windowManager.GetWindow(WINDOW_SLIDESHOW);
-       if (!slideshow)
-         return FailedToExecute;
-       g_application.getApplicationMessenger().SendAction(CAction(ACTION_STOP), WINDOW_SLIDESHOW);
-       slideshow->Reset();
-       break;
-  }
+		case PLAYLIST_PICTURE:
+			slideshow = (CGUIWindowSlideShow*)g_windowManager.GetWindow(WINDOW_SLIDESHOW);
+			if (!slideshow)
+				return FailedToExecute;
+			g_application.getApplicationMessenger().SendAction(CAction(ACTION_STOP), WINDOW_SLIDESHOW);
+			slideshow->Reset();
+			break;
+  	}
 
-  NotifyAll();
-  return ACK;
+	NotifyAll();
+	return ACK;
 }
 
 JSON_STATUS CPlaylistOperations::Swap(const CStdString &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
-  int playlist = GetPlaylist(parameterObject["playlistid"]);
-  if (playlist == PLAYLIST_PICTURE)
-    return FailedToExecute;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int playlist = GetPlaylist(parameterObject["playlistid"]);
+	if (playlist == PLAYLIST_PICTURE)
+		return FailedToExecute;
 
-  g_application.getApplicationMessenger().PlayListPlayerSwap(playlist, (int)parameterObject["position1"].asInteger(), (int)parameterObject["position2"].asInteger());
+	g_application.getApplicationMessenger().PlayListPlayerSwap(playlist, (int)parameterObject["position1"].asInteger(), (int)parameterObject["position2"].asInteger());
 
-  NotifyAll();
-  return ACK;
+	NotifyAll();
+	return ACK;
 }
 
 int CPlaylistOperations::GetPlaylist(const CVariant &playlist)
 {
-  int playlistid = (int)playlist.asInteger();
-  if (playlistid > PLAYLIST_NONE && playlistid <= PLAYLIST_PICTURE)
-    return playlistid;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int playlistid = (int)playlist.asInteger();
+	if (playlistid > PLAYLIST_NONE && playlistid <= PLAYLIST_PICTURE)
+		return playlistid;
 
-  return PLAYLIST_NONE;
+	return PLAYLIST_NONE;
 }
 
 void CPlaylistOperations::NotifyAll()
 {
-  CGUIMessage msg(GUI_MSG_PLAYLIST_CHANGED, 0, 0);
-  g_windowManager.SendThreadMessage(msg);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CGUIMessage msg(GUI_MSG_PLAYLIST_CHANGED, 0, 0);
+	g_windowManager.SendThreadMessage(msg);
 }
 
 JSON_STATUS CPlaylistOperations::GetPropertyValue(int playlist, const CStdString &property, CVariant &result)
 {
-  if (property.Equals("type"))
-  {
-    switch (playlist)
-    {
-      case PLAYLIST_MUSIC:
-        result = "audio";
-        break;
-        
-      case PLAYLIST_VIDEO:
-        result = "video";
-        break;
-        
-      case PLAYLIST_PICTURE:
-        result = "pictures";
-        break;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (property.Equals("type"))
+	{
+		switch (playlist)
+		{
+			case PLAYLIST_MUSIC:
+				result = "audio";
+				break;
 
-      default:
-        result = "unknown";
-        break;
-    }
-  }
-  else if (property.Equals("size"))
-  {
-    CFileItemList list;
-    CGUIWindowSlideShow *slideshow = NULL;
-    switch (playlist)
-    {
-      case PLAYLIST_MUSIC:
-      case PLAYLIST_VIDEO:
-        g_application.getApplicationMessenger().PlayListPlayerGetItems(playlist, list);
-        result = list.Size();
-        break;
+			case PLAYLIST_VIDEO:
+				result = "video";
+				break;
 
-      case PLAYLIST_PICTURE:
-        slideshow = (CGUIWindowSlideShow*)g_windowManager.GetWindow(WINDOW_SLIDESHOW);
-        if (slideshow)
-          result = slideshow->NumSlides();
-        else
-          result = 0;
-        break;
+			case PLAYLIST_PICTURE:
+				result = "pictures";
+				break;
 
-      default:
-        result = 0;
-        break;
-    }
-  }
-  else
-    return InvalidParams;
+			default:
+				result = "unknown";
+				break;
+		}
+	}
+	else if (property.Equals("size"))
+	{
+		CFileItemList list;
+		CGUIWindowSlideShow *slideshow = NULL;
+		switch (playlist)
+		{
+			case PLAYLIST_MUSIC:
+			case PLAYLIST_VIDEO:
+				g_application.getApplicationMessenger().PlayListPlayerGetItems(playlist, list);
+				result = list.Size();
+				break;
 
-  return OK;
+			case PLAYLIST_PICTURE:
+				slideshow = (CGUIWindowSlideShow*)g_windowManager.GetWindow(WINDOW_SLIDESHOW);
+				if (slideshow)
+					result = slideshow->NumSlides();
+				else
+					result = 0;
+				break;
+
+			default:
+				result = 0;
+				break;
+		}
+	}
+	else
+		return InvalidParams;
+
+	return OK;
 }

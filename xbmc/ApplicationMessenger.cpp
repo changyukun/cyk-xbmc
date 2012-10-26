@@ -217,6 +217,7 @@ void CApplicationMessenger::SendMessage(ThreadMessage& message, bool wait)
 		/* 主线程已经stop 了，则返回*/
 		if (message.waitEvent)
 			message.waitEvent.reset();
+		
 		return;
 	}
 
@@ -285,7 +286,8 @@ void CApplicationMessenger::ProcessMessages()
 		boost::shared_ptr<CEvent> waitEvent = pMsg->waitEvent; 
 		lock.Leave(); // <- see the large comment in SendMessage ^
 
-		ProcessMessage(pMsg);
+		ProcessMessage(pMsg); /* 处理一条消息*/
+		
 		if (waitEvent)
 			waitEvent->Set();
 		
@@ -669,7 +671,7 @@ void CApplicationMessenger::ProcessMessage(ThreadMessage *pMsg)
 			}
 			else
 			{
-				CLog::Log(LOGDEBUG,"==========>>> cyk PlayFile 0---3");
+				CLog::Log(LOGDEBUG,"==========>>> cyk PlayFile 0---3"); /*@@@@@@@@@@@@@@@@*/
 				g_playlistPlayer.Play();
 			}
 			break;
@@ -1155,7 +1157,7 @@ void CApplicationMessenger::PlayListPlayerPlay()
 		1、
 		
 	说明:
-		1、
+		1、列表播放
 */
 	ThreadMessage tMsg = {TMSG_PLAYLISTPLAYER_PLAY, (DWORD) -1};
 	SendMessage(tMsg, true);

@@ -256,7 +256,7 @@ CFadeEffect::CFadeEffect(const TiXmlElement *node, bool reverseDefaults) : CAnim
 		1、
 
 	说明:
-		1、淡出效果
+		1、淡出动画效果( 构造函数)
 */
 	if (reverseDefaults)
 	{ // out effect defaults
@@ -288,7 +288,7 @@ CFadeEffect::CFadeEffect(float start, float end, unsigned int delay, unsigned in
 		1、
 
 	说明:
-		1、淡出效果
+		1、淡出动画效果( 构造函数)
 */
 	m_startAlpha = start;
 	m_endAlpha = end;
@@ -319,7 +319,7 @@ CSlideEffect::CSlideEffect(const TiXmlElement *node) : CAnimEffect(node, EFFECT_
 		1、
 
 	说明:
-		1、滑动效果
+		1、滑动动画效果( 构造函数)
 */
 	m_startX = m_endX = 0;
 	m_startY = m_endY = 0;
@@ -371,7 +371,7 @@ CRotateEffect::CRotateEffect(const TiXmlElement *node, EFFECT_TYPE effect) : CAn
 		1、
 
 	说明:
-		1、旋转效果
+		1、旋转动画效果( 构造函数)
 */
 	m_startAngle = m_endAngle = 0;
 	m_autoCenter = false;
@@ -433,7 +433,7 @@ CZoomEffect::CZoomEffect(const TiXmlElement *node, const CRect &rect) : CAnimEff
 		1、
 
 	说明:
-		1、放大效果
+		1、放大动画效果( 构造函数)
 */
 	// effect defaults
 	m_startX = m_startY = 100;
@@ -565,7 +565,7 @@ CAnimation::CAnimation()
 		1、
 
 	说明:
-		1、
+		1、动画类(  构造函数)
 */
 	m_type = ANIM_TYPE_NONE;
 	m_reversible = true;
@@ -591,7 +591,7 @@ CAnimation::CAnimation(const CAnimation &src)
 		1、
 
 	说明:
-		1、
+		1、动画类(  构造函数)
 */
   	*this = src;
 }
@@ -623,7 +623,7 @@ const CAnimation &CAnimation::operator =(const CAnimation &src)
 		1、
 
 	说明:
-		1、
+		1、重载等号操作符
 */
 	if (this == &src) 
 		return *this; // same
@@ -674,7 +674,7 @@ void CAnimation::Animate(unsigned int time, bool startAnim)
 		1、
 
 	说明:
-		1、
+		1、初步理解为是动画类动起来。。。。。。。即有了动画的效果
 */
 	// First start any queued animations
 	if (m_queuedProcess == ANIM_PROCESS_NORMAL)
@@ -693,6 +693,7 @@ void CAnimation::Animate(unsigned int time, bool startAnim)
 			m_start = time;
 		m_currentProcess = ANIM_PROCESS_REVERSE;
 	}
+	
 	// reset the queued state once we've rendered to ensure allocation has occured
 	if (startAnim || m_queuedProcess == ANIM_PROCESS_REVERSE)
 		m_queuedProcess = ANIM_PROCESS_NONE;

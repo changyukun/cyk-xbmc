@@ -550,9 +550,11 @@ const CPlayList& CPlayListPlayer::GetPlaylist(int iPlaylist) const
 		case PLAYLIST_MUSIC:
 			return *m_PlaylistMusic;
 			break;
+			
 		case PLAYLIST_VIDEO:
 			return *m_PlaylistVideo;
 			break;
+			
 		default:
 			// NOTE: This playlist may not be empty if the caller of the non-const version alters it!
 			return *m_PlaylistEmpty;

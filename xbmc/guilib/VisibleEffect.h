@@ -46,7 +46,7 @@ enum ANIMATION_TYPE
 	ANIM_TYPE_CONDITIONAL       // for animations triggered by a condition change
 };
 
-class CAnimEffect
+class CAnimEffect /* 动画效果类*/
 {
 public:
 	enum EFFECT_TYPE 
@@ -79,7 +79,7 @@ public:
 
 protected:
 	TransformMatrix m_matrix;
-	EFFECT_TYPE m_effect; /* 目标效果类型*/
+	EFFECT_TYPE m_effect; /* 动画效果类型*/
 
 	private:
 	virtual void ApplyEffect(float offset, const CPoint &center)=0;
@@ -91,7 +91,7 @@ protected:
 	Tweener *m_pTweener; /* 中间件，见构造函数中对GetTweener  方法的调用*/
 };
 
-class CFadeEffect : public CAnimEffect
+class CFadeEffect : public CAnimEffect /* 淡出动画效果类*/
 {
 public:
 	CFadeEffect(const TiXmlElement *node, bool reverseDefaults);
@@ -105,7 +105,7 @@ private:
 	float m_endAlpha;
 };
 
-class CSlideEffect : public CAnimEffect
+class CSlideEffect : public CAnimEffect  /* 滑动动画效果类*/
 {
 public:
 	CSlideEffect(const TiXmlElement *node);
@@ -120,7 +120,7 @@ private:
 	float m_endY;
 };
 
-class CRotateEffect : public CAnimEffect
+class CRotateEffect : public CAnimEffect  /* 旋转动画效果类*/
 {
 public:
 	CRotateEffect(const TiXmlElement *node, EFFECT_TYPE effect);
@@ -136,7 +136,7 @@ private:
 	CPoint m_center;
 };
 
-class CZoomEffect : public CAnimEffect
+class CZoomEffect : public CAnimEffect  /* 放大动画效果类*/
 {
 public:
 	CZoomEffect(const TiXmlElement *node, const CRect &rect);
@@ -154,7 +154,7 @@ private:
 	CPoint m_center;
 };
 
-class CAnimation
+class CAnimation /* 动画类*/
 {
 public:
 	CAnimation();
@@ -206,7 +206,7 @@ private:
 
 	// state of animation
 	ANIMATION_PROCESS m_queuedProcess;
-	ANIMATION_PROCESS m_currentProcess;
+	ANIMATION_PROCESS m_currentProcess; /* 动画当前的处理状态*/
 	ANIMATION_STATE m_currentState;
 
 	// timing of animation
@@ -215,7 +215,8 @@ private:
 	unsigned int m_delay;
 	unsigned int m_amount;
 
-	std::vector<CAnimEffect *> m_effects;
+	std::vector<CAnimEffect *> m_effects; /* 动画效果类容器，里面的每个单元都是一种动画效果类的实
+										 例。如旋转、淡出等等事例，这些实例都是类的CAnimEffect 子类*/
 };
 
 /**
