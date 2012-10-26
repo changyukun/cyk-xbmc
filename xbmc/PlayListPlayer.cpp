@@ -95,7 +95,7 @@ bool CPlayListPlayer::OnMessage(CGUIMessage &message)
 	switch (message.GetMessage())
 	{
 		case GUI_MSG_NOTIFY_ALL:
-			if (message.GetParam1() == GUI_MSG_UPDATE_ITEM && message.GetItem())
+			if (message.GetParam1() == GUI_MSG_UPDATE_ITEM && message.GetItem())/* 更新当前播放列表中的某项item */
 			{
 				// update our item if necessary
 				CPlayList &playlist = GetPlaylist(m_iCurrentPlayList);

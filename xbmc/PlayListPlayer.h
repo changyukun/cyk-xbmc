@@ -184,8 +184,8 @@ protected:
   int m_iFailedSongs;
   unsigned int m_failedSongsStart;
   int m_iCurrentSong;
-  int m_iCurrentPlayList;
-  CPlayList* m_PlaylistMusic;
+  int m_iCurrentPlayList; /* 当前播放列表的标识*/
+  CPlayList* m_PlaylistMusic; 
   CPlayList* m_PlaylistVideo;
   CPlayList* m_PlaylistEmpty;
   REPEAT_STATE m_repeatState[2];
