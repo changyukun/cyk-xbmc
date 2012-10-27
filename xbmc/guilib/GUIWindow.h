@@ -245,7 +245,7 @@ protected:
 	bool m_active;        // true if window is active or dialog is running
 	CGUIInfoColor m_clearBackground; // colour to clear the window
 
-	int m_renderOrder;      // for render order of dialogs
+	int m_renderOrder;  /* 见方法CGUIWindow::Load()  中对其进行赋值，即分析xml  文件的结果对其赋值*/    // for render order of dialogs
 
 	/*! \brief Grabs the window's top,left position in skin coordinates
 	The window origin may change based on <origin> tag conditions in the skin.
@@ -253,12 +253,12 @@ protected:
 	\return the window's origin in skin coordinates
 	*/
 	virtual CPoint GetPosition() const;
-	std::vector<COrigin> m_origins;  // positions of dialogs depending on base window
+	std::vector<COrigin> m_origins;  /* 见方法CGUIWindow::Load()  中对其进行赋值，即分析xml  文件的结果对其赋值*/ // positions of dialogs depending on base window
 
 	// control states
 	int m_lastControlID;
 	std::vector<CControlState> m_controlStates;
-	int m_previousWindow;
+	int m_previousWindow; /* 见方法CGUIWindow::Load()  中对其进行赋值，即分析xml  文件的结果对其赋值*/
 
 	bool m_animationsEnabled;
 	struct icompare

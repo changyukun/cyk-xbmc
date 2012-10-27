@@ -345,9 +345,9 @@ protected:
 	bool m_pushedUpdates;
 
 	// animation effects
-	std::vector<CAnimation> m_animations;
+	std::vector<CAnimation> m_animations; /* 见方法CGUIWindow::Load()  及 CGUIControl::SetAnimations() 中对其进行赋值，即分析xml  文件的结果对其赋值*/
 	CPoint m_camera;
-	bool m_hasCamera;
+	bool m_hasCamera; /* 见方法CGUIWindow::Load()  中对其进行赋值，即分析xml  文件的结果对其赋值*/
 	TransformMatrix m_transform;
 	TransformMatrix m_cachedTransform; // Contains the absolute transform the control
 

@@ -343,19 +343,29 @@ bool CGUIControlFactory::GetTexture(const TiXmlNode* pRootNode, const char* strT
 		1、
 */
 	const TiXmlElement* pNode = pRootNode->FirstChildElement(strTag);
-	if (!pNode) return false;
+	if (!pNode) 
+		return false;
+	
 	const char *border = pNode->Attribute("border");
 	if (border)
 		GetRectFromString(border, image.border);
+	
 	image.orientation = 0;
+	
 	const char *flipX = pNode->Attribute("flipx");
-	if (flipX && strcmpi(flipX, "true") == 0) image.orientation = 1;
+	if (flipX && strcmpi(flipX, "true") == 0)
+		image.orientation = 1;
+	
 	const char *flipY = pNode->Attribute("flipy");
-	if (flipY && strcmpi(flipY, "true") == 0) image.orientation = 3 - image.orientation;  // either 3 or 2
+	if (flipY && strcmpi(flipY, "true") == 0) 
+		image.orientation = 3 - image.orientation;  // either 3 or 2
+		
 	image.diffuse = pNode->Attribute("diffuse");
+	
 	const char *background = pNode->Attribute("background");
 	if (background && strnicmp(background, "true", 4) == 0)
 		image.useLarge = true;
+	
 	image.filename = (pNode->FirstChild() && pNode->FirstChild()->ValueStr() != "-") ? pNode->FirstChild()->Value() : "";
 	return true;
 }
@@ -850,19 +860,29 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 {
 /*
 	参数:
-		1、
+		1、parentID			: 传入一个id 号，相当于要创建的这个控件的父窗口的id 号
+		2、rect				: 传入一个矩形坐标值
+		3、pControlNode		: 传入此控件的描述信息( xml 节点，从xml 文件的control 节点分析出来的，即一个control 的内容)
+		4、insideContainer	: 
 
 	返回:
 		1、
 
 	说明:
-		1、
+		1、此函数实现了创建一个控件的功能，即根据xml  中一个control  标签的内容
+			来进行创建
+*/
+
+
+
+/* =========================================================================
+	取出控件的type 值，即xml 文件controls 节点中的某个control 节点中type  属性的值
 */
 	// get the control type
 	CStdString strType = GetType(pControlNode);
 	CGUIControl::GUICONTROLTYPES type = TranslateControlType(strType);
 
-	int id = 0;
+	int id = 0; /* 此控件的id 号*/
 	float posX = 0, posY = 0;
 	float width = 0, height = 0;
 	float minHeight = 0, minWidth = 0;
@@ -977,11 +997,21 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 	// Read control properties from XML
 	//
 
+
+/* =========================================================================
+	取出控件的id 值，即xml 文件controls 节点中的某个control 节点中id 描述的值
+*/
 	if (!pControlNode->Attribute("id", (int*) &id))
 		XMLUtils::GetInt(pControlNode, "id", (int&) id);       // backward compatibility - not desired
+		
 	// TODO: Perhaps we should check here whether id is valid for focusable controls
 	// such as buttons etc.  For labels/fadelabels/images it does not matter
+	
 
+/* =========================================================================
+	取出控件的posx、posy 的值，即xml 文件controls 节点中的某个control 节点中posx、
+	posy 描述的值
+*/
 	XMLUtils::GetFloat(pControlNode, "posx", posX);
 	XMLUtils::GetFloat(pControlNode, "posy", posY);
 	// Convert these from relative coords
@@ -993,6 +1023,10 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 	if (pos.Right(1) == "r")
 		posY = rect.Height() - posY;
 
+/* =========================================================================
+	取出控件的width、height、offsetx、offsety 的值，即xml 文件controls 节点中的某个
+	control 节点中width、height、offsetx、offsety描述的值
+*/
 	GetDimension(pControlNode, "width", width, minWidth);
 	GetDimension(pControlNode, "height", height, minHeight);
 	XMLUtils::GetFloat(pControlNode, "offsetx", offset.x);
@@ -1009,15 +1043,22 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 			height = max(rect.y2 - posY, 0.0f);
 	}
 
+/* =========================================================================
+	取出控件的hitrect 值，即xml 文件controls 节点中的某个control 节点中hitrect 描述
+	的值，并用此值进行相应的计算
+*/
 	hitRect.SetRect(posX, posY, posX + width, posY + height);
 	GetHitRect(pControlNode, hitRect);
 
-	if (!GetActions(pControlNode, "onup",    upActions))    upActions.SetNavigation(id);
-	if (!GetActions(pControlNode, "ondown",  downActions))  downActions.SetNavigation(id);
-	if (!GetActions(pControlNode, "onleft",  leftActions))  leftActions.SetNavigation(id);
-	if (!GetActions(pControlNode, "onright", rightActions)) rightActions.SetNavigation(id);
-	if (!GetActions(pControlNode, "onnext",  nextActions))  nextActions.SetNavigation(id);
-	if (!GetActions(pControlNode, "onprev",  prevActions))  prevActions.SetNavigation(id);
+
+
+	if (!GetActions(pControlNode, "onup",    upActions))    		upActions.SetNavigation(id);
+	if (!GetActions(pControlNode, "ondown",  downActions))  	downActions.SetNavigation(id);
+	if (!GetActions(pControlNode, "onleft",  leftActions))  		leftActions.SetNavigation(id);
+	if (!GetActions(pControlNode, "onright", rightActions)) 		rightActions.SetNavigation(id);
+	if (!GetActions(pControlNode, "onnext",  nextActions))  		nextActions.SetNavigation(id);
+	if (!GetActions(pControlNode, "onprev",  prevActions))  		prevActions.SetNavigation(id);
+	
 	GetActions(pControlNode, "onback",  backActions);
 
 	if (XMLUtils::GetInt(pControlNode, "defaultcontrol", defaultControl))
@@ -1043,12 +1084,17 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 	GetInfoColor(pControlNode, "selectedcolor", labelInfo.selectedColor, parentID);
 	XMLUtils::GetFloat(pControlNode, "textoffsetx", labelInfo.offsetX);
 	XMLUtils::GetFloat(pControlNode, "textoffsety", labelInfo.offsetY);
+	
 	int angle = 0;  // use the negative angle to compensate for our vertically flipped cartesian plane
-	if (XMLUtils::GetInt(pControlNode, "angle", angle)) labelInfo.angle = (float)-angle;
+	if (XMLUtils::GetInt(pControlNode, "angle", angle)) 
+		labelInfo.angle = (float)-angle;
+	
 	CStdString strFont;
 	if (XMLUtils::GetString(pControlNode, "font", strFont))
 		labelInfo.font = g_fontManager.GetFont(strFont);
+	
 	GetAlignment(pControlNode, "align", labelInfo.align);
+	
 	uint32_t alignY = 0;
 	if (GetAlignmentY(pControlNode, "aligny", alignY))
 		labelInfo.align |= alignY;

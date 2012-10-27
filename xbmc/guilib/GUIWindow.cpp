@@ -218,7 +218,10 @@ bool CGUIWindow::Load(TiXmlDocument &xmlDoc)
 	TiXmlElement *pChild = pRootElement->FirstChildElement();
 	while (pChild)
 	{
+		/* ===================>> 取出节点的值*/
 		CStdString strValue = pChild->Value();
+
+		/* ===================>> 根据节点的不同的值做不同的操作*/
 		if (strValue == "type" && pChild->FirstChild())
 		{
 			// if we have are a window type (ie not a dialog), and we have <type>dialog</type>
@@ -235,6 +238,7 @@ bool CGUIWindow::Load(TiXmlDocument &xmlDoc)
 			const char *always = pChild->Attribute("always");
 			if (always && strcmpi(always, "true") == 0)
 				m_defaultAlways = true;
+			
 			m_defaultControl = atoi(pChild->FirstChild()->Value());
 		}
 		else if (strValue == "visible" && pChild->FirstChild())
@@ -265,9 +269,12 @@ bool CGUIWindow::Load(TiXmlDocument &xmlDoc)
 				COrigin origin;
 				originElement->QueryFloatAttribute("x", &origin.x);
 				originElement->QueryFloatAttribute("y", &origin.y);
+				
 				if (originElement->FirstChild())
 					origin.condition = g_infoManager.Register(originElement->FirstChild()->Value(), GetID());
+				
 				m_origins.push_back(origin);
+				
 				originElement = originElement->NextSiblingElement("origin");
 			}
 		}
@@ -296,7 +303,9 @@ bool CGUIWindow::Load(TiXmlDocument &xmlDoc)
 				m_overlayState = overlay ? OVERLAY_STATE_SHOWN : OVERLAY_STATE_HIDDEN;
 		}
 
+		/* ===================>> 取出下一个节点*/
 		pChild = pChild->NextSiblingElement();
+		
 	}
 	LoadAdditionalTags(pRootElement);
 
@@ -309,7 +318,8 @@ void CGUIWindow::LoadControl(TiXmlElement* pControl, CGUIControlGroup *pGroup)
 {
 /*
 	参数:
-		1、
+		1、pControl	: 传入一个control  的节点( 分析xml  得到的)
+		2、pGroup	:
 
 	返回:
 		1、
@@ -321,6 +331,7 @@ void CGUIWindow::LoadControl(TiXmlElement* pControl, CGUIControlGroup *pGroup)
 	CGUIControlFactory factory;
 
 	CRect rect(0, 0, (float)m_coordsRes.iWidth, (float)m_coordsRes.iHeight);
+	
 	if (pGroup)
 	{
 		rect.x1 = pGroup->GetXPosition();
@@ -328,7 +339,9 @@ void CGUIWindow::LoadControl(TiXmlElement* pControl, CGUIControlGroup *pGroup)
 		rect.x2 = rect.x1 + pGroup->GetWidth();
 		rect.y2 = rect.y1 + pGroup->GetHeight();
 	}
-	CGUIControl* pGUIControl = factory.Create(GetID(), rect, pControl);
+	
+	CGUIControl* pGUIControl = factory.Create(GetID(), rect, pControl); /* 创建一个控件，见函数内部*/
+	
 	if (pGUIControl)
 	{
 		float maxX = pGUIControl->GetXPosition() + pGUIControl->GetWidth();
