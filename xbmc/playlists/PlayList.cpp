@@ -395,17 +395,36 @@ CFileItemPtr CPlayList::operator[] (int iItem)
 	return m_vecItems[iItem];
 }
 
+
+/* =================================================================
+使用random_shuffle()算法随机化序列元素 
+
+
+假设你需要指定范围内的随机数，传统的方法是使用ANSI C的函数random(),然后格式化结果以便结果是落在指定的范围内。但是，使用这个方法至少有两个缺点。
+    首先，做格式化时，结果常常是扭曲的，所以得不到正确的随机数（如某些数的出现频率要高于其它数）
+    其次，random()只支持整型数；不能用它来产生随机字符，浮点数，字符串或数据库中的记录。
+    对于以上的两个问题，C++中提供了更好的解决方法，那就是random_shuffle()算法。不要着急，下面我就会告诉你如何用这种算法来产生不同类型的随机数
+
+
+    产生指定范围内的随机元素集的最佳方法是创建一个顺序序列（也就是向量或者内置数组），在这个顺序序列中含有指定范围的所有值。例如，如何你需要产生100个0-99之间的数，那么就创建一个向量并用100个按升序排列的数填充向量： #include <vector> using std::vector;int main(){ vector<int> vi; for (int i = 0; i < 10; i++) vi.push_back(i); 现在向量包含了 100 个 0-99 之间的整数并且按升序排列}    填充完向量之后，用random_shuffle()算法打乱元素排列顺序。random_shuffle()定义在标准的头文件<algorithm.h>中。因为
+所有的STL算法都是在名字空间std::中声明的，所以你要注意正确地声明数据类型。random_shuffle()有两个参数，第一个参数是指向序列首元素的迭代器，第二个参数则指向序列最后一个元素的下一个位置。下列代码段用random_shuffle()算法打乱了先前填充到向量中的元素： include <algorithm>
+
+
+首先简单的介绍一个扑克牌洗牌的方法，假设一个数组 poker[52] 中存有一副扑克牌1-52的牌点值，使用一个for循环遍历这个数组，每次循环都生成一个[0，52)之间的随机数RandNum，以RandNum为数组下标，把当前下标对应的值和RandNum对应位置的值交换，循环结束，每个牌都与某个位置交换了一次，这样一副牌就被打乱了
+===================================================================*/
+
 void CPlayList::Shuffle(int iPosition)
 {
 /*
 	参数:
-		1、
+		1、iPosition : 传入一个容器中的位置参数
 		
 	返回:
 		1、
 		
 	说明:
-		1、
+		1、此函数实现了将容器中从位置iPosition 开始到结束所有
+			单元的随机化工作，详见函数random_shuffle  的作用
 */
 	if (size() == 0)
 		// nothing to shuffle, just set the flag for later
@@ -421,6 +440,11 @@ void CPlayList::Shuffle(int iPosition)
 		CLog::Log(LOGDEBUG,"%s shuffling at pos:%i", __FUNCTION__, iPosition);
 
 		ivecItems it = m_vecItems.begin() + iPosition;
+
+		/*
+			随机化序列元素，调用此函数之前必须调用srand(time(NULL)); 进行初始化
+			随机种子
+		*/
 		random_shuffle(it, m_vecItems.end());
 
 		// the list is now shuffled!
@@ -456,7 +480,7 @@ void CPlayList::UnShuffle()
 		1、
 		
 	说明:
-		1、
+		1、应该是与方法Shuffle  相反的功能
 */
 	sort(m_vecItems.begin(), m_vecItems.end(), SSortPlayListItem::PlaylistSort);
 	// the list is now unshuffled!
@@ -507,6 +531,7 @@ void CPlayList::Remove(const CStdString& strFileName)
 		else
 			++it;
 	}
+	
 	DecrementOrder(iOrder); /* 见此函数的说明*/
 }
 
@@ -629,13 +654,14 @@ void CPlayList::SetUnPlayable(int iItem)
 {
 /*
 	参数:
-		1、
+		1、iItem : 传入容器中一个单元的序号
 		
 	返回:
 		1、
 		
 	说明:
-		1、
+		1、函数实现了将容器中位置为iItem  单元的ubplayable 属性设置为真，并且
+			将统计可播放单元数量减1 
 */
 	if (iItem < 0 || iItem >= size())
 	{

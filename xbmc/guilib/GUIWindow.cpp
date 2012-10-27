@@ -105,7 +105,10 @@ bool CGUIWindow::Load(const CStdString& strFileName, bool bContainsPath)
 		1、
 
 	说明:
-		1、
+		1、加载对应此界面的xml  文件
+		2、此方法可能被调用的过程
+			1) CGUIWindow::AllocResources ===> 此方法
+			2) CGUIWindow::Initialize() ===> 此方法
 */
 #ifdef HAS_PERFORMANCE_SAMPLE
 	CPerformanceSample aSample("WindowLoad-" + strFileName, true);
@@ -153,7 +156,12 @@ bool CGUIWindow::LoadXML(const CStdString &strPath, const CStdString &strLowerPa
 		1、
 
 	说明:
-		1、
+		1、此函数实现了根据xml  文件进行加载
+
+			通过tinyxml  对xml  文件进行解析，解析出来各个节点的
+			内容以及相对应的数值，使用方法:
+
+			实例一个TiXmlDocument  类，然后调用LoadFile  方法既可
 */
 	TiXmlDocument xmlDoc;
 	if ( !xmlDoc.LoadFile(strPath) && !xmlDoc.LoadFile(CStdString(strPath).ToLower()) && !xmlDoc.LoadFile(strLowerPath))
@@ -176,9 +184,12 @@ bool CGUIWindow::Load(TiXmlDocument &xmlDoc)
 		1、
 
 	说明:
-		1、加载对应此界面的xml  文件
+		1、
 */
-	TiXmlElement* pRootElement = xmlDoc.RootElement();
+	TiXmlElement* pRootElement = xmlDoc.RootElement(); /* 取出xml  解析结果的根节点*/
+
+
+	/* 如果根节点的值不是window  直接返回，即xml  描述的不是一个窗口*/
 	if (strcmpi(pRootElement->Value(), "window"))
 	{
 		CLog::Log(LOGERROR, "file : XML file doesnt contain <window>");
@@ -199,6 +210,11 @@ bool CGUIWindow::Load(TiXmlDocument &xmlDoc)
 	CGUIControlFactory::GetActions(pRootElement, "onunload", m_unloadActions);
 	CGUIControlFactory::GetHitRect(pRootElement, m_hitRect);
 
+
+	/*
+		如下遍历xml  的所有节点进行逐个分析
+	*/
+	
 	TiXmlElement *pChild = pRootElement->FirstChildElement();
 	while (pChild)
 	{
@@ -637,7 +653,7 @@ void CGUIWindow::OnInitWindow()
 		1、
 */
 	//  Play the window specific init sound
-	if (IsSoundEnabled())
+	if (IsSoundEnabled()) /* 窗口初始化时是否播放音乐*/
 		g_audioManager.PlayWindowSound(GetID(), SOUND_INIT);
 
 	// set our rendered state
@@ -707,6 +723,7 @@ bool CGUIWindow::OnMessage(CGUIMessage& message)
 				CLog::Log(LOGDEBUG, "------ Window Init (%s) ------", GetProperty("xmlfile").c_str());
 				if (m_dynamicResourceAlloc || !m_bAllocated) 
 					AllocResources();
+				
 				OnInitWindow();
 				return true;
 			}
@@ -888,7 +905,7 @@ void CGUIWindow::AllocResources(bool forceLoad /*= FALSE */)
 		bHasPath = true;
 	
 	if (xmlFile.size() && (forceLoad || m_loadOnDemand || !m_windowLoaded))
-		Load(xmlFile,bHasPath);
+		Load(xmlFile,bHasPath); /* 见函数内部，对xml  进行加载*/
 
 	int64_t slend;
 	slend = CurrentHostCounter();
@@ -973,6 +990,7 @@ bool CGUIWindow::Initialize()
 */
 	if (!g_windowManager.Initialized())
 		return false;     // can't load if we have no skin yet
+		
 	return Load(GetProperty("xmlfile").asString());
 }
 

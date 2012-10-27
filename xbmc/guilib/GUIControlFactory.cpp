@@ -552,13 +552,16 @@ bool CGUIControlFactory::GetActions(const TiXmlNode* pRootNode, const char* strT
 {
 /*
 	参数:
-		1、
+		1、pRootNode	: 传入一个xml  节点数据的实例( tinyxml 分析xml 文件后会得到各个节点的实例)
+		2、strTag		: 传入一个字符串
+		3、action		: 相当于用于返回的值
 
 	返回:
 		1、
 
 	说明:
-		1、
+		1、实质就是在参数pRootNode  的子节点中查找名为strTag  的节点，并且分析
+			节点对应的值然后返回
 */
 	action.m_actions.clear();
 	const TiXmlElement* pElement = pRootNode->FirstChildElement(strTag);
@@ -580,13 +583,15 @@ bool CGUIControlFactory::GetHitRect(const TiXmlNode *control, CRect &rect)
 {
 /*
 	参数:
-		1、
+		1、control	: 传入一个xml  节点数据的实例( tinyxml 分析xml 文件后会得到各个节点的实例)
+		2、rect		: 相当于用于返回的值
 
 	返回:
 		1、
 
 	说明:
-		1、
+		1、实质就是在参数control  的子节点中查找名为"hitrect"  的节点，并且分析
+			节点对应的值然后返回
 */
 	const TiXmlElement* node = control->FirstChildElement("hitrect");
 	if (node)
@@ -652,13 +657,17 @@ bool CGUIControlFactory::GetInfoColor(const TiXmlNode *control, const char *strT
 {
 /*
 	参数:
-		1、
+		1、control	: 传入一个xml  节点数据的实例( tinyxml 分析xml 文件后会得到各个节点的实例)
+		2、strTag	: 传入一个字符串
+		3、value	: 相当于用于返回的值
+		4、parentID	: 
 
 	返回:
 		1、
 
 	说明:
-		1、
+		1、实质就是在参数control  的子节点中查找名为strTag  的节点，并且分析
+			节点对应的值然后返回
 */
 	const TiXmlElement* node = control->FirstChildElement(strTag);
 	if (node && node->FirstChild())

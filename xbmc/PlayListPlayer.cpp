@@ -336,6 +336,7 @@ bool CPlayListPlayer::Play(int iSong, bool bAutoPlay /* = false */, bool bPlayPr
 	CPlayList& playlist = GetPlaylist(m_iCurrentPlayList);
 	if (playlist.size() <= 0) 
 		return false;
+	
 	if (iSong < 0) 
 		iSong = 0;
 	if (iSong >= playlist.size()) 
@@ -493,7 +494,10 @@ void CPlayListPlayer::ClearPlaylist(int iPlaylist)
 		1、
 		
 	说明:
-		1、
+		1、函数执行过程:
+			1、清除应用程序的m_strPlayListFile 的值
+			2、清除指定播放列表中的所有元素
+			3、向gui  发送播放列表改变的消息
 */
 	// clear our applications playlist file
 	g_application.m_strPlayListFile.Empty();
@@ -523,9 +527,11 @@ CPlayList& CPlayListPlayer::GetPlaylist(int iPlaylist)
 		case PLAYLIST_MUSIC:
 			return *m_PlaylistMusic;
 			break;
+			
 		case PLAYLIST_VIDEO:
 			return *m_PlaylistVideo;
 			break;
+			
 		default:
 			m_PlaylistEmpty->Clear();
 			return *m_PlaylistEmpty;
@@ -647,6 +653,7 @@ bool CPlayListPlayer::RepeatedOne(int iPlaylist) const
 */
 	if (iPlaylist == PLAYLIST_MUSIC || iPlaylist == PLAYLIST_VIDEO)
 		return (m_repeatState[iPlaylist] == REPEAT_ONE);
+	
 	return false;
 }
 
@@ -770,10 +777,11 @@ REPEAT_STATE CPlayListPlayer::GetRepeat(int iPlaylist) const
 		1、
 		
 	说明:
-		1、
+		1、获取指定播放列表的重复状态
 */
 	if (iPlaylist == PLAYLIST_MUSIC || iPlaylist == PLAYLIST_VIDEO)
 		return m_repeatState[iPlaylist];
+	
 	return REPEAT_NONE;
 }
 
@@ -822,7 +830,7 @@ void CPlayListPlayer::Add(int iPlaylist, CPlayList& playlist)
 		1、
 		
 	说明:
-		1、
+		1、参考Insert  方法的说明
 */
 	if (iPlaylist != PLAYLIST_MUSIC && iPlaylist != PLAYLIST_VIDEO)
 		return;
@@ -843,7 +851,7 @@ void CPlayListPlayer::Add(int iPlaylist, const CFileItemPtr &pItem)
 		1、
 		
 	说明:
-		1、
+		1、参考Insert  方法的说明
 */
 	if (iPlaylist != PLAYLIST_MUSIC && iPlaylist != PLAYLIST_VIDEO)
 		return;
@@ -864,7 +872,7 @@ void CPlayListPlayer::Add(int iPlaylist, CFileItemList& items)
 		1、
 		
 	说明:
-		1、
+		1、参考Insert  方法的说明
 */
 	if (iPlaylist != PLAYLIST_MUSIC && iPlaylist != PLAYLIST_VIDEO)
 		return;
@@ -879,20 +887,26 @@ void CPlayListPlayer::Insert(int iPlaylist, CPlayList& playlist, int iIndex)
 {
 /*
 	参数:
-		1、
+		1、iPlaylist 	: 传入一个序列的代号，即要往哪个播放列表中插入数据，如PLAYLIST_MUSIC、PLAYLIST_VIDEO 等
+		2、playlist 	: 传入要插入的播放序列实例
+		3、iIndex	: 传入一个插入的序号
 		
 	返回:
 		1、
 		
 	说明:
-		1、
+		1、相当于插入一个播放序列
 */
 	if (iPlaylist != PLAYLIST_MUSIC && iPlaylist != PLAYLIST_VIDEO)
 		return;
-	CPlayList& list = GetPlaylist(iPlaylist);
-	int iSize = list.size();
-	list.Insert(playlist, iIndex);
-	if (list.IsShuffled())
+	
+	CPlayList& list = GetPlaylist(iPlaylist); /* 获取被插入的播放列表*/
+	
+	int iSize = list.size();/* 获取被插入播放列表的个数*/
+	
+	list.Insert(playlist, iIndex);/* 插入传入的数据*/
+	
+	if (list.IsShuffled())/* 队列是否被序列化了*/
 		ReShuffle(iPlaylist, iSize);
 	else if (m_iCurrentPlayList == iPlaylist && m_iCurrentSong >= iIndex)
 		m_iCurrentSong++;
@@ -902,20 +916,27 @@ void CPlayListPlayer::Insert(int iPlaylist, const CFileItemPtr &pItem, int iInde
 {
 /*
 	参数:
-		1、
+		1、iPlaylist 	: 传入一个序列的代号，即要往哪个播放列表中插入数据，如PLAYLIST_MUSIC、PLAYLIST_VIDEO 等
+		2、pItem 	: 传入一个要插入的item
+		3、iIndex	: 传入一个插入的序号
 		
 	返回:
 		1、
 		
 	说明:
-		1、
+		1、相当于插入一个item
 */
+
 	if (iPlaylist != PLAYLIST_MUSIC && iPlaylist != PLAYLIST_VIDEO)
 		return;
-	CPlayList& list = GetPlaylist(iPlaylist);
-	int iSize = list.size();
-	list.Insert(pItem, iIndex);
-	if (list.IsShuffled())
+	
+	CPlayList& list = GetPlaylist(iPlaylist);/* 获取被插入的播放列表*/
+	
+	int iSize = list.size();/* 获取被插入播放列表的个数*/
+	
+	list.Insert(pItem, iIndex);/* 插入传入的数据*/
+	
+	if (list.IsShuffled())/* 队列是否被序列化了*/
 		ReShuffle(iPlaylist, iSize);
 	else if (m_iCurrentPlayList == iPlaylist && m_iCurrentSong >= iIndex)
 		m_iCurrentSong++;
@@ -925,20 +946,26 @@ void CPlayListPlayer::Insert(int iPlaylist, CFileItemList& items, int iIndex)
 {
 /*
 	参数:
-		1、
+		1、iPlaylist 	: 传入一个序列的代号，即要往哪个播放列表中插入数据，如PLAYLIST_MUSIC、PLAYLIST_VIDEO 等
+		2、pItem 	: 传入要插入的item  序列
+		3、iIndex	: 传入一个插入的序号
 		
 	返回:
 		1、
 		
 	说明:
-		1、
+		1、相当于插入一个item 序列
 */
 	if (iPlaylist != PLAYLIST_MUSIC && iPlaylist != PLAYLIST_VIDEO)
 		return;
-	CPlayList& list = GetPlaylist(iPlaylist);
-	int iSize = list.size();
-	list.Insert(items, iIndex);
-	if (list.IsShuffled())
+	
+	CPlayList& list = GetPlaylist(iPlaylist);/* 获取被插入的播放列表*/
+	
+	int iSize = list.size();/* 获取被插入播放列表的个数*/
+	
+	list.Insert(items, iIndex);/* 插入传入的数据*/
+	
+	if (list.IsShuffled())/* 队列是否被序列化了*/
 		ReShuffle(iPlaylist, iSize);
 	else if (m_iCurrentPlayList == iPlaylist && m_iCurrentSong >= iIndex)
 		m_iCurrentSong++;
@@ -954,12 +981,21 @@ void CPlayListPlayer::Remove(int iPlaylist, int iPosition)
 		1、
 		
 	说明:
-		1、
+		1、函数执行过程:
+			1、函数实现了从传入的播放列表中将位置为iPosition  的单元
+				从播放列表中删除
+			2、如果传入的播放列表为当前正在播放的列表，并且当前
+				正在播放的节目在iPosition  位置的后面，则将当前播放的
+				节目序号减1
+			3、向gui  发送播放列表改变的消息
 */
 	if (iPlaylist != PLAYLIST_MUSIC && iPlaylist != PLAYLIST_VIDEO)
 		return;
+	
 	CPlayList& list = GetPlaylist(iPlaylist);
+	
 	list.Remove(iPosition);
+	
 	if (m_iCurrentPlayList == iPlaylist && m_iCurrentSong >= iPosition)
 		m_iCurrentSong--;
 
@@ -998,7 +1034,13 @@ void CPlayListPlayer::Swap(int iPlaylist, int indexItem1, int indexItem2)
 		1、
 		
 	说明:
-		1、
+		1、函数执行过程:
+			1、函数实现了将传入的两个序号所对应的播放列表单元
+				进行交换位置
+			2、如果传入的播放列表为当前正在播放的列表，并且传
+				入的两个序号中有个序号是当前正在播放的节目，则
+				重新设置当前正在播放的节目
+			3、向gui  发送播放列表改变的消息
 */
 	if (iPlaylist != PLAYLIST_MUSIC && iPlaylist != PLAYLIST_VIDEO)
 		return;
