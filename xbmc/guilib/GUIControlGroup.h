@@ -81,7 +81,7 @@ public:
 
   virtual void SaveStates(std::vector<CControlState> &states);
 
-  virtual bool IsGroup() const { return true; };
+  virtual bool IsGroup() const { return true; }; /* 见CGUIWindow::LoadControl  中对此方法的说明*/
 
 #ifdef _DEBUG
   virtual void DumpTextureUse();
@@ -97,7 +97,7 @@ protected:
   bool IsValidControl(const CGUIControl *control) const;
 
   // sub controls
-  std::vector<CGUIControl *> m_children;
+  std::vector<CGUIControl *> m_children; /* 子控件的容器*/
   typedef std::vector<CGUIControl *>::iterator iControls;
   typedef std::vector<CGUIControl *>::const_iterator ciControls;
   typedef std::vector<CGUIControl *>::reverse_iterator rControls;

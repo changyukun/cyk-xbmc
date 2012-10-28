@@ -240,21 +240,29 @@ bool CGUIControlFactory::GetDimension(const TiXmlNode *pRootNode, const char* st
 {
 /*
 	参数:
-		1、
+		1、pRootNode	: 传入一个节点
+		2、strTag		: 传入一个字符串
+		3、value		: 用于返回值
+		4、min			: 传入一个最小值
 
 	返回:
 		1、
 
 	说明:
-		1、
+		1、获取尺寸范围
+			实质就是在传入节点pRootNode  的子节点中获取名为strTag  节点的值
 */
 	const TiXmlElement* pNode = pRootNode->FirstChildElement(strTag);
-	if (!pNode || !pNode->FirstChild()) return false;
+
+	if (!pNode || !pNode->FirstChild()) 
+		return false;
+	
 	if (0 == strnicmp("auto", pNode->FirstChild()->Value(), 4))
 	{ // auto-width - at least min must be set
 		pNode->QueryFloatAttribute("max", &value);
 		pNode->QueryFloatAttribute("min", &min);
-		if (!min) min = 1;
+		if (!min) 
+			min = 1;
 		return true;
 	}
 	value = (float)atof(pNode->FirstChild()->Value());
@@ -334,13 +342,16 @@ bool CGUIControlFactory::GetTexture(const TiXmlNode* pRootNode, const char* strT
 {
 /*
 	参数:
-		1、
+		1、pRootNode	: 传入一个xml  节点数据的实例( tinyxml 分析xml 文件后会得到各个节点的实例)
+		2、strTag		: 传入一个字符串
+		3、image		: 相当于用于返回的值
 
 	返回:
 		1、
 
 	说明:
-		1、
+		1、实质就是在参数pRootNode  的子节点中查找名为strTag  的节点，并且分析
+			节点对应的值然后将其插入到image  中进行返回
 */
 	const TiXmlElement* pNode = pRootNode->FirstChildElement(strTag);
 	if (!pNode) 
@@ -365,7 +376,8 @@ bool CGUIControlFactory::GetTexture(const TiXmlNode* pRootNode, const char* strT
 	const char *background = pNode->Attribute("background");
 	if (background && strnicmp(background, "true", 4) == 0)
 		image.useLarge = true;
-	
+
+	/* 取得图片的名字*/
 	image.filename = (pNode->FirstChild() && pNode->FirstChild()->ValueStr() != "-") ? pNode->FirstChild()->Value() : "";
 	return true;
 }
@@ -571,21 +583,24 @@ bool CGUIControlFactory::GetActions(const TiXmlNode* pRootNode, const char* strT
 
 	说明:
 		1、实质就是在参数pRootNode  的子节点中查找名为strTag  的节点，并且分析
-			节点对应的值然后返回
+			节点对应的值然后将其插入到action 的m_actions  容器中
 */
-	action.m_actions.clear();
-	const TiXmlElement* pElement = pRootNode->FirstChildElement(strTag);
+
+	action.m_actions.clear(); /* 清空m_actions  容器*/
+
+	const TiXmlElement* pElement = pRootNode->FirstChildElement(strTag); /* 取出第一个名为strTag  的节点*/
 	while (pElement)
 	{
 		if (pElement->FirstChild())
 		{
 			CGUIAction::cond_action_pair pair;
-			pair.condition = pElement->Attribute("condition");
-			pair.action = pElement->FirstChild()->Value();
-			action.m_actions.push_back(pair);
+			pair.condition = pElement->Attribute("condition"); /* 取出条件属性*/
+			pair.action = pElement->FirstChild()->Value(); /* 取出第一个字节点的值作为动作*/
+			action.m_actions.push_back(pair); /* 将其插入到m_actions  容器中*/
 		}
-		pElement = pElement->NextSiblingElement(strTag);
+		pElement = pElement->NextSiblingElement(strTag); /* 取出下一个名为strTag  的节点*/
 	}
+	
 	return action.m_actions.size() > 0;
 }
 
@@ -845,7 +860,7 @@ CStdString CGUIControlFactory::GetType(const TiXmlElement *pControlNode)
 		1、
 
 	说明:
-		1、
+		1、实质就是获取传入xml  节点的type  属性的值
 */
 	CStdString type;
 	const char *szType = pControlNode->Attribute("type");
@@ -853,6 +868,7 @@ CStdString CGUIControlFactory::GetType(const TiXmlElement *pControlNode)
 		type = szType;
 	else  // backward compatibility - not desired
 		XMLUtils::GetString(pControlNode, "type", type);
+	
 	return type;
 }
 
@@ -1039,6 +1055,7 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 	{
 		if (!width)
 			width = max(rect.x2 - posX, 0.0f);
+		
 		if (!height)
 			height = max(rect.y2 - posY, 0.0f);
 	}
@@ -1052,6 +1069,10 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 
 
 
+/* =========================================================================
+	取出控件的各个动作值，即xml 文件controls 节点中的某个control 节点中如
+	下各个描述的值
+*/
 	if (!GetActions(pControlNode, "onup",    upActions))    		upActions.SetNavigation(id);
 	if (!GetActions(pControlNode, "ondown",  downActions))  	downActions.SetNavigation(id);
 	if (!GetActions(pControlNode, "onleft",  leftActions))  		leftActions.SetNavigation(id);
@@ -1060,6 +1081,7 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 	if (!GetActions(pControlNode, "onprev",  prevActions))  		prevActions.SetNavigation(id);
 	
 	GetActions(pControlNode, "onback",  backActions);
+	
 
 	if (XMLUtils::GetInt(pControlNode, "defaultcontrol", defaultControl))
 	{
@@ -1196,7 +1218,7 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 	GetInfoTexture(pControlNode, "texture", texture, textureFile, parentID);
 #ifdef PRE_SKIN_VERSION_9_10_COMPATIBILITY
 	if (type == CGUIControl::GUICONTROL_IMAGE && insideContainer && textureFile.IsConstant())
-	aspect.ratio = CAspectRatio::AR_STRETCH;
+		aspect.ratio = CAspectRatio::AR_STRETCH;
 #endif
 
 	GetTexture(pControlNode, "bordertexture", borderTexture);
@@ -1321,8 +1343,15 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 	// Instantiate a new control using the properties gathered above
 	//
 
+
+/* =========================================================================
+	根据控件的不同类型，new  出来不同的控件实例，如button、edit 等等
+
+	注意，new 出来的各个控件的基类有所区别，有点基类是CGUIControl ，有的
+	基类则是CGUIControlGroup 
+*/
 	CGUIControl *control = NULL;
-	if (type == CGUIControl::GUICONTROL_GROUP)
+	if (type == CGUIControl::GUICONTROL_GROUP) /* 控件组*/
 	{
 		if (insideContainer)
 		{
@@ -1335,17 +1364,16 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 			((CGUIControlGroup *)control)->SetRenderFocusedLast(renderFocusedLast);
 		}
 	}
-	else if (type == CGUIControl::GUICONTROL_GROUPLIST)
+	else if (type == CGUIControl::GUICONTROL_GROUPLIST) /* 控件组列表*/
 	{
 		CScroller scroller;
 		GetScroller(pControlNode, "scrolltime", scroller);
 
-		control = new CGUIControlGroupList(
-		parentID, id, posX, posY, width, height, buttonGap, pageControl, orientation, useControlCoords, labelInfo.align, scroller);
+		control = new CGUIControlGroupList(parentID, id, posX, posY, width, height, buttonGap, pageControl, orientation, useControlCoords, labelInfo.align, scroller);
 		((CGUIControlGroup *)control)->SetRenderFocusedLast(renderFocusedLast);
 		((CGUIControlGroupList *)control)->SetMinSize(minWidth, minHeight);
 	}
-	else if (type == CGUIControl::GUICONTROL_LABEL)
+	else if (type == CGUIControl::GUICONTROL_LABEL) /* 标签*/
 	{
 		const CGUIInfoLabel &content = (infoLabels.size()) ? infoLabels[0] : CGUIInfoLabel("");
 		if (insideContainer)
@@ -1359,7 +1387,7 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 			((CGUILabelControl *)control)->SetWidthControl(minWidth, bScrollLabel);
 		}
 	}
-	else if (type == CGUIControl::GUICONTROL_EDIT)
+	else if (type == CGUIControl::GUICONTROL_EDIT) /* 编辑框*/
 	{
 		control = new CGUIEditControl(parentID, id, posX, posY, width, height, textureFocus, textureNoFocus,labelInfo, strLabel);
 
@@ -1371,7 +1399,7 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 			((CGUIEditControl *) control)->SetInputType(CGUIEditControl::INPUT_TYPE_PASSWORD, 0);
 		((CGUIEditControl *) control)->SetTextChangeActions(textChangeActions);
 	}
-	else if (type == CGUIControl::GUICONTROL_VIDEO)
+	else if (type == CGUIControl::GUICONTROL_VIDEO) /* 视频控件*/
 	{
 		control = new CGUIVideoControl(parentID, id, posX, posY, width, height);
 	}
@@ -1381,7 +1409,7 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 
 		((CGUIFadeLabelControl *)control)->SetInfo(infoLabels);
 	}
-	else if (type == CGUIControl::GUICONTROL_RSS)
+	else if (type == CGUIControl::GUICONTROL_RSS) /* 控件RSS  */
 	{
 		control = new CGUIRSSControl(parentID, id, posX, posY, width, height,labelInfo, textColor3, headlineColor, strRSSTags);
 
@@ -1394,9 +1422,9 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 		else
 			CLog::Log(LOGERROR,"invalid rss url set referenced in skin");
 	}
-	else if (type == CGUIControl::GUICONTROL_BUTTON)
+	else if (type == CGUIControl::GUICONTROL_BUTTON) /* button  控件*/
 	{
-		control = new CGUIButtonControl(parentID, id, posX, posY, width, height,textureFocus, textureNoFocus,labelInfo);
+		control = new CGUIButtonControl(parentID, id, posX, posY, width, height, textureFocus, textureNoFocus, labelInfo);
 
 		((CGUIButtonControl *)control)->SetLabel(strLabel);
 		((CGUIButtonControl *)control)->SetLabel2(strLabel2);

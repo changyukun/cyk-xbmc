@@ -798,15 +798,18 @@ void CGUIControlGroup::AddControl(CGUIControl *control, int position /* = -1*/)
 		1、
 
 	说明:
-		1、
+		1、将一个控件插入到m_children  控件容器中的position  位置上
 */
 	if (!control) 
 		return;
+	
 	if (position < 0 || position > (int)m_children.size())
 		position = (int)m_children.size();
+	
 	m_children.insert(m_children.begin() + position, control);
 	control->SetParentControl(this);
 	control->SetPushUpdates(m_pushedUpdates);
+	
 	AddLookup(control);
 	SetInvalid();
 }
@@ -829,8 +832,10 @@ void CGUIControlGroup::AddLookup(CGUIControl *control)
 		for (LookupMap::const_iterator i = map.begin(); i != map.end(); i++)
 			m_lookup.insert(m_lookup.upper_bound(i->first), make_pair(i->first, i->second));
 	}
+	
 	if (control->GetID())
 		m_lookup.insert(m_lookup.upper_bound(control->GetID()), make_pair(control->GetID(), control));
+	
 	// ensure that our size is what it should be
 	if (m_parentControl)
 		((CGUIControlGroup *)m_parentControl)->AddLookup(control);

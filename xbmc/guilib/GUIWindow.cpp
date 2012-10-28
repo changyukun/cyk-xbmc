@@ -284,7 +284,7 @@ bool CGUIWindow::Load(TiXmlDocument &xmlDoc)
 			pChild->QueryFloatAttribute("y", &m_camera.y);
 			m_hasCamera = true;
 		}
-		else if (strValue == "controls")
+		else if (strValue == "controls") /* 添加控件*/
 		{
 			TiXmlElement *pControl = pChild->FirstChildElement();
 			while (pControl)
@@ -355,12 +355,26 @@ void CGUIWindow::LoadControl(TiXmlElement* pControl, CGUIControlGroup *pGroup)
 		{
 			m_height = maxY;
 		}
+
+		/* 如果是一个控件组，则将此控件添加到控件组，否则添加到窗体中*/
 		// if we are in a group, add to the group, else add to our window
 		if (pGroup)
 			pGroup->AddControl(pGUIControl);
 		else
 			AddControl(pGUIControl);
+
+		
 		// if the new control is a group, then add it's controls
+		/*
+			注意IsGroup  方法的实现
+
+			基类CGUIControl  中对此方法实现返回为false
+			类CGUIControlGroup  中对此方法实现返回为true
+
+			因此在CGUIControlFactory::Create  中new  的各个控件的时候，如果那个
+			控件是继承基类CGUIControl  的，则IsGroup  方法返回为false，如果是
+			继承CGUIControlGroup  类的，则IsGroup  方法返回的为true
+		*/
 		if (pGUIControl->IsGroup())
 		{
 			TiXmlElement *pSubControl = pControl->FirstChildElement("control");

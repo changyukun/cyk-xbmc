@@ -227,7 +227,7 @@ public:
 	virtual void UpdateInfo(const CGUIListItem *item = NULL) {};
 	virtual void SetPushUpdates(bool pushUpdates) { m_pushedUpdates = pushUpdates; };
 
-	virtual bool IsGroup() const { return false; };
+	virtual bool IsGroup() const { return false; }; /* 见CGUIWindow::LoadControl  中对此方法的说明*/
 	virtual bool IsContainer() const { return false; };
 	virtual bool GetCondition(int condition, int data) const { return false; };
 
@@ -327,7 +327,9 @@ protected:
 	bool m_bInvalidated;
 	bool m_bAllocated;
 	bool m_pulseOnSelect;
-	GUICONTROLTYPES ControlType;
+	GUICONTROLTYPES ControlType; /* 控件类型，见CGUIControlFactory::Create()  方法中new 各种控件
+									的构造函数中对其进行的赋值，如控件是一个控制
+									组、button  等等*/
 
 	CGUIControl *m_parentControl;   // our parent control if we're part of a group
 
