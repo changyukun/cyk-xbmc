@@ -240,9 +240,9 @@ protected:
 	bool m_windowLoaded;  // true if the window's xml file has been loaded
 	bool m_loadOnDemand;  // true if the window should be loaded only as needed
 	bool m_isDialog;      // true if we have a dialog, false otherwise.
-	bool m_dynamicResourceAlloc;
+	bool m_dynamicResourceAlloc; /* 是否允许窗体动态分配资源，如果允许，则在窗体的init  消息中会重新分析xml  文件等再重新分配资源*/
 	bool m_closing;
-	bool m_active;        // true if window is active or dialog is running
+	bool m_active;   /* 此值为真表示窗口为激活状态或者对话框正在运行*/     // true if window is active or dialog is running
 	CGUIInfoColor m_clearBackground; // colour to clear the window
 
 	int m_renderOrder;  /* 见方法CGUIWindow::Load()  中对其进行赋值，即分析xml  文件的结果对其赋值*/    // for render order of dialogs

@@ -3453,12 +3453,13 @@ bool CApplication::ProcessMouse()
 
 	// This is a mouse action so we need to record the mouse position
 	return OnAction(CAction(mouseaction.GetID(), 
-					g_Mouse.GetHold(MOUSE_LEFT_BUTTON), 
-					(float)g_Mouse.GetX(), 
-					(float)g_Mouse.GetY(), 
-					(float)g_Mouse.GetDX(), 
-					(float)g_Mouse.GetDY(),
-					mouseaction.GetName()));
+							g_Mouse.GetHold(MOUSE_LEFT_BUTTON), 
+							(float)g_Mouse.GetX(), 
+							(float)g_Mouse.GetY(), 
+							(float)g_Mouse.GetDX(), 
+							(float)g_Mouse.GetDY(),
+							mouseaction.GetName())
+					);
 }
 
 void  CApplication::CheckForTitleChange()

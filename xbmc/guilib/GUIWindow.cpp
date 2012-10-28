@@ -356,7 +356,10 @@ void CGUIWindow::LoadControl(TiXmlElement* pControl, CGUIControlGroup *pGroup)
 			m_height = maxY;
 		}
 
-		/* 如果是一个控件组，则将此控件添加到控件组，否则添加到窗体中*/
+		/* 
+			如果是一个控件组，则将此控件添加到控
+			件组，否则添加到窗体中
+		*/
 		// if we are in a group, add to the group, else add to our window
 		if (pGroup)
 			pGroup->AddControl(pGUIControl);
@@ -748,8 +751,9 @@ bool CGUIWindow::OnMessage(CGUIMessage& message)
 		case GUI_MSG_WINDOW_INIT:
 			{
 				CLog::Log(LOGDEBUG, "------ Window Init (%s) ------", GetProperty("xmlfile").c_str());
+				
 				if (m_dynamicResourceAlloc || !m_bAllocated) 
-					AllocResources();
+					AllocResources(); /* 见函数内部会间接调用分析xml 创建各个控件等等操作*/
 				
 				OnInitWindow();
 				return true;
@@ -760,9 +764,11 @@ bool CGUIWindow::OnMessage(CGUIMessage& message)
 			{
 				CLog::Log(LOGDEBUG, "------ Window Deinit (%s) ------", GetProperty("xmlfile").c_str());
 				OnDeinitWindow(message.GetParam1());
+				
 				// now free the window
 				if (m_dynamicResourceAlloc) 
 					FreeResources();
+				
 				return true;
 			}
 			break;
@@ -946,6 +952,7 @@ void CGUIWindow::AllocResources(bool forceLoad /*= FALSE */)
 	freq = CurrentHostFrequency();
 	CLog::Log(LOGDEBUG,"Alloc resources: %.2fms (%.2f ms skin load)", 1000.f * (end - start) / freq, 1000.f * (slend - start) / freq);
 #endif
+
 	m_bAllocated = true;
 }
 

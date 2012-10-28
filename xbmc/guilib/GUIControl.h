@@ -323,9 +323,9 @@ protected:
 	CGUIInfoColor m_diffuseColor;
 	int m_controlID; /* 每个CGuiWindow  实例的id 号，如WINDOW_HOME、WINDOW_PROGRAMS 等值*/
 	int m_parentID; /* 父窗体的id 号*/
-	bool m_bHasFocus; /* 此窗体是否具有焦点，见方法CGUIControl::SetFocus()  的说明*/
+	bool m_bHasFocus; /* 此窗体或控件是否具有焦点，见方法CGUIControl::SetFocus()  的说明*/
 	bool m_bInvalidated;
-	bool m_bAllocated;
+	bool m_bAllocated; /* 窗体的资源是否已经分配了，如各个控件等是否创建了，即根据xml 来创建的*/
 	bool m_pulseOnSelect;
 	GUICONTROLTYPES ControlType; /* 控件类型，见CGUIControlFactory::Create()  方法中new 各种控件
 									的构造函数中对其进行的赋值，如控件是一个控制
