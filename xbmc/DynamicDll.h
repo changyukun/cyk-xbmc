@@ -144,6 +144,7 @@ public: \
 /*
 	cyk ##############  宏定义解析######################################## 
 	
+	============>>>>>>> ( 0 个参数的)
 	例如DEFINE_METHOD0(void, av_register_all_dont_call) 
 	会生成如下代码的
 
@@ -162,7 +163,29 @@ public: \
 		{ 
 			return m_av_register_all_dont_call (); \
 		}
+
+	============>>>>>>> ( 3 个参数的)
+	例如DEFINE_METHOD3(int, url_fopen, (ByteIOContext **p1, const char *p2, int p3))
+	会生成如下代码
+
+	protected:
+
+		typedef int (__cdecl * url_fopen_METHOD) ();
+
+		union 
+		{ 
+			url_fopen_METHOD      	m_url_fopen_call; 
+			void*         			m_url_fopen_ptr; 
+		}; 
 	
+	public: 
+		virtual void url_fopen (ByteIOContext **p1, const char *p2, int p3) 
+		{ 
+			return m_url_fopen_call (p1, p2, p3); \
+		}
+
+
+	============>>>>>>> ( 其他个数参数的以此类推)
 */
 
 #define DEFINE_METHOD_LINKAGE0(result, linkage, name) \

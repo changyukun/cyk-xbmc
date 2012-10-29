@@ -240,7 +240,9 @@ class DllAvFormat : public DllDynamic, DllAvFormatInterface
 
 
 	
-
+	/*
+		见文件DynamicDll.h  中对宏DEFINE_METHOD_LINKAGE_BASE  的解释
+	*/
 	DEFINE_METHOD0(void, av_register_all_dont_call)
 	DEFINE_METHOD1(AVInputFormat*, av_find_input_format, (const char *p1))
 	DEFINE_METHOD1(int, url_feof, (ByteIOContext *p1))
@@ -250,6 +252,11 @@ class DllAvFormat : public DllDynamic, DllAvFormatInterface
 	DEFINE_METHOD1(int, av_read_play, (AVFormatContext *p1))
 	DEFINE_METHOD1(int, av_read_pause, (AVFormatContext *p1))
 	DEFINE_METHOD1(void, av_read_frame_flush, (AVFormatContext *p1))
+
+
+	/*
+		见文件DynamicDll.h  中对宏DEFINE_METHOD_LINKAGE_BASE  的解释
+	*/
 	DEFINE_FUNC_ALIGNED2(int, __cdecl, av_read_frame, AVFormatContext *, AVPacket *)
 	DEFINE_FUNC_ALIGNED4(int, __cdecl, av_seek_frame, AVFormatContext*, int, int64_t, int)
 	DEFINE_FUNC_ALIGNED1(int, __cdecl, av_find_stream_info_dont_call, AVFormatContext*)
@@ -265,6 +272,9 @@ class DllAvFormat : public DllDynamic, DllAvFormatInterface
 	DEFINE_FUNC_ALIGNED2(void, __cdecl, put_be24, ByteIOContext*, unsigned int)
 	DEFINE_FUNC_ALIGNED2(void, __cdecl, put_be32, ByteIOContext*, unsigned int)
 	DEFINE_FUNC_ALIGNED2(void, __cdecl, put_be16, ByteIOContext*, unsigned int)
+
+
+	
 	DEFINE_METHOD1(void, url_set_interrupt_cb, (URLInterruptCB *p1))
 	DEFINE_METHOD8(int, init_put_byte, (ByteIOContext *p1, unsigned char *p2, int p3, int p4, void *p5, 
 						int (*p6)(void *opaque, uint8_t *buf, int buf_size),
