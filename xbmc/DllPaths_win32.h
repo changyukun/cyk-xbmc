@@ -22,6 +22,8 @@
  *
  */
 
+/* cyk ---------> 指定各个动态链接库的版本及路径等配置相关。。。。。。*/
+
 /* libraries */
 #define DLL_PATH_CPLUFF        "special://xbmcbin/system/cpluff.dll"
 #define DLL_PATH_IMAGELIB      "special://xbmcbin/system/ImageLib.dll"
