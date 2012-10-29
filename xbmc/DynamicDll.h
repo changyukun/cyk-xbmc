@@ -141,6 +141,30 @@ public: \
       return m_##name args2; \
     }
 
+/*
+	cyk ##############  宏定义解析######################################## 
+	
+	例如DEFINE_METHOD0(void, av_register_all_dont_call) 
+	会生成如下代码的
+
+	protected:
+
+		typedef void (__cdecl * av_register_all_dont_call_METHOD) ();
+
+		union 
+		{ 
+			av_register_all_dont_call_METHOD      	m_av_register_all_dont_call; 
+			void*         						m_av_register_all_dont_call_ptr; 
+		}; 
+	
+	public: 
+		virtual void av_register_all_dont_call () 
+		{ 
+			return m_av_register_all_dont_call (); \
+		}
+	
+*/
+
 #define DEFINE_METHOD_LINKAGE0(result, linkage, name) \
         DEFINE_METHOD_LINKAGE_BASE(result, linkage, name, ()  , ())
 

@@ -127,6 +127,10 @@
 
 #define GUI_MSG_USER         1000
 
+/*
+	cyk ----> 控件操作的各种宏定义
+*/
+
 /*!
  \ingroup winmsg
  \brief

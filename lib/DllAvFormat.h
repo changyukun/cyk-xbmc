@@ -219,9 +219,27 @@ public:
 
 class DllAvFormat : public DllDynamic, DllAvFormatInterface
 {
+	/*
+		DECLARE_DLL_WRAPPER
+		相当于声明了一个构造函数，类似如下代码
+		
+		public: 
+ 			 DllAvFormat () : DllDynamic( DLL_PATH_LIBAVFORMAT ) {}
+	*/
 	DECLARE_DLL_WRAPPER(DllAvFormat, DLL_PATH_LIBAVFORMAT)
 
+
+	
+	/*
+		LOAD_SYMBOLS()
+		相当于类似如下代码
+		protected: 
+    			virtual bool LoadSymbols() { return true; }
+	*/
 	LOAD_SYMBOLS()
+
+
+	
 
 	DEFINE_METHOD0(void, av_register_all_dont_call)
 	DEFINE_METHOD1(AVInputFormat*, av_find_input_format, (const char *p1))
@@ -329,7 +347,7 @@ class DllAvFormat : public DllDynamic, DllAvFormatInterface
 	// DllAvCore loaded implicitely by m_dllAvCodec
 	// DllAvUtil loaded implicitely by m_dllAvCodec
 
-	public:
+public:
 	void av_register_all()
 	{
 		CSingleLock lock(DllAvCodec::m_critSection);
