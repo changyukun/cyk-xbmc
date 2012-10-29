@@ -3029,8 +3029,10 @@ void CDVDPlayer::Seek(bool bPlus, bool bLargeStep)
 
 	m_messenger.Put(new CDVDMsgPlayerSeek((int)seek, !bPlus, true, false, restore));
 	SynchronizeDemuxer(100);
-	if (seek < 0) seek = 0;
-		m_callback.OnPlayBackSeek((int)seek, (int)(seek - time));
+	if (seek < 0)
+		seek = 0;
+
+	m_callback.OnPlayBackSeek((int)seek, (int)(seek - time));
 }
 
 bool CDVDPlayer::SeekScene(bool bPlus)
@@ -4080,6 +4082,7 @@ void CDVDPlayer::FlushBuffers(bool queued, double pts, bool accurate)
 
 		if(pts != DVD_NOPTS_VALUE)
 			m_clock.Discontinuity(pts);
+		
 		UpdatePlayState(0);
 	}
 }
