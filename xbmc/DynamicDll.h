@@ -128,18 +128,20 @@ public: \
       void*         name##_ptr; \
     };
 
+
 #define DEFINE_METHOD_LINKAGE_BASE(result, linkage, name, args, args2) \
-  protected: \
-    typedef result (linkage * name##_METHOD) args; \
-    union { \
-      name##_METHOD m_##name; \
-      void*         m_##name##_ptr; \
-    }; \
-  public: \
-    virtual result name args \
-    { \
-      return m_##name args2; \
-    }
+	protected: 											\
+		typedef result (linkage * name##_METHOD) args; 	\
+		union 											\
+		{ 												\
+			name##_METHOD       	m_##name; 				\
+			void*         			m_##name##_ptr; 		\
+	   	}; 												\
+	public: 												\
+		virtual result name args 							\
+		{ 												\
+			return m_##name args2; 						\
+		}
 
 /*
 	cyk ##############  ∫Í∂®“ÂΩ‚Œˆ######################################## 
