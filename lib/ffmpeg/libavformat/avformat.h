@@ -677,17 +677,43 @@ typedef struct AVChapter {
  * version bump.
  * sizeof(AVFormatContext) must not be used outside libav*.
  */
+
+
+
+/*
+	AVFormatContext在FFMpeg里是一个非常重要的的结构，是其它输入、输出相关信息的一个容器，需要注意的是其中两个成员： 
+
+	struct AVInputFormat *iformat;//数据输入格式
+	struct AVOutputFormat *oformat;//数据输出格式
+
+	这两个成员不能同时赋值，即AVFormatContext不能同时做为输入、输出格式的容器。AVFormatContext和AVIContext、FLVContext等XXXContext之间像前面讲的 URLContext和URLProtocol的关系一样，是一种"多态"关系，即AVFormatContext 对像记录着运行时大家共有的信息，而各个XXXContext记录自己文件格式的信息，如AVIContext、FLVContext等。 AVInputFormat->priv_data_size记录相对应的XXXContext的大小，该值大小在编译时静态确定。 AVFormatContext的void *priv_data记录XXXContext指针。 
+
+	AVFormatContext对像的初始化主要在 AVInputFormat的read_header函数中进行，read_header是个函数指针，指向 
+
+	具体的文件类型的read_header，如flv_read_header()，avi_read_header()等，AVFormatContext、 AVInputFormat和XXXContext组成一起共同完成数据输入模块，可以出来粗鲁的认为，AVFormatContext是一个类容器，AVInputFormat是这个类的操作函数集合，XXXContext代表该类的私有数据对像。AVFormatContext还有个重要的成员 AVStream *streams[MAX_STREAMS];也是在read_header里初始化，这个等会儿再讲。 
+	前几篇说的都还是数据源文件格式解析部分，哪么解析完后呢，读出的数据流保存在哪呢？正是现在讲的AVStream对像，在AVInputFormat 的read_header中初始化AVFormatContext对像时，他会解析出该输入文件有哪些类型的数据流，并初始化 AVFormatContext的AVStream *streams[MAX_STREAMS];一个AVStream代表一个流对像，如音频流、视频流，nb_streams记录流对像个数。主版本号大于53时MAX_STREAMS为100，小于53为20。AVStream也是个容器，其 
+	void *priv_data;//
+
+	成员变量指向具体的Stream类型对像，如AVIStream。其
+
+	AVCodecContext *actx;//记录具体的编解容器，这个下面会讲
+
+	也在这读头文件信息里初始化。
+*/
+
+
 typedef struct AVFormatContext 
 {
 	const AVClass *av_class; /**< Set by avformat_alloc_context. */
 	/* Can only be iformat or oformat, not both at the same time. */
-	struct AVInputFormat *iformat;
-	struct AVOutputFormat *oformat;
+	struct AVInputFormat *iformat; /* 数据输入格式，注意数据输入格式与数据输出格式不能同时赋值，即此数据结构不能同时作为输入、输出的容器*/
+	struct AVOutputFormat *oformat; /* 数据输出格式，见上面iformat  域成员的说明*/
 	void *priv_data;
 	ByteIOContext *pb; /* 见函数av_open_input_stream 中对此域成员的赋值，通常此值被赋为一个由函数av_alloc_put_byte 返回的数据结构( 将文件的读、定位等函数整合在一起) */
+
 	unsigned int nb_streams;
 #if FF_API_MAX_STREAMS
-	AVStream *streams[MAX_STREAMS];
+	AVStream *streams[MAX_STREAMS]; /* 在域成员iformat  的read_header  方法中初始化AVFormatContext 对像时，他会解析出该输入文件有哪些类型的数据流，并填充这个数组，数组的每个单元代表一个数据流，如音频流，视频流*/
 #else
 	AVStream **streams;
 #endif
