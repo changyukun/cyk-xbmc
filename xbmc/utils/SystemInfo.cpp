@@ -596,6 +596,8 @@ CStdString CSysInfo::GetUAWindowsVersion()
 CStdString CSysInfo::GetUserAgent()
 {
   CStdString result;
+
+#if 1 
   result = "XBMC/" + g_infoManager.GetLabel(SYSTEM_BUILD_VERSION) + " (";
 #if defined(_WIN32)
   result += GetUAWindowsVersion();
@@ -616,6 +618,12 @@ CStdString CSysInfo::GetUserAgent()
   result += GetUnameVersion();
 #endif
   result += "; http://www.xbmc.org)";
+
+#else // ---- cyk add  此功能用于解决morefun 解析土豆视频的真实地址，利用asx 文件xbmc 无法播放的问题, 方法CFileCurl::SetCommonOptions  中会用到此值
+
+result = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.47 Safari/536.11 curl/7.16.3 (Windows  Service Pack 1 build 7601; en-US; beta) morefuntv/0.9.23.2010";
+
+#endif
 
   return result;
 }
