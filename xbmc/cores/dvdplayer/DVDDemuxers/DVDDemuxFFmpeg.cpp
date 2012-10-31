@@ -910,7 +910,7 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 			int result = 0;
 			try
 			{
-				result = m_dllAvFormat.av_read_frame(m_pFormatContext, &pkt);
+				result = m_dllAvFormat.av_read_frame(m_pFormatContext, &pkt);/* 读取数据包*/
 			}
 			catch(const win32_exception &e)
 			{
@@ -919,16 +919,16 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 			}
 			m_timeout.SetInfinite();
 
-			if (result == AVERROR(EINTR) || result == AVERROR(EAGAIN))
+			if (result == AVERROR(EINTR) || result == AVERROR(EAGAIN)) /* 空数据包*/
 			{
 				// timeout, probably no real error, return empty packet
 				bReturnEmpty = true;
 			}
-			else if (result < 0)
+			else if (result < 0) /* 读取错误*/
 			{
 				Flush();
 			}
-			else if (pkt.size < 0 || pkt.stream_index >= MAX_STREAMS)
+			else if (pkt.size < 0 || pkt.stream_index >= MAX_STREAMS) /* 读取到的数据包数据不对，长度小于0 或者流的索引超出范围*/
 			{
 				// XXX, in some cases ffmpeg returns a negative packet size
 				if(m_pFormatContext->pb && !m_pFormatContext->pb->eof_reached)
@@ -942,10 +942,11 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 
 				m_dllAvCodec.av_free_packet(&pkt);
 			}
-			else
+			else /* 读取到正确的数据包*/
 			{
 				AVStream *stream = m_pFormatContext->streams[pkt.stream_index];
 
+				/* 分配一块用于存取数据包的内存，返回的就是这个内存*/
 				if (m_program != UINT_MAX)
 				{
 					/* check so packet belongs to selected program */
@@ -964,7 +965,8 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 				else
 					pPacket = CDVDDemuxUtils::AllocateDemuxPacket(pkt.size);
 
-				if (pPacket)
+			
+				if (pPacket) /* 分配了数据包内存*/
 				{
 					// lavf sometimes bugs out and gives 0 dts/pts instead of no dts/pts
 					// since this could only happens on initial frame under normal
@@ -1004,7 +1006,7 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 
 					// maybe we can avoid a memcpy here by detecting where pkt.destruct is pointing too?
 					if (pkt.data)
-						memcpy(pPacket->pData, pkt.data, pPacket->iSize);
+						memcpy(pPacket->pData, pkt.data, pPacket->iSize); /* 拷贝数据*/
 
 					pPacket->pts = ConvertTimestamp(pkt.pts, stream->time_base.den, stream->time_base.num);
 					pPacket->dts = ConvertTimestamp(pkt.dts, stream->time_base.den, stream->time_base.num);
@@ -1082,6 +1084,7 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 			}
 		}
 	}
+	
 	return pPacket;
 }
 

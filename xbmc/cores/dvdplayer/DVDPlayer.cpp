@@ -1578,7 +1578,7 @@ void CDVDPlayer::ProcessAudioData(CDemuxStream* pStream, DemuxPacket* pPacket)
 		m_EdlAutoSkipMarkers.mute = false;
 	}
 
-	m_dvdPlayerAudio.SendMessage(new CDVDMsgDemuxerPacket(pPacket, drop));
+	m_dvdPlayerAudio.SendMessage(new CDVDMsgDemuxerPacket(pPacket, drop)); /* 发送数据包到音频解码器*/
 }
 
 void CDVDPlayer::ProcessVideoData(CDemuxStream* pStream, DemuxPacket* pPacket)

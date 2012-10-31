@@ -374,7 +374,7 @@ int CDVDPlayerAudio::DecodeFrame(DVDAudioFrame &audioframe, bool bDropPacket)
 			if (dts != DVD_NOPTS_VALUE)
 				m_audioClock = dts;
 
-			int len = m_pAudioCodec->Decode(m_decode.data, m_decode.size);
+			int len = m_pAudioCodec->Decode(m_decode.data, m_decode.size); /* 调用真正的解码器*/
 			m_audioStats.AddSampleBytes(m_decode.size);
 			if (len < 0)
 			{
@@ -633,6 +633,7 @@ void CDVDPlayerAudio::Process()
 	while (!m_bStop)
 	{
 		//Don't let anybody mess with our global variables
+		/* 调用音频解码相关函数*/
 		result = DecodeFrame(audioframe, m_speed > DVD_PLAYSPEED_NORMAL || m_speed < 0); // blocks if no audio is available, but leaves critical section before doing so
 
 		if( result & DECODE_FLAG_ERROR )

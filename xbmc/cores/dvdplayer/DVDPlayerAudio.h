@@ -173,7 +173,7 @@ protected:
 
   CDVDAudio m_dvdAudio; // audio output device
   CDVDClock* m_pClock; // dvd master clock
-  CDVDAudioCodec* m_pAudioCodec; // audio codec
+  CDVDAudioCodec* m_pAudioCodec; /* 在方法CDVDPlayerAudio::OpenStream 中创建的解码器*/  // audio codec
   BitstreamStats m_audioStats;
 
   int     m_speed;
