@@ -307,6 +307,28 @@ attribute_deprecated int av_register_protocol(URLProtocol *protocol);
  */
 int av_register_protocol2(URLProtocol *protocol, int size);
 
+
+
+/*
+	URLProtocol,URLContext和ByteIOContext是FFMpeg操作文件(即I/O，包括网络数据流)的结构，这几个结构现实
+	的功能类似于C++的多态继承吧，C++的多态是通过子类继承实现，而FFMpeg的“多态”是通过
+	静态对像现实。这部分的代码非常值得C程序借鉴，我是说，如果你要在C里实现类似C++多态
+	性的功能；比如当你要区分你老婆和情人之间的不同功能时。
+
+	请查看URLProtocol、URLContext、ByteIOContext  三个数据结构的定义。
+
+
+	FFMpeg所有的Protol类型都用这个变量串成一个链表，表头为avio.c里的URLProtocol *first_protocol = NULL;
+	每个文件类似都有自己的一个URLProtocol静态对象，如libavformat/file.c里
+
+	不同于URLProtocol对象值在编译时确定，URLContext对象值是在运行过程中根据输入的I/O类型动
+	态确定的。这一动一静组合起到了C++的多态继承一样的作用。URLContext像是基类，为大家
+	共同所有，而URLProtocol像是子类部分。
+
+	ByteIOContext是URLContext和URLProtocol 一个扩展，也是FFMpeg提供给用户的接口，URLContext 和URLProtocol对
+	用户是透明，我们所有的操作是通过ByteIOContext现实
+*/
+
 /**
  * Bytestream IO Context.
  * New fields can be added to the end with minor version bumps.

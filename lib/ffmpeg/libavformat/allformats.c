@@ -55,7 +55,7 @@ void av_register_all(void)
 	
 	initialized = 1;
 
-	avcodec_register_all(); /* 见函数的定义*/
+	avcodec_register_all(); /* 注册所有解码类型的信息。见函数的定义*/
 
 	/* (de)muxers */
 	REGISTER_MUXER    (A64, a64);

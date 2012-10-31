@@ -1129,6 +1129,27 @@ typedef struct AVFrame {
  * version bump.
  * sizeof(AVCodecContext) must not be used outside libav*.
  */
+
+/*
+	AVCodecContext 的enum CodecID codec_id  成员记录者当前数据流的Codec，void *priv_data  记录具体Codec  所对应的上
+	下文信息对像的指针，如MsrleContext。这三个结合起来现实数据解码的作用。我们可以傻逼的认
+	为AVCodecContext  是这个解码模块的容器类，Codec  是操作函数集合，类似MsrleContext的就是操作数据对像。
+	
+	他们之间关系的确立：
+	
+	每一个解码类型都会有自己的Codec静态对像，Codec的int priv_data_size记录该解码器上下文的结构大小，
+	如MsrleContext。这些都是编译时确定的，程序运行时通过 avcodec_register_all()将所有的解码器注册成一个
+	链表。在av_open_input_stream()函数中调用 AVInputFormat的read_header()中读文件头信息时，会读出数据流的CodecID，
+	即确定了他的解码器Codec
+
+
+	从定义上可知，AVPicture 是AVFrame的一个子集，他们都是数据流在编解过程中用来保存数据缓存的对
+	像，从int av_read_frame(AVFormatContext *s, AVPacket *pkt) 函数看，从数据流读出的数据首先是保存在AVPacket  里，也
+	可以理解为一个AVPacket 最多只包含一个AVFrame，而一个 AVFrame可能包含好几个AVPacket，AVPacket是种数据
+	流分包的概念。记录一些音视频相关的属性值，如pts,dts等，
+
+*/
+
 typedef struct AVCodecContext {
     /**
      * information on struct for av_log
