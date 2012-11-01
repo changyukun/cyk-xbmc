@@ -316,7 +316,7 @@ CDVDAudioCodec* CDVDFactoryCodec::CreateAudioCodec( CDVDStreamInfo &hint, bool p
 		1、
 		
 	说明:
-		1、
+		1、创建一个音频播放器
 */
 	CDVDAudioCodec* pCodec = NULL;
 	CDVDCodecOptions options;

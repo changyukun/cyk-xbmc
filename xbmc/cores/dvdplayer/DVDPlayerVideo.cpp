@@ -157,7 +157,7 @@ CDVDPlayerVideo::CDVDPlayerVideo( CDVDClock* pClock
 		1、
 		
 	说明:
-		1、
+		1、见方法CDVDPlayerVideo::OpenStream()  中创建了一个真正的解码器
 */
 	m_pClock = pClock;
 	m_pOverlayContainer = pOverlayContainer;
@@ -265,6 +265,7 @@ bool CDVDPlayerVideo::OpenStream( CDVDStreamInfo &hint )
 	else
 	{
 		OpenStream(hint, codec);/* 打开流媒体，同时保存创建的解码器实例*/
+		
 		CLog::Log(LOGNOTICE, "Creating video thread");
 		m_messageQueue.Init();
 		Create(); /* changyukun AAA--3--AAA  间接创建启动视频解码器线程，即线程函数CDVDPlayerVideo::Process() */

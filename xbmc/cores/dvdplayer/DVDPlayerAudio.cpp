@@ -170,7 +170,7 @@ CDVDPlayerAudio::CDVDPlayerAudio(CDVDClock* pClock, CDVDMessageQueue& parent)
 		1、
 		
 	说明:
-		1、
+		1、见方法CDVDPlayerAudio::OpenStream  中创建了一个真正的解码器
 */
 	m_pClock = pClock;
 	m_pAudioCodec = NULL;
@@ -223,7 +223,8 @@ bool CDVDPlayerAudio::OpenStream( CDVDStreamInfo &hints )
 	bool passthrough = AUDIO_IS_BITSTREAM(g_guiSettings.GetInt("audiooutput.mode"));
 
 	CLog::Log(LOGNOTICE, "Finding audio codec for: %i", hints.codec);
-	CDVDAudioCodec* codec = CDVDFactoryCodec::CreateAudioCodec(hints, passthrough);
+	
+	CDVDAudioCodec* codec = CDVDFactoryCodec::CreateAudioCodec(hints, passthrough); /* 创建了一个音频解码器*/
 	if( !codec )
 	{
 		CLog::Log(LOGERROR, "Unsupported audio codec");
@@ -235,8 +236,10 @@ bool CDVDPlayerAudio::OpenStream( CDVDStreamInfo &hints )
 	else
 	{
 		OpenStream(hints, codec);
+		
 		m_messageQueue.Init();
 		CLog::Log(LOGNOTICE, "Creating audio thread");
+		
 		Create(); /* changyukun BBB--3--BBB  间接创建启动音频解码器线程*/
 	}
 	return true;
@@ -255,7 +258,8 @@ void CDVDPlayerAudio::OpenStream( CDVDStreamInfo &hints, CDVDAudioCodec* codec )
 		1、
 */
 	SAFE_DELETE(m_pAudioCodec);
-	m_pAudioCodec = codec;
+
+	m_pAudioCodec = codec; /* 保存用于解码的解码器实例*/
 
 	/* store our stream hints */
 	m_streaminfo = hints;
