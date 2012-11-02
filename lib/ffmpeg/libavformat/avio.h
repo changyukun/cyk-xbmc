@@ -338,17 +338,20 @@ int av_register_protocol2(URLProtocol *protocol, int size);
  */
 typedef struct 
 {
-	unsigned char *buffer;
-	int buffer_size;
-	unsigned char *buf_ptr, *buf_end;
-	void *opaque;
+	/*
+		见函数av_alloc_put_byte  的说明
+	*/
+	unsigned char *buffer; /* buffer 空间地址，对应函数的第1  个参数*/
+	int buffer_size; /* buffer 空间地址的大小，对应函数的第2  个参数*/
+	unsigned char *buf_ptr, *buf_end;/* */
+	void *opaque; /* 对应函数的第4  个参数*/
 	int (*read_packet)(void *opaque, uint8_t *buf, int buf_size);
 	int (*write_packet)(void *opaque, uint8_t *buf, int buf_size);
 	int64_t (*seek)(void *opaque, int64_t offset, int whence);
-	int64_t pos; /**< position in the file of the current buffer */
+	int64_t pos; /**< position in the file of the current buffer */ /* buffer 空间的绝对地址，相当于经过此buffer 存留过的所有数据的总数，见函数flush_buffer  对此值的统计*/
 	int must_flush; /**< true if the next seek should flush */
-	int eof_reached; /**< true if eof reached */
-	int write_flag;  /**< true if open for writing */
+	int eof_reached; /**< true if eof reached */ /* 真表示到达文件尾*/
+	int write_flag;  /**< true if open for writing */ /* 真表示可写*/
 	int is_streamed;
 	int max_packet_size;
 	unsigned long checksum;
