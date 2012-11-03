@@ -47,8 +47,8 @@ static const AVClass urlcontext_class =
 
 static int default_interrupt_cb(void);
 
-URLProtocol *first_protocol = NULL;
-URLInterruptCB *url_interrupt_cb = default_interrupt_cb;
+URLProtocol *first_protocol = NULL; /* 保存所有URLProtocol  数据结构的链表*/
+URLInterruptCB *url_interrupt_cb = default_interrupt_cb;  /* 由应用层调用url_set_interrupt_cb  函数进行设定的*/
 
 URLProtocol *av_protocol_next(URLProtocol *p)
 {
@@ -58,6 +58,10 @@ URLProtocol *av_protocol_next(URLProtocol *p)
 
 int av_register_protocol2(URLProtocol *protocol, int size)
 {
+/*
+	实质就是将传入的protocol  数据结构插入到first_protocol  链表中
+	见函数av_register_all  中调用宏REGISTER_PROTOCOL
+*/
     URLProtocol **p;
     if (size < sizeof(URLProtocol)) {
         URLProtocol* temp = av_mallocz(sizeof(URLProtocol));

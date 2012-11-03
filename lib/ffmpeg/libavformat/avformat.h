@@ -275,6 +275,13 @@ typedef struct AVFormatParameters {
 #define AVFMT_NODIMENSIONS  0x0800 /**< Format does not need width/height */
 #define AVFMT_NOSTREAMS     0x1000 /**< Format does not require any streams */
 
+
+/* 
+	复用数据结构的定义，所有复用的数
+	据结构构成一个链表，保存在全局链
+	表first_oformat  中，通过av_register_all 函数的代码
+	插入到此队列中的
+*/
 typedef struct AVOutputFormat {
     const char *name;
     /**
@@ -324,7 +331,14 @@ typedef struct AVOutputFormat {
     struct AVOutputFormat *next;
 } AVOutputFormat;
 
-typedef struct AVInputFormat {
+
+/* 
+	解复用数据结构的定义，所有解复用的数
+	据结构构成一个链表，保存在全局链
+	表first_iformat  中，通过av_register_all 函数的代码
+	插入到此队列中的
+*/
+typedef struct AVInputFormat { 
     /**
      * A comma separated list of short names for the format. New names
      * may be appended with a minor bump.

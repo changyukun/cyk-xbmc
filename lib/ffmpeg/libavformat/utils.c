@@ -168,12 +168,12 @@ static void av_frac_add(AVFrac *f, int64_t incr)
 #if !FF_API_FIRST_FORMAT
 static
 #endif
-AVInputFormat *first_iformat = NULL; 	/* 见函数av_register_all  中对所有数据结构为AVInputFormat 类型的注册*/
+AVInputFormat *first_iformat = NULL; 	/* 解复用数据结构的链表，见函数av_register_all  中对所有数据结构为AVInputFormat 类型的注册*/
 /** head of registered output format linked list */
 #if !FF_API_FIRST_FORMAT
 static
 #endif
-AVOutputFormat *first_oformat = NULL; /* 见函数av_register_all  中对所有数据结构为AVOutputFormat 类型的注册*/
+AVOutputFormat *first_oformat = NULL; /* 复用数据结构的链表，见函数av_register_all  中对所有数据结构为AVOutputFormat 类型的注册*/
 
 AVInputFormat  *av_iformat_next(AVInputFormat  *f)
 {
@@ -700,7 +700,8 @@ AVInputFormat *av_probe_input_format(AVProbeData *pd, int is_opened)
 		1、
 		
 	说明:
-		1、
+		1、实质就是分析传入的数据，然后根据数据的内容
+			在解复用的全局链表first_iformat  中找到相应的单元
 */
 	int score=0;
 	return av_probe_input_format2(pd, is_opened, &score);
@@ -831,7 +832,7 @@ int av_open_input_stream(AVFormatContext **ic_ptr,
 
 	if (ic->iformat->read_header)
 	{
-		err = ic->iformat->read_header(ic, ap);
+		err = ic->iformat->read_header(ic, ap); /* 调用解复用结构中读头函数*/
 		if (err < 0)
 			goto fail;
 	}

@@ -56,11 +56,21 @@ void av_register_all(void)
 	initialized = 1;
 
 	avcodec_register_all(); /* 注册所有解码类型的信息。见函数的定义*/
+	
 
 	/* (de)muxers */
-	REGISTER_MUXER    (A64, a64);
-	REGISTER_DEMUXER  (AAC, aac);
-	REGISTER_MUXDEMUX (AC3, ac3);
+	
+	/* 
+		以下为对应码流类型的复用、解复用、复用解复用合一的数据结构注册
+		即将定义好的各种类型的数据结构的实体插入到对应的链表中
+
+		例如复用		: 将全局变量ff_a64_muxer  插入到链表first_oformat  中
+		例如解复用		: 将全局变量ff_aac_demuxer  插入到链表first_iformat  中
+		例如解复合一	: 将全局变量ff_ac3_demuxer  同时插入到链表first_iformat  和first_iformat 中
+	*/
+	REGISTER_MUXER    (A64, a64); 	/* 复用*/
+	REGISTER_DEMUXER  (AAC, aac); 	/* 解复用*/
+	REGISTER_MUXDEMUX (AC3, ac3); 	/* 复用解复用合一*/
 	REGISTER_MUXER    (ADTS, adts);
 	REGISTER_DEMUXER  (AEA, aea);
 	REGISTER_MUXDEMUX (AIFF, aiff);
@@ -240,7 +250,11 @@ void av_register_all(void)
 	REGISTER_MUXDEMUX (LIBNUT, libnut);
 
 	/* protocols */
-	REGISTER_PROTOCOL (CONCAT, concat);
+	/* 
+		以下为对应各种协议类型的注册
+		即将定义好的各种类型的数据结构的实体插入到对应的链表中
+	*/
+	REGISTER_PROTOCOL (CONCAT, concat); /* 见函数av_register_protocol2  的说明*/
 	REGISTER_PROTOCOL (FILE, file);
 	REGISTER_PROTOCOL (GOPHER, gopher);
 	REGISTER_PROTOCOL (HTTP, http);

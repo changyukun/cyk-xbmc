@@ -1176,7 +1176,7 @@ void av_log_ask_for_sample(void *avc, const char *msg)
             "and contact the ffmpeg-devel mailing list.\n");
 }
 
-static AVHWAccel *first_hwaccel = NULL;
+static AVHWAccel *first_hwaccel = NULL; /* 保存硬件加速的所有数据结构的链表，见avcodec_register_all  函数中的调用*/
 
 void av_register_hwaccel(AVHWAccel *hwaccel)
 {

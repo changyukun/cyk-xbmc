@@ -363,7 +363,8 @@ int64_t url_fseek(ByteIOContext *s, int64_t offset, int whence)
 		1、
 		
 	说明:
-		1、
+		1、此函数用对读写模式进行定位，见函数init_put_byte  中对读写
+			模式的说明再分析此代码
 */
 	int64_t offset1;
 	int64_t pos;
@@ -400,9 +401,9 @@ int64_t url_fseek(ByteIOContext *s, int64_t offset, int whence)
 		s->buf_ptr = s->buffer + offset1;
 	} 
 	else if ((s->is_streamed ||offset1 <= s->buf_end + SHORT_SEEK_THRESHOLD - s->buffer) &&
-															!s->write_flag && 
-															offset1 >= 0 &&
-															(whence != SEEK_END || force))
+							!s->write_flag && 
+							offset1 >= 0 &&
+							(whence != SEEK_END || force))
 	{	
 		/* 
 			不能定位或者是在定位的极限范围内，则直接调用fill-buffer  不断的
@@ -823,7 +824,9 @@ static void fill_buffer(ByteIOContext *s)
 		1、
 		
 	说明:
-		1、见函数init_put_byte  的说明
+		1、见init_put_byte  函数的读模式说明
+		2、此函数内部调用了s->update_checksum 的方法( 由外部传入的此方法) 对
+			数据进行统计
 					
 */
 	uint8_t *dst= !s->max_packet_size && s->buf_end - s->buffer < s->buffer_size ? s->buf_ptr : s->buffer;
@@ -995,7 +998,14 @@ int get_buffer(ByteIOContext *s, unsigned char *buf, int size)
 		
 		if (len == 0) /* s 结构体的buffer  中没有数据了*/
 		{
-			if(size > s->buffer_size && !s->update_checksum)/* 如果要读取的数据数量大于s  结构体中buffer  的大小，直接调用s  结构体中的读函数往传入的buffer  中读数据就行了，即不用往s  结构体中的buffer  读取了*/
+			/* 
+				如果要读取的数据数量大于s  结构体中buffer  的大小，直接调
+				用s  结构体中的读函数往传入的buffer  中读数据就行了，即不
+				用往s  结构体中的buffer  读取了，即不需要调用fill_buffer  函数，在
+				fill_buffer  函数中调用了update_checksum  的统计方法，因此这里的判断
+				是读取的数据长度大于buffer  的大小，并且不需要统计
+			*/
+			if(size > s->buffer_size && !s->update_checksum) 
 			{
 				/* 直接调用读函数将数据从输入文件中读入到传入的buffer  中了，就没有使用结构体s  中的buffer  了*/
 				if(s->read_packet)
@@ -1023,7 +1033,7 @@ int get_buffer(ByteIOContext *s, unsigned char *buf, int size)
 					s->buf_end = s->buffer/* + len*/;
 				}
 			}
-			else
+			else /* 需要对数据统计，无论读取多长的数据，需要调用fill_buffer  函数 */
 			{
 				fill_buffer(s);
 				len = s->buf_end - s->buf_ptr;
@@ -1438,12 +1448,12 @@ static int url_resetbuf(ByteIOContext *s, int flags)
 	assert(flags == URL_WRONLY || flags == URL_RDONLY);
 #endif
 
-	if (flags & URL_WRONLY) /* 有写标志*/
+	if (flags & URL_WRONLY) /* 写模式*/
 	{
 		s->buf_end = s->buffer + s->buffer_size; /* 将buf_end  设置到整个buffer  的尾*/
 		s->write_flag = 1;
 	} 
-	else /* 有读标志*/
+	else /* 读模式*/
 	{
 		s->buf_end = s->buffer; /* 将buf_end  设置到整个buffer  的头*/
 		s->write_flag = 0;

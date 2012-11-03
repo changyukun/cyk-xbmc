@@ -424,6 +424,7 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 		std::string content = m_pInput->GetContent();
 
 		/* check if we can get a hint from content */
+		/* 实质就是在解复用的数据结构链表中找到相匹配的*/
 		if( content.compare("video/x-vobsub") == 0 )
 			iformat = m_dllAvFormat.av_find_input_format("mpeg"); /* 见函数av_register_all  对所有input 的注册*/
 		else if( content.compare("video/x-dvd-mpeg") == 0 )
@@ -511,13 +512,14 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 				pd.filename = strFile.c_str();
 
 				// read data using avformat's buffers
+				/* 从m_ioContext  的buffer 中读取数据，见ffmpeg 中get_buffer 函数的说明*/
 				pd.buf_size = m_dllAvFormat.get_buffer(m_ioContext, pd.buf, m_ioContext->max_packet_size ? m_ioContext->max_packet_size : m_ioContext->buffer_size);
 				if (pd.buf_size <= 0)
 				{
 					CLog::Log(LOGERROR, "%s - error reading from input stream, %s", __FUNCTION__, strFile.c_str());
 					return false;
 				}
-				memset(pd.buf+pd.buf_size, 0, AVPROBE_PADDING_SIZE);
+				memset(pd.buf+pd.buf_size, 0, AVPROBE_PADDING_SIZE);/* 将后面的数据清零*/
 
 				// restore position again
 				m_dllAvFormat.url_fseek(m_ioContext , 0, SEEK_SET);
@@ -592,6 +594,10 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 			}
 		}
 
+		/*
+			程序执行到此处时一定找到了对应码流类型的解复用数据结构
+			，保存在iformat  中
+		*/
 
 		/* 调用ffmpeg 打开demuxer */
 		// open the demuxer
