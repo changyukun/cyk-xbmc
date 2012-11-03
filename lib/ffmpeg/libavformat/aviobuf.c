@@ -64,7 +64,108 @@ int init_put_byte( ByteIOContext *s,
 		1、
 		
 	说明:
-		1、
+		1、数据结构ByteIOContext  的整体说明此数据结构工作在两种模式下，一种写模式、一种读模式
+
+			A、写模式=======>  外界通过此结构体向一个文件中写数据
+			
+				首先配置好结构体中的写函数，写标记，即s->write_packet  和s->write_flag ，此结构
+				体中buffer  作为一个缓冲的作用，即外界通过调用put_xxxx  等函数 ( 如put_byte)  向
+				结构体中写入数据，结构体中buffer  没有剩余空间时，put_xxxx  函数会调用flush_buffer()  函数
+				将数据写入到文件中，s->pos  统计了所有写出去数据的绝对地址( 相当于总数)
+
+				写入数据xxxxx ( 多次写入会更新s->buf_ptr  指针位置)
+					-----------------------------------------------------------------------------------------
+					|xxxxxxxxxxxxxxxxxxxxxxxxxxx|		      													|
+					-----------------------------------------------------------------------------------------
+					|							|															|
+					s->buffer					s->buf_ptr													s->buf_end	
+
+				写满了( s->buf_ptr >= s->buf_end) 
+					-----------------------------------------------------------------------------------------
+					|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
+					-----------------------------------------------------------------------------------------
+					|																						|
+					s->buffer																				s->buf_end	
+																											s->buf_ptr	
+				调用flush_buffer()  将数据写入到文件中( 将s->buf_ptr 指针移动到起点)
+					-----------------------------------------------------------------------------------------
+					|									      													|
+					-----------------------------------------------------------------------------------------
+					|																						|
+					s->buffer																				s->buf_end	
+					s->buf_ptr
+
+			B、读模式=======>  外界通过此结构体从一个文件中读取数据
+			
+				首先配置好结构体中的读函数，此结构体中buffer  作为一个外界用来读取文件
+				的一个缓冲作用，即外界通过调用get_xxxx  等函数 ( 如get_buffer)  从结构体中的buffer
+				读取数据，当结构体中buffer  内没有可用的数据时，get_xxx 会自动通过调用fill_buffer()  
+				函数从文件中再读入数据到buffer  中，s->pos  统计了所有读入数据的绝对地址( 相当于总数)
+
+				s->buf_ptr  	: 是个移动的指针，用来告诉外界从缓存的什么地方开始读取数据
+				s->buf_end	: 是个移动的指针，用于标记s  结构体中buffer  内有效数据的结束地址
+
+
+				1、假设buffer  中原有数据，如下图
+					-----------------------------------------------------------------------------------------
+					|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|		      													
+					-----------------------------------------------------------------------------------------
+					|														|															
+					s->buffer												s->buf_end				
+					s->buf_ptr
+
+				
+				2、外界调用了get_xxxx 读取数据( 将s->buf_ptr  之前的xxxx  数据读取，但数据还在buffer  
+					中，没有从buffer  中清除，方便seek  使用，直到buffer  对应的位置重新写入数据
+					覆盖了原有数据才相当于清除数据，s->buf_ptr  只是个移动的指针，用来告诉
+					外界从缓存的什么地方开始读取数据而已)
+					-----------------------------------------------------------------------------------------
+					|xxxxxxxxxxxxxxxxxxxxxxxxxxx|xxxxxxxxxxxxxxxxxxxxxxxxxxx|		      													
+					-----------------------------------------------------------------------------------------
+					|							|							|															
+					s->buffer					s->buf_ptr					s->buf_end		
+					
+
+				3、外界又调用了get_xxxx 获取数据( 将buffer  中的所有数据都取走了)
+					-----------------------------------------------------------------------------------------
+					|														|		      													
+					-----------------------------------------------------------------------------------------
+					|														|															
+					s->buffer												s->buf_end	
+																			s->buf_ptr
+
+				4、get_xxx()  函数内部会调用fill_buffer()  从文件中读取数据
+					-----------------------------------------------------------------------------------------
+					|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|		      													
+					-----------------------------------------------------------------------------------------
+					|											|															
+					s->buffer									s->buf_end				
+					s->buf_ptr
+
+				注意: ======>
+				
+					也有可能在第2 步骤中( 即buffer  中还有可用数据)  调用fill_buffer()  函数向
+					buffer  中读取数据，详见fill_buffer()  函数的代码，则读取数据之后buffer  空间
+					可能存在如下两种情况，buffer  中原有的数据都被破坏了，图中aaaa 的
+					数据时新读取到的，相当于有效数据，xxxx  为原有数据，相当于无效
+					数据
+
+					1)  此时原有的数据xxxxx  被aaaa  取代了，根据实际读取数据的长度更
+					     新s->buf_end  指针，s->buf_ptr  指针没有发生变化
+						-----------------------------------------------------------------------------------------
+						|xxxxxxxxxxxxxxxxxxxxxxxxxxx|aaaaaaaaaaaaaaaaaaa|		      													
+						-----------------------------------------------------------------------------------------
+						|							|					|															
+						s->buffer					s->buf_ptr			s->buf_end	
+
+					2)  将数据写入到buffer  的起始位置
+						-----------------------------------------------------------------------------------------
+						|aaaaaaaaaaaaaaaaaaaaaaa|xxxxxxxxxxxxxxxxxxxxxxx  (  原来xxx 的数据)		      													
+						-----------------------------------------------------------------------------------------
+						|						|															
+						s->buffer				s->buf_end	
+						s->buf_ptr
+	
 */
 	s->buffer = buffer;
 	s->buffer_size = buffer_size;
@@ -115,6 +216,8 @@ ByteIOContext *av_alloc_put_byte(unsigned char *buffer,
 	说明:
 		1、此函数实质就是分配一个ByteIOContext  类型的内存空间，然后
 			对此数据结构进行赋值，然后返回这个数据结构
+
+		2、见函数init_put_byte  的说明
 */
 	ByteIOContext *s = av_mallocz(sizeof(ByteIOContext));/* 分配一个ByteIOContext 的数据空间*/
 
@@ -134,25 +237,9 @@ static void flush_buffer(ByteIOContext *s)
 		1、
 		
 	说明:
-		1、buffer 的示意图如下
-		
-			---------------------------------------------------------
-			|XXXXX  有效数据XXXXXX	|		      空闲空间	|
-			---------------------------------------------------------
-			|							|							|
-			s->buffer					s->buf_ptr					s->buf_end
-
-			其中	s->buffer	( 值不变，在init_put_byte  函数中赋值，即buffer 的头)
-					s->buf_end	( 值不变，在init_put_byte  函数中赋值，即buffer 的尾)
-					s->buf_ptr	( 向buffer 中写数据、从buffer  中读数据操作，此值会不断的发生变化)
-
-		2、此函数的实质就是将buffer  中的有效数据清空，所谓清空就是
-			从此buffer  中把数据读出去，即如果参数s  中有写函数，就调用
-			写函数将有效数据写到相应的文件中，然后将s->buf_ptr  指针移
-			动到起点，如果参数s  中没有写函数，则直接将s->buf_ptr  指针
-			移动到起点，相当于直接把数据扔掉
-
-			同时统计处理过的数据总数，即相当于buffer  的绝对位置
+		1、见init_put_byte  函数的写模式说明
+		2、经过flush  函数之后buf_ptr  指针回到了buffer  的起始地址，即s->buffer  
+			而s->buf_end  指针的地址没有发生变化
 */
 	if (s->buf_ptr > s->buffer) 
 	{
@@ -172,7 +259,8 @@ static void flush_buffer(ByteIOContext *s)
 		}
 		s->pos += s->buf_ptr - s->buffer; /* 更新buffer 空间的绝对地址*/
 	}
-	s->buf_ptr = s->buffer;
+	
+	s->buf_ptr = s->buffer; /* 经过flush  函数之后buf_ptr  指针回到了buffer  的起始地址，即s->buffer  */
 }
 
 void put_byte(ByteIOContext *s, int b)
@@ -305,19 +393,37 @@ int64_t url_fseek(ByteIOContext *s, int64_t offset, int whence)
 	
 	if (!s->must_flush && offset1 >= 0 && offset1 <= (s->buf_end - s->buffer)) 
 	{
+		/*
+			在s  结构体的buffer  中就能定位到
+		*/
 		/* can do the seek inside the buffer */
 		s->buf_ptr = s->buffer + offset1;
 	} 
 	else if ((s->is_streamed ||offset1 <= s->buf_end + SHORT_SEEK_THRESHOLD - s->buffer) &&
-														!s->write_flag && offset1 >= 0 &&
-														(whence != SEEK_END || force))
-	{
+															!s->write_flag && 
+															offset1 >= 0 &&
+															(whence != SEEK_END || force))
+	{	
+		/* 
+			不能定位或者是在定位的极限范围内，则直接调用fill-buffer  不断的
+			从输入文件中读数据，一直到要定位的位置
+		*/
 		while(s->pos < offset && !s->eof_reached)
 			fill_buffer(s);
 		
 		if (s->eof_reached)
 			return AVERROR_EOF;
-		
+
+		/*
+			此处代码可以逆向思维计算一下
+			s->buf_ptr  	: 要定位到的指针地址
+			s->buf_end	: 读取到的数据的结束地址
+			s->pos		: 读取的数据总数
+			offset		: 要定位的位置( 偏移地址)
+
+			所以
+			s->buf_ptr  +  s->pos   等于s->buf_end + offset  
+		*/
 		s->buf_ptr = s->buf_end + offset - s->pos;
 	} 
 	else 
@@ -717,7 +823,8 @@ static void fill_buffer(ByteIOContext *s)
 		1、
 		
 	说明:
-		1、
+		1、见函数init_put_byte  的说明
+					
 */
 	uint8_t *dst= !s->max_packet_size && s->buf_end - s->buffer < s->buffer_size ? s->buf_ptr : s->buffer;
 	int len= s->buffer_size - (dst - s->buffer);
@@ -872,7 +979,10 @@ int get_buffer(ByteIOContext *s, unsigned char *buf, int size)
 		1、
 		
 	说明:
-		1、
+		1、此函数实现了一个从s  的buffer  中获取数据到参数buf  的功能，要获取的数据
+			个数为size  个。
+
+			
 */
 	int len, size1;
 
@@ -883,14 +993,15 @@ int get_buffer(ByteIOContext *s, unsigned char *buf, int size)
 		if (len > size)
 			len = size;
 		
-		if (len == 0) 
+		if (len == 0) /* s 结构体的buffer  中没有数据了*/
 		{
-			if(size > s->buffer_size && !s->update_checksum)
+			if(size > s->buffer_size && !s->update_checksum)/* 如果要读取的数据数量大于s  结构体中buffer  的大小，直接调用s  结构体中的读函数往传入的buffer  中读数据就行了，即不用往s  结构体中的buffer  读取了*/
 			{
+				/* 直接调用读函数将数据从输入文件中读入到传入的buffer  中了，就没有使用结构体s  中的buffer  了*/
 				if(s->read_packet)
-					len = s->read_packet(s->opaque, buf, size);
+					len = s->read_packet(s->opaque, buf, size); 
 				
-				if (len <= 0)
+				if (len <= 0)/* 读到文件尾了*/
 				{
 					/* do not modify buffer if EOF reached so that a seek back can
 					be done without rereading data */
@@ -901,11 +1012,13 @@ int get_buffer(ByteIOContext *s, unsigned char *buf, int size)
 					
 					break;
 				} 
-				else 
+				else  /* 没读到文件尾*/
 				{
-					s->pos += len;
+					s->pos += len; /* 虽然数据没有读入到s  结构的buffer 中，但是依然算作了s  对处理过数据的统计中*/
 					size -= len;
 					buf += len;
+
+					/* 将s  结构体中的s->buf_ptr  和s->buf_end  两个指针都归为设置到s  结构体中buffer  的起始处*/
 					s->buf_ptr = s->buffer;
 					s->buf_end = s->buffer/* + len*/;
 				}
@@ -919,7 +1032,7 @@ int get_buffer(ByteIOContext *s, unsigned char *buf, int size)
 					break;
 			}
 		}
-		else 
+		else /* s 结构体的buffer  中还有数据*/
 		{
 			memcpy(buf, s->buf_ptr, len);
 			buf += len;
@@ -1325,14 +1438,14 @@ static int url_resetbuf(ByteIOContext *s, int flags)
 	assert(flags == URL_WRONLY || flags == URL_RDONLY);
 #endif
 
-	if (flags & URL_WRONLY) 
+	if (flags & URL_WRONLY) /* 有写标志*/
 	{
-		s->buf_end = s->buffer + s->buffer_size;
+		s->buf_end = s->buffer + s->buffer_size; /* 将buf_end  设置到整个buffer  的尾*/
 		s->write_flag = 1;
 	} 
-	else 
+	else /* 有读标志*/
 	{
-		s->buf_end = s->buffer;
+		s->buf_end = s->buffer; /* 将buf_end  设置到整个buffer  的头*/
 		s->write_flag = 0;
 	}
 	return 0;

@@ -339,7 +339,7 @@ int av_register_protocol2(URLProtocol *protocol, int size);
 typedef struct 
 {
 	/*
-		见函数av_alloc_put_byte  的说明
+		见函数av_alloc_put_byte  的详细说明
 	*/
 	unsigned char *buffer; /* buffer 空间地址，对应函数的第1  个参数*/
 	int buffer_size; /* buffer 空间地址的大小，对应函数的第2  个参数*/
