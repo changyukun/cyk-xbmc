@@ -675,6 +675,10 @@ typedef struct AVStream {
  * version bump.
  * sizeof(AVProgram) must not be used outside libav*.
  */
+/*
+	一个节目的数据结构定义
+	一个节目内可能还有多个数据流，如音频流、视频流
+*/
 typedef struct AVProgram {
     int            id;
 #if FF_API_OLD_METADATA
@@ -683,8 +687,8 @@ typedef struct AVProgram {
 #endif
     int            flags;
     enum AVDiscard discard;        ///< selects which program to discard and which to feed to the caller
-    unsigned int   *stream_index;
-    unsigned int   nb_stream_indexes;
+    unsigned int   *stream_index; /* 指向保存各个流序号的指针数组，相当于每个单元保存着各个流的序号*/
+    unsigned int   nb_stream_indexes; /* 节目内流索引的个数，相当于流的个数*/
     AVMetadata *metadata;
 } AVProgram;
 
@@ -739,10 +743,10 @@ typedef struct AVChapter {
 
 typedef struct AVFormatContext 
 {
-	const AVClass *av_class; /**< Set by avformat_alloc_context. */
+	const AVClass *av_class; /* 此值被设置为全局变量av_format_context_class  ，见函数avformat_alloc_context 中*/   /**< Set by avformat_alloc_context. */
 	/* Can only be iformat or oformat, not both at the same time. */
-	struct AVInputFormat *iformat; /* 数据输入格式，注意数据输入格式与数据输出格式不能同时赋值，即此数据结构不能同时作为输入、输出的容器*/
-	struct AVOutputFormat *oformat; /* 数据输出格式，见上面iformat  域成员的说明*/
+	struct AVInputFormat *iformat; /* 解复用数据结构，见函数av_open_input_stream 对其赋值，注意数据输入格式与数据输出格式不能同时赋值，即此数据结构不能同时作为输入、输出的容器*/
+	struct AVOutputFormat *oformat; /* 复用数据结构，见上面iformat  域成员的说明*/
 	void *priv_data;
 	ByteIOContext *pb; /* 见函数av_open_input_stream 中对此域成员的赋值，通常此值被赋为一个由函数av_alloc_put_byte 返回的数据结构( 将文件的读、定位等函数整合在一起) */
 

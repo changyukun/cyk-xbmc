@@ -783,14 +783,14 @@ int av_open_input_stream(AVFormatContext **ic_ptr,
 	AVFormatContext *ic;
 	AVFormatParameters default_ap;
 
-	if(!ap)
+	if(!ap) /* 如果参数ap  为空，则使用使用此函数内部的临时变量*/
 	{
 		ap=&default_ap;
 		memset(ap, 0, sizeof(default_ap));
 	}
 
 	if(!ap->prealloced_context)
-		ic = avformat_alloc_context();/* 见函数内部*/
+		ic = avformat_alloc_context();/* 见函数内部，分配一个AVFormatContext  空间，并做相应的填充*/
 	else
 		ic = *ic_ptr;
 	
@@ -805,8 +805,8 @@ int av_open_input_stream(AVFormatContext **ic_ptr,
 		有参数返回供用户使用的
 	*/ 
 	
-	ic->iformat = fmt; /**/ 
-	ic->pb = pb; /**/ 
+	ic->iformat = fmt; /* 保存传入的demuxer  数据结构*/ 
+	ic->pb = pb; /* 保存传入的ByteIOContext  数据结构*/ 
 	ic->duration = AV_NOPTS_VALUE;
 	ic->start_time = AV_NOPTS_VALUE;
 	av_strlcpy(ic->filename, filename, sizeof(ic->filename));

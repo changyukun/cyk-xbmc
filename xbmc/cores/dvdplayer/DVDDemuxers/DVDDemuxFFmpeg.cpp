@@ -654,7 +654,7 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 	m_pFormatContext->flags |= AVFMT_FLAG_NONBLOCK;
 
 	// print some extra information
-	m_dllAvFormat.dump_format(m_pFormatContext, 0, strFile.c_str(), 0);
+	m_dllAvFormat.dump_format(m_pFormatContext, 0, strFile.c_str(), 0); /* 打印相应的扩展信息*/
 
 	UpdateCurrentPTS();
 
@@ -662,14 +662,16 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 	if (m_pFormatContext->nb_programs)
 	{
 		// look for first non empty stream and discard nonselected programs
+		/* 选出第一个节目作为播放的*/
 		for (unsigned int i = 0; i < m_pFormatContext->nb_programs; i++)
 		{
 			if(m_program == UINT_MAX && m_pFormatContext->programs[i]->nb_stream_indexes > 0)
 				m_program = i;
 
 			if(i != m_program)
-				m_pFormatContext->programs[i]->discard = AVDISCARD_ALL;
+				m_pFormatContext->programs[i]->discard = AVDISCARD_ALL; /* 将此节目丢弃*/
 		}
+		
 		if(m_program != UINT_MAX)
 		{
 			// add streams from selected program
@@ -677,6 +679,7 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 				AddStream(m_pFormatContext->programs[m_program]->stream_index[i]);
 		}
 	}
+	
 	// if there were no programs or they were all empty, add all streams
 	if (m_program == UINT_MAX)
 	{
