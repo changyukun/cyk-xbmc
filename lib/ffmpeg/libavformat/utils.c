@@ -1099,7 +1099,7 @@ int av_read_packet(AVFormatContext *s, AVPacket *pkt)
 		1、
 		
 	说明:
-		1、
+		1、读取数据包
 */
 	int ret, i;
 	AVStream *st;
@@ -1127,7 +1127,7 @@ int av_read_packet(AVFormatContext *s, AVPacket *pkt)
 		}
 
 		av_init_packet(pkt);
-		ret= s->iformat->read_packet(s, pkt);
+		ret= s->iformat->read_packet(s, pkt);/* --- cyk read packet  第4  步，通过此函数进入到某个解复用数据结构的读函数中，如进入全局变量ff_mpegts_demuxer  定义的结构体中的read_packet */
 		if (ret < 0) 
 		{
 			if (!pktl || ret == AVERROR(EAGAIN))
@@ -1717,7 +1717,7 @@ got_packet:
 		{
 			AVPacket cur_pkt;
 			/* read next packet */
-			ret = av_read_packet(s, &cur_pkt);
+			ret = av_read_packet(s, &cur_pkt);  /* --- cyk read packet  第3  步*/
 			if (ret < 0) 
 			{
 				if (ret == AVERROR(EAGAIN))
@@ -1858,7 +1858,7 @@ int av_read_frame(AVFormatContext *s, AVPacket *pkt)
 		
 		if(genpts)
 		{
-			int ret= av_read_frame_internal(s, pkt);
+			int ret= av_read_frame_internal(s, pkt); /* --- cyk read packet  第2  步*/
 			if(ret<0)
 			{
 				if(pktl && ret != AVERROR(EAGAIN))
@@ -1876,7 +1876,7 @@ int av_read_frame(AVFormatContext *s, AVPacket *pkt)
 		else
 		{
 			assert(!s->packet_buffer);
-			return av_read_frame_internal(s, pkt);
+			return av_read_frame_internal(s, pkt); /* --- cyk read packet  第2  步*/
 		}
 	}
 }

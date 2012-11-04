@@ -77,7 +77,7 @@ void av_fast_malloc(void *ptr, unsigned int *size, FF_INTERNALC_MEM_TYPE min_siz
 }
 
 /* encoder management */
-static AVCodec *first_avcodec = NULL;
+static AVCodec *first_avcodec = NULL; /* 所有格式的编码器、解码器数据结构的链表*/
 
 AVCodec *av_codec_next(AVCodec *c){
     if(c) return c->next;

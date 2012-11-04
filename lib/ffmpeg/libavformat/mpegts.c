@@ -1351,7 +1351,7 @@ static int read_packet(AVFormatContext *s, uint8_t *buf, int raw_packet_size)
     int skip, len;
 
     for(;;) {
-        len = get_buffer(pb, buf, TS_PACKET_SIZE);
+        len = get_buffer(pb, buf, TS_PACKET_SIZE); /* --- cyk read packet  第8  步，进入真正的读操作，见函数说明*/
         if (len != TS_PACKET_SIZE)
             return AVERROR(EIO);
         /* check paquet sync byte */
@@ -1386,7 +1386,7 @@ static int handle_packets(MpegTSContext *ts, int nb_packets)
         packet_num++;
         if (nb_packets != 0 && packet_num >= nb_packets)
             break;
-        ret = read_packet(s, packet, ts->raw_packet_size);
+        ret = read_packet(s, packet, ts->raw_packet_size); /* --- cyk read packet  第7  步*/
         if (ret != 0)
             return ret;
         ret = handle_packet(ts, packet);
@@ -1666,7 +1666,7 @@ static int mpegts_read_packet(AVFormatContext *s,
     ts->pkt = pkt;
     ts->pkt->data = NULL;
 
-    ret = handle_packets(ts, 0);
+    ret = handle_packets(ts, 0); /* --- cyk read packet  第6  步*/
     if (ret < 0) {
         /* flush pes data left */
         for (i = 0; i < NB_PID_MAX; i++) {
@@ -1913,7 +1913,7 @@ AVInputFormat ff_mpegts_demuxer = {
     sizeof(MpegTSContext),
     mpegts_probe,
     mpegts_read_header,
-    mpegts_read_packet,
+    mpegts_read_packet, /* --- cyk read packet  第5  步*/
     mpegts_read_close,
     NULL,
     mpegts_get_pcr,

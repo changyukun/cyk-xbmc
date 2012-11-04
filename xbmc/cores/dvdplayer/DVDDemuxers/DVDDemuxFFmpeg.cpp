@@ -919,7 +919,7 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 			int result = 0;
 			try
 			{
-				result = m_dllAvFormat.av_read_frame(m_pFormatContext, &pkt);/* 读取数据包*/
+				result = m_dllAvFormat.av_read_frame(m_pFormatContext, &pkt);/* 读取数据包，--- cyk read packet  第1  步。如何通过此函数调用到文件读函数的，可以搜索标识为" cyk read packet "  的注释，分几步*/
 			}
 			catch(const win32_exception &e)
 			{

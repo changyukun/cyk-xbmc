@@ -187,15 +187,15 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 		1、
 		
 	说明:
-		1、
+		1、此函数内实现了真正的解码线程的创建
 */
 	AVCodec* pCodec;
 
 	if(!m_dllAvUtil.Load() || !m_dllAvCodec.Load() || !m_dllSwScale.Load() || !m_dllAvFilter.Load()) 
 		return false;
 
-	m_dllAvCodec.avcodec_register_all();
-	m_dllAvFilter.avfilter_register_all();
+	m_dllAvCodec.avcodec_register_all(); /* 注册所有的视频解码器*/
+	m_dllAvFilter.avfilter_register_all(); /* 注册所有的视频filter */
 
 	m_bSoftware     = hints.software;
 	m_pCodecContext = m_dllAvCodec.avcodec_alloc_context();
@@ -250,7 +250,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 #endif
 
 	if(pCodec == NULL)
-		pCodec = m_dllAvCodec.avcodec_find_decoder(hints.codec);
+		pCodec = m_dllAvCodec.avcodec_find_decoder(hints.codec); /* 找到相对应的解码器*/
 
 	if(pCodec == NULL)
 	{
@@ -260,6 +260,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 
 	CLog::Log(LOGNOTICE,"CDVDVideoCodecFFmpeg::Open() Using codec: %s",pCodec->long_name ? pCodec->long_name : pCodec->name);
 
+	/* 对数据结构进行相应的填充*/
 	m_pCodecContext->opaque = (void*)this;
 	m_pCodecContext->debug_mv = 0;
 	m_pCodecContext->debug = 0;
@@ -309,12 +310,17 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 			m_dllAvUtil.av_set_string3(m_pCodecContext, it->m_name.c_str(), it->m_value.c_str(), 0, NULL);
 	}
 
-	int num_threads = std::min(8 /*MAX_THREADS*/, g_cpuInfo.getCPUCount());
+	int num_threads = std::min(8 /*MAX_THREADS*/, g_cpuInfo.getCPUCount()); /* 获取cpu  的个数，即最多创建8  个解码线程，少于8  个的时候按照cpu  的个数来创建解码线程的个数*/
 	if( num_threads > 1 && !hints.software && m_pHardware == NULL // thumbnail extraction fails when run threaded
 								&& ( pCodec->id == CODEC_ID_H264
 								|| pCodec->id == CODEC_ID_MPEG4 ))
 	{
-		m_dllAvCodec.avcodec_thread_init(m_pCodecContext, num_threads);
+		/* 
+			初始化并创建对应个数的解码线程
+			linux 系统的见ffmpeg/libavcodec/pthread.c   文件中
+			win32 系统的见ffmpeg/libavcodec/win32thread.c  文件中
+		*/
+		m_dllAvCodec.avcodec_thread_init(m_pCodecContext, num_threads); 
 	}
 
 	if (m_dllAvCodec.avcodec_open(m_pCodecContext, pCodec) < 0)

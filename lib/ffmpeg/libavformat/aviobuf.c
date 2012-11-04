@@ -984,8 +984,8 @@ int get_buffer(ByteIOContext *s, unsigned char *buf, int size)
 	说明:
 		1、此函数实现了一个从s  的buffer  中获取数据到参数buf  的功能，要获取的数据
 			个数为size  个。
-
-			
+		2、见函数init_put_byte  的说明，此函数工作于读模式下
+	
 */
 	int len, size1;
 
