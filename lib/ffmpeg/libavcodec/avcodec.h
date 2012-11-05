@@ -2201,7 +2201,7 @@ typedef struct AVCodecContext {
      * - encoding: Set by user.
      * - decoding: Set by user.
      */
-    int thread_count;
+    int thread_count; /* 解码器线程的个数，见函数avcodec_thread_init  */
 
     /**
      * The codec may call this to execute several independent things.
@@ -2220,7 +2220,7 @@ typedef struct AVCodecContext {
      * - encoding: set by execute()
      * - decoding: set by execute()
      */
-    void *thread_opaque;
+    void *thread_opaque; /* 保存解码器所有线程的控制块，见函数avcodec_thread_init  */
 
     /**
      * Motion estimation threshold below which no motion estimation is

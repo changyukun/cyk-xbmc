@@ -221,7 +221,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 #ifdef HAVE_LIBVDPAU
 	if(g_guiSettings.GetBool("videoplayer.usevdpau") && !m_bSoftware)
 	{
-		while((pCodec = m_dllAvCodec.av_codec_next(pCodec)))
+		while((pCodec = m_dllAvCodec.av_codec_next(pCodec))) 
 		{
 			if(pCodec->id == hints.codec&& pCodec->capabilities & CODEC_CAP_HWACCEL_VDPAU)
 			{
@@ -250,7 +250,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 #endif
 
 	if(pCodec == NULL)
-		pCodec = m_dllAvCodec.avcodec_find_decoder(hints.codec); /* 找到相对应的解码器*/
+		pCodec = m_dllAvCodec.avcodec_find_decoder(hints.codec); /* 在ffmpeg  注册的所有解码器数据结构中查找相匹配的那个*/
 
 	if(pCodec == NULL)
 	{
@@ -311,6 +311,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 	}
 
 	int num_threads = std::min(8 /*MAX_THREADS*/, g_cpuInfo.getCPUCount()); /* 获取cpu  的个数，即最多创建8  个解码线程，少于8  个的时候按照cpu  的个数来创建解码线程的个数*/
+
 	if( num_threads > 1 && !hints.software && m_pHardware == NULL // thumbnail extraction fails when run threaded
 								&& ( pCodec->id == CODEC_ID_H264
 								|| pCodec->id == CODEC_ID_MPEG4 ))
@@ -318,7 +319,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 		/* 
 			初始化并创建对应个数的解码线程
 			linux 系统的见ffmpeg/libavcodec/pthread.c   文件中
-			win32 系统的见ffmpeg/libavcodec/win32thread.c  文件中
+			win32 系统的见ffmpeg/libavcodec/w32thread.c  文件中
 		*/
 		m_dllAvCodec.avcodec_thread_init(m_pCodecContext, num_threads); 
 	}

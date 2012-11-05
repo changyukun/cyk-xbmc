@@ -245,7 +245,7 @@ bool CDVDPlayerVideo::OpenStream( CDVDStreamInfo &hint )
 #endif
 
 	CLog::Log(LOGNOTICE, "Creating video codec with codec id: %i", hint.codec);
-	CDVDVideoCodec* codec = CDVDFactoryCodec::CreateVideoCodec(hint, surfaces); /* 创建一个解码器实例*/
+	CDVDVideoCodec* codec = CDVDFactoryCodec::CreateVideoCodec(hint, surfaces); /* 创建一个真正的解码器实例，如CDVDVideoCodecFFmpeg  实例*/
 	if(!codec)
 	{
 		CLog::Log(LOGERROR, "Unsupported video codec");

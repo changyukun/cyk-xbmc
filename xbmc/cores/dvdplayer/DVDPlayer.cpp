@@ -1621,7 +1621,7 @@ void CDVDPlayer::ProcessVideoData(CDemuxStream* pStream, DemuxPacket* pPacket)
 	if (CheckSceneSkip(m_CurrentVideo))
 		drop = true;
 
-	m_dvdPlayerVideo.SendMessage(new CDVDMsgDemuxerPacket(pPacket, drop));/* 发送数据包到视频解码器*/
+	m_dvdPlayerVideo.SendMessage(new CDVDMsgDemuxerPacket(pPacket, drop));/* 发送数据包到视频解码器，见CDVDPlayerVideo::Process()  */
 }
 
 void CDVDPlayer::ProcessSubData(CDemuxStream* pStream, DemuxPacket* pPacket)
