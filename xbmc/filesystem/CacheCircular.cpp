@@ -48,7 +48,7 @@ CCacheCircular::CCacheCircular(size_t front, size_t back)
 		1、
 		
 	说明:
-		1、将参数front + back 的和作为cache buffer 的大小
+		1、将参数front + back 的和作为cache buffer 的大小 ，通常back = front/4
 */
 }
 

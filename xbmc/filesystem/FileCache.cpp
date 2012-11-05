@@ -326,6 +326,7 @@ void CFileCache::Process()
 		}
 
 		int iRead = m_source.Read(buffer.get(), chunksize);
+		
 		if (iRead == 0)/* 视频源文件已经读取完毕，如果一个视频分段已经读取完毕*/
 		{
 			CLog::Log(LOGINFO, "CFileCache::Process - Hit eof.");
@@ -500,6 +501,7 @@ int64_t CFileCache::Seek(int64_t iFilePosition, int iWhence)
 
 	int64_t iCurPos = m_readPos;
 	int64_t iTarget = iFilePosition;
+	
 	if (iWhence == SEEK_END)
 		iTarget = GetLength() + iTarget;
 	else if (iWhence == SEEK_CUR)

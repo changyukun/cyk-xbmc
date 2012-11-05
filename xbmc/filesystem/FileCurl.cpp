@@ -1108,11 +1108,13 @@ bool CFileCurl::Open(const CURL& url)
 	m_opened = true;
 
 	CURL url2(url);
+	
 	ParseAndCorrectUrl(url2);
 
 	CLog::Log(LOGDEBUG, "FileCurl::Open(%p) %s", (void*)this, m_url.c_str());
 
 	ASSERT(!(!m_state->m_easyHandle ^ !m_state->m_multiHandle));
+	
 	if( m_state->m_easyHandle == NULL )
 		g_curlInterface.easy_aquire(url2.GetProtocol(), url2.GetHostName(), &m_state->m_easyHandle, &m_state->m_multiHandle );
 
@@ -1121,6 +1123,7 @@ bool CFileCurl::Open(const CURL& url)
 	SetRequestHeaders(m_state);
 
 	long response = m_state->Connect(m_bufferSize);
+	
 	if( response < 0 || response >= 400)
 		return false;
 
