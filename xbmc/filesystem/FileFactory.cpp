@@ -145,7 +145,7 @@ IFile* CFileFactory::CreateLoader(const CURL& url)
 	if(g_application.getNetwork().IsAvailable()) /* 网络是否可用*/
 	{
 		if (strProtocol == "http" ||strProtocol == "https" ||strProtocol == "dav" ||strProtocol == "davs" ||strProtocol == "ftp" || strProtocol == "ftpx" ||strProtocol == "ftps" ||strProtocol == "rss")
-			return new CFileCurl();
+			return new CFileCurl(); // ------------ cyk -------- 创建
 #ifdef HAS_FILESYSTEM_SFTP
 		else if (strProtocol == "sftp" || strProtocol == "ssh") 	return new CFileSFTP();
 #endif
