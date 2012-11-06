@@ -417,37 +417,85 @@ int avcodec_default_reget_buffer(AVCodecContext *s, AVFrame *pic){
     return 0;
 }
 
-int avcodec_default_execute(AVCodecContext *c, int (*func)(AVCodecContext *c2, void *arg2),void *arg, int *ret, int count, int size){
-    int i;
+int avcodec_default_execute(AVCodecContext *c, int (*func)(AVCodecContext *c2, void *arg2),void *arg, int *ret, int count, int size)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、exec1  函数
+*/
+	int i;
 
-    for(i=0; i<count; i++){
-        int r= func(c, (char*)arg + i*size);
-        if(ret) ret[i]= r;
-    }
-    return 0;
+	for(i=0; i<count; i++)
+	{
+		int r= func(c, (char*)arg + i*size);
+		if(ret) 
+			ret[i]= r;
+	}
+	return 0;
 }
 
-int avcodec_default_execute2(AVCodecContext *c, int (*func)(AVCodecContext *c2, void *arg2, int jobnr, int threadnr),void *arg, int *ret, int count){
-    int i;
+int avcodec_default_execute2(AVCodecContext *c, int (*func)(AVCodecContext *c2, void *arg2, int jobnr, int threadnr),void *arg, int *ret, int count)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、exec2  函数
+*/
+	int i;
 
-    for(i=0; i<count; i++){
-        int r= func(c, arg, i, 0);
-        if(ret) ret[i]= r;
-    }
-    return 0;
+	for(i=0; i<count; i++)
+	{
+		int r= func(c, arg, i, 0);
+		if(ret)
+			ret[i]= r;
+	}
+	return 0;
 }
 
-enum PixelFormat avcodec_default_get_format(struct AVCodecContext *s, const enum PixelFormat *fmt){
-    while (*fmt != PIX_FMT_NONE && ff_is_hwaccel_pix_fmt(*fmt))
-        ++fmt;
-    return fmt[0];
+enum PixelFormat avcodec_default_get_format(struct AVCodecContext *s, const enum PixelFormat *fmt)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	while (*fmt != PIX_FMT_NONE && ff_is_hwaccel_pix_fmt(*fmt))
+		++fmt;
+	return fmt[0];
 }
 
-void avcodec_get_frame_defaults(AVFrame *pic){
-    memset(pic, 0, sizeof(AVFrame));
+void avcodec_get_frame_defaults(AVFrame *pic)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	memset(pic, 0, sizeof(AVFrame));
 
-    pic->pts= AV_NOPTS_VALUE;
-    pic->key_frame= 1;
+	pic->pts= AV_NOPTS_VALUE;
+	pic->key_frame= 1;
 }
 
 AVFrame *avcodec_alloc_frame(void)
@@ -482,7 +530,7 @@ int attribute_align_arg avcodec_open(AVCodecContext *avctx, AVCodec *codec)
 		1、
 		
 	说明:
-		1、
+		1、编解码器打开函数
 */
 	int ret= -1;
 
@@ -600,252 +648,400 @@ free_and_end:
 	goto end;
 }
 
-int attribute_align_arg avcodec_encode_audio(AVCodecContext *avctx, uint8_t *buf, int buf_size,
-                         const short *samples)
+int attribute_align_arg avcodec_encode_audio(AVCodecContext *avctx, uint8_t *buf, int buf_size, const short *samples)
 {
-    if(buf_size < FF_MIN_BUFFER_SIZE && 0){
-        av_log(avctx, AV_LOG_ERROR, "buffer smaller than minimum size\n");
-        return -1;
-    }
-    if((avctx->codec->capabilities & CODEC_CAP_DELAY) || samples){
-        int ret = avctx->codec->encode(avctx, buf, buf_size, samples);
-        avctx->frame_number++;
-        return ret;
-    }else
-        return 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if(buf_size < FF_MIN_BUFFER_SIZE && 0)
+	{
+		av_log(avctx, AV_LOG_ERROR, "buffer smaller than minimum size\n");
+		return -1;
+	}
+	
+	if((avctx->codec->capabilities & CODEC_CAP_DELAY) || samples)
+	{
+		int ret = avctx->codec->encode(avctx, buf, buf_size, samples);
+		avctx->frame_number++;
+		return ret;
+	}
+	else
+		return 0;
 }
 
-int attribute_align_arg avcodec_encode_video(AVCodecContext *avctx, uint8_t *buf, int buf_size,
-                         const AVFrame *pict)
+int attribute_align_arg avcodec_encode_video(AVCodecContext *avctx, uint8_t *buf, int buf_size, const AVFrame *pict)
 {
-    if(buf_size < FF_MIN_BUFFER_SIZE){
-        av_log(avctx, AV_LOG_ERROR, "buffer smaller than minimum size\n");
-        return -1;
-    }
-    if(av_image_check_size(avctx->width, avctx->height, 0, avctx))
-        return -1;
-    if((avctx->codec->capabilities & CODEC_CAP_DELAY) || pict){
-        int ret = avctx->codec->encode(avctx, buf, buf_size, pict);
-        avctx->frame_number++;
-        emms_c(); //needed to avoid an emms_c() call before every return;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if(buf_size < FF_MIN_BUFFER_SIZE)
+	{
+		av_log(avctx, AV_LOG_ERROR, "buffer smaller than minimum size\n");
+		return -1;
+	}
+	
+	if(av_image_check_size(avctx->width, avctx->height, 0, avctx))
+		return -1;
+	
+	if((avctx->codec->capabilities & CODEC_CAP_DELAY) || pict)
+	{
+		int ret = avctx->codec->encode(avctx, buf, buf_size, pict);
+		avctx->frame_number++;
+		emms_c(); //needed to avoid an emms_c() call before every return;
 
-        return ret;
-    }else
-        return 0;
+		return ret;
+	}
+	else
+		return 0;
 }
 
-int avcodec_encode_subtitle(AVCodecContext *avctx, uint8_t *buf, int buf_size,
-                            const AVSubtitle *sub)
+int avcodec_encode_subtitle(AVCodecContext *avctx, uint8_t *buf, int buf_size, const AVSubtitle *sub)
 {
-    int ret;
-    if(sub->start_display_time) {
-        av_log(avctx, AV_LOG_ERROR, "start_display_time must be 0.\n");
-        return -1;
-    }
-    if(sub->num_rects == 0 || !sub->rects)
-        return -1;
-    ret = avctx->codec->encode(avctx, buf, buf_size, sub);
-    avctx->frame_number++;
-    return ret;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int ret;
+	if(sub->start_display_time) 
+	{
+		av_log(avctx, AV_LOG_ERROR, "start_display_time must be 0.\n");
+		return -1;
+	}
+	
+	if(sub->num_rects == 0 || !sub->rects)
+		return -1;
+	
+	ret = avctx->codec->encode(avctx, buf, buf_size, sub);
+	avctx->frame_number++;
+	return ret;
 }
 
 #if FF_API_VIDEO_OLD
-int attribute_align_arg avcodec_decode_video(AVCodecContext *avctx, AVFrame *picture,
-                         int *got_picture_ptr,
-                         const uint8_t *buf, int buf_size)
+int attribute_align_arg avcodec_decode_video(AVCodecContext *avctx, AVFrame *picture,int *got_picture_ptr,const uint8_t *buf, int buf_size)
 {
-    AVPacket avpkt;
-    av_init_packet(&avpkt);
-    avpkt.data = buf;
-    avpkt.size = buf_size;
-    // HACK for CorePNG to decode as normal PNG by default
-    avpkt.flags = AV_PKT_FLAG_KEY;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	AVPacket avpkt;
+	av_init_packet(&avpkt);
+	avpkt.data = buf;
+	avpkt.size = buf_size;
+	// HACK for CorePNG to decode as normal PNG by default
+	avpkt.flags = AV_PKT_FLAG_KEY;
 
-    return avcodec_decode_video2(avctx, picture, got_picture_ptr, &avpkt);
+	return avcodec_decode_video2(avctx, picture, got_picture_ptr, &avpkt);
 }
 #endif
 
-int attribute_align_arg avcodec_decode_video2(AVCodecContext *avctx, AVFrame *picture,
-                         int *got_picture_ptr,
-                         AVPacket *avpkt)
+int attribute_align_arg avcodec_decode_video2(AVCodecContext *avctx, AVFrame *picture, int *got_picture_ptr, AVPacket *avpkt)
 {
-    int ret;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、此函数内部会调用具体类型码流的解码函数
+*/
+	int ret;
 
-    *got_picture_ptr= 0;
-    if((avctx->coded_width||avctx->coded_height) && av_image_check_size(avctx->coded_width, avctx->coded_height, 0, avctx))
-        return -1;
+	*got_picture_ptr= 0;
+	
+	if((avctx->coded_width||avctx->coded_height) && av_image_check_size(avctx->coded_width, avctx->coded_height, 0, avctx))
+		return -1;
 
-    avctx->pkt = avpkt;
+	avctx->pkt = avpkt;
 
-    if((avctx->codec->capabilities & CODEC_CAP_DELAY) || avpkt->size){
-        ret = avctx->codec->decode(avctx, picture, got_picture_ptr,
-                                avpkt);
+	if((avctx->codec->capabilities & CODEC_CAP_DELAY) || avpkt->size)
+	{
+		ret = avctx->codec->decode(avctx, picture, got_picture_ptr,avpkt); /* 调用了具体类型码流的解码器的解码函数*/
 
-        emms_c(); //needed to avoid an emms_c() call before every return;
+		emms_c(); //needed to avoid an emms_c() call before every return;
 
-        picture->pkt_dts= avpkt->dts;
+		picture->pkt_dts= avpkt->dts;
 
-        if (*got_picture_ptr)
-            avctx->frame_number++;
-    }else
-        ret= 0;
+		if (*got_picture_ptr)
+			avctx->frame_number++;
+	}
+	else
+		ret= 0;
 
-    return ret;
+	return ret;
 }
 
 #if FF_API_AUDIO_OLD
-int attribute_align_arg avcodec_decode_audio2(AVCodecContext *avctx, int16_t *samples,
-                         int *frame_size_ptr,
-                         const uint8_t *buf, int buf_size)
+int attribute_align_arg avcodec_decode_audio2(AVCodecContext *avctx, int16_t *samples,int *frame_size_ptr,const uint8_t *buf, int buf_size)
 {
-    AVPacket avpkt;
-    av_init_packet(&avpkt);
-    avpkt.data = buf;
-    avpkt.size = buf_size;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	AVPacket avpkt;
+	av_init_packet(&avpkt);
+	avpkt.data = buf;
+	avpkt.size = buf_size;
 
-    return avcodec_decode_audio3(avctx, samples, frame_size_ptr, &avpkt);
+    	return avcodec_decode_audio3(avctx, samples, frame_size_ptr, &avpkt);
 }
 #endif
 
-int attribute_align_arg avcodec_decode_audio3(AVCodecContext *avctx, int16_t *samples,
-                         int *frame_size_ptr,
-                         AVPacket *avpkt)
+int attribute_align_arg avcodec_decode_audio3(AVCodecContext *avctx, int16_t *samples,int *frame_size_ptr,AVPacket *avpkt)
 {
-    int ret;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int ret;
 
-    avctx->pkt = avpkt;
+	avctx->pkt = avpkt;
 
-    if((avctx->codec->capabilities & CODEC_CAP_DELAY) || avpkt->size){
-        //FIXME remove the check below _after_ ensuring that all audio check that the available space is enough
-        if(*frame_size_ptr < AVCODEC_MAX_AUDIO_FRAME_SIZE){
-            av_log(avctx, AV_LOG_ERROR, "buffer smaller than AVCODEC_MAX_AUDIO_FRAME_SIZE\n");
-            return -1;
-        }
-        if(*frame_size_ptr < FF_MIN_BUFFER_SIZE ||
-        *frame_size_ptr < avctx->channels * avctx->frame_size * sizeof(int16_t)){
-            av_log(avctx, AV_LOG_ERROR, "buffer %d too small\n", *frame_size_ptr);
-            return -1;
-        }
+	if((avctx->codec->capabilities & CODEC_CAP_DELAY) || avpkt->size)
+	{
+		//FIXME remove the check below _after_ ensuring that all audio check that the available space is enough
+		if(*frame_size_ptr < AVCODEC_MAX_AUDIO_FRAME_SIZE)
+		{
+			av_log(avctx, AV_LOG_ERROR, "buffer smaller than AVCODEC_MAX_AUDIO_FRAME_SIZE\n");
+			return -1;
+		}
+		if(*frame_size_ptr < FF_MIN_BUFFER_SIZE ||*frame_size_ptr < avctx->channels * avctx->frame_size * sizeof(int16_t))
+		{
+			av_log(avctx, AV_LOG_ERROR, "buffer %d too small\n", *frame_size_ptr);
+			return -1;
+		}
 
-        ret = avctx->codec->decode(avctx, samples, frame_size_ptr, avpkt);
-        avctx->frame_number++;
-    }else{
-        ret= 0;
-        *frame_size_ptr=0;
-    }
-    return ret;
+		ret = avctx->codec->decode(avctx, samples, frame_size_ptr, avpkt);
+		avctx->frame_number++;
+	}
+	else
+	{
+		ret= 0;
+		*frame_size_ptr=0;
+	}
+	return ret;
 }
 
 #if FF_API_SUBTITLE_OLD
-int avcodec_decode_subtitle(AVCodecContext *avctx, AVSubtitle *sub,
-                            int *got_sub_ptr,
-                            const uint8_t *buf, int buf_size)
+int avcodec_decode_subtitle(AVCodecContext *avctx, AVSubtitle *sub,int *got_sub_ptr,const uint8_t *buf, int buf_size)
 {
-    AVPacket avpkt;
-    av_init_packet(&avpkt);
-    avpkt.data = buf;
-    avpkt.size = buf_size;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	AVPacket avpkt;
+	av_init_packet(&avpkt);
+	avpkt.data = buf;
+	avpkt.size = buf_size;
 
-    return avcodec_decode_subtitle2(avctx, sub, got_sub_ptr, &avpkt);
+	return avcodec_decode_subtitle2(avctx, sub, got_sub_ptr, &avpkt);
 }
 #endif
 
-int avcodec_decode_subtitle2(AVCodecContext *avctx, AVSubtitle *sub,
-                            int *got_sub_ptr,
-                            AVPacket *avpkt)
+int avcodec_decode_subtitle2(AVCodecContext *avctx, AVSubtitle *sub,int *got_sub_ptr,AVPacket *avpkt)
 {
-    int ret;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int ret;
 
-    avctx->pkt = avpkt;
-    *got_sub_ptr = 0;
-    ret = avctx->codec->decode(avctx, sub, got_sub_ptr, avpkt);
-    if (*got_sub_ptr)
-        avctx->frame_number++;
-    return ret;
+	avctx->pkt = avpkt;
+	*got_sub_ptr = 0;
+	ret = avctx->codec->decode(avctx, sub, got_sub_ptr, avpkt);
+	if (*got_sub_ptr)
+		avctx->frame_number++;
+	return ret;
 }
 
 void avsubtitle_free(AVSubtitle *sub)
 {
-    int i;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int i;
 
-    for (i = 0; i < sub->num_rects; i++)
-    {
-        av_freep(&sub->rects[i]->pict.data[0]);
-        av_freep(&sub->rects[i]->pict.data[1]);
-        av_freep(&sub->rects[i]->pict.data[2]);
-        av_freep(&sub->rects[i]->pict.data[3]);
-        av_freep(&sub->rects[i]->text);
-        av_freep(&sub->rects[i]->ass);
-        av_freep(&sub->rects[i]);
-    }
+	for (i = 0; i < sub->num_rects; i++)
+	{
+		av_freep(&sub->rects[i]->pict.data[0]);
+		av_freep(&sub->rects[i]->pict.data[1]);
+		av_freep(&sub->rects[i]->pict.data[2]);
+		av_freep(&sub->rects[i]->pict.data[3]);
+		av_freep(&sub->rects[i]->text);
+		av_freep(&sub->rects[i]->ass);
+		av_freep(&sub->rects[i]);
+	}
 
-    av_freep(&sub->rects);
+	av_freep(&sub->rects);
 
-    memset(sub, 0, sizeof(AVSubtitle));
+	memset(sub, 0, sizeof(AVSubtitle));
 }
 
 av_cold int avcodec_close(AVCodecContext *avctx)
 {
-    /* If there is a user-supplied mutex locking routine, call it. */
-    if (ff_lockmgr_cb) {
-        if ((*ff_lockmgr_cb)(&codec_mutex, AV_LOCK_OBTAIN))
-            return -1;
-    }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	/* If there is a user-supplied mutex locking routine, call it. */
+	if (ff_lockmgr_cb) 
+	{
+		if ((*ff_lockmgr_cb)(&codec_mutex, AV_LOCK_OBTAIN))
+			return -1;
+	}
 
-    entangled_thread_counter++;
-    if(entangled_thread_counter != 1){
-        av_log(avctx, AV_LOG_ERROR, "insufficient thread locking around avcodec_open/close()\n");
-        entangled_thread_counter--;
-        return -1;
-    }
+	entangled_thread_counter++;
+	if(entangled_thread_counter != 1)
+	{
+		av_log(avctx, AV_LOG_ERROR, "insufficient thread locking around avcodec_open/close()\n");
+		entangled_thread_counter--;
+		return -1;
+	}
 
-    if (HAVE_THREADS && avctx->thread_opaque)
-        avcodec_thread_free(avctx);
-    if (avctx->codec && avctx->codec->close)
-        avctx->codec->close(avctx);
-    avcodec_default_free_buffers(avctx);
-    avctx->coded_frame = NULL;
-    av_freep(&avctx->priv_data);
-    if(avctx->codec && avctx->codec->encode)
-        av_freep(&avctx->extradata);
-    avctx->codec = NULL;
-    entangled_thread_counter--;
+	if (HAVE_THREADS && avctx->thread_opaque)
+		avcodec_thread_free(avctx);
 
-    /* Release any user-supplied mutex. */
-    if (ff_lockmgr_cb) {
-        (*ff_lockmgr_cb)(&codec_mutex, AV_LOCK_RELEASE);
-    }
-    return 0;
+	if (avctx->codec && avctx->codec->close)
+		avctx->codec->close(avctx);
+
+	avcodec_default_free_buffers(avctx);
+	avctx->coded_frame = NULL;
+	av_freep(&avctx->priv_data);
+
+	if(avctx->codec && avctx->codec->encode)
+		av_freep(&avctx->extradata);
+
+	avctx->codec = NULL;
+	entangled_thread_counter--;
+
+	/* Release any user-supplied mutex. */
+	if (ff_lockmgr_cb) 
+	{
+		(*ff_lockmgr_cb)(&codec_mutex, AV_LOCK_RELEASE);
+	}
+	return 0;
 }
 
 AVCodec *avcodec_find_encoder(enum CodecID id)
 {
-    AVCodec *p, *experimental=NULL;
-    p = first_avcodec;
-    while (p) {
-        if (p->encode != NULL && p->id == id) {
-            if (p->capabilities & CODEC_CAP_EXPERIMENTAL && !experimental) {
-                experimental = p;
-            } else
-                return p;
-        }
-        p = p->next;
-    }
-    return experimental;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	AVCodec *p, *experimental=NULL;
+	p = first_avcodec;
+	while (p)
+	{
+		if (p->encode != NULL && p->id == id) 
+		{
+			if (p->capabilities & CODEC_CAP_EXPERIMENTAL && !experimental) 
+			{
+				experimental = p;
+			}
+			else
+				return p;
+		}
+		p = p->next;
+	}
+	return experimental;
 }
 
 AVCodec *avcodec_find_encoder_by_name(const char *name)
 {
-    AVCodec *p;
-    if (!name)
-        return NULL;
-    p = first_avcodec;
-    while (p) {
-        if (p->encode != NULL && strcmp(name,p->name) == 0)
-            return p;
-        p = p->next;
-    }
-    return NULL;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	AVCodec *p;
+	
+	if (!name)
+		return NULL;
+	
+	p = first_avcodec;
+	
+	while (p) 
+	{
+		if (p->encode != NULL && strcmp(name,p->name) == 0)
+			return p;
+		p = p->next;
+	}
+	return NULL;
 }
 
 AVCodec *avcodec_find_decoder(enum CodecID id)
@@ -873,174 +1069,239 @@ AVCodec *avcodec_find_decoder(enum CodecID id)
 
 AVCodec *avcodec_find_decoder_by_name(const char *name)
 {
-    AVCodec *p;
-    if (!name)
-        return NULL;
-    p = first_avcodec;
-    while (p) {
-        if (p->decode != NULL && strcmp(name,p->name) == 0)
-            return p;
-        p = p->next;
-    }
-    return NULL;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	AVCodec *p;
+	if (!name)
+		return NULL;
+	
+	p = first_avcodec;
+	
+	while (p) 
+	{
+		if (p->decode != NULL && strcmp(name,p->name) == 0)
+			return p;
+		p = p->next;
+	}
+	return NULL;
 }
 
 static int get_bit_rate(AVCodecContext *ctx)
 {
-    int bit_rate;
-    int bits_per_sample;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int bit_rate;
+	int bits_per_sample;
 
-    switch(ctx->codec_type) {
-    case AVMEDIA_TYPE_VIDEO:
-    case AVMEDIA_TYPE_DATA:
-    case AVMEDIA_TYPE_SUBTITLE:
-    case AVMEDIA_TYPE_ATTACHMENT:
-        bit_rate = ctx->bit_rate;
-        break;
-    case AVMEDIA_TYPE_AUDIO:
-        bits_per_sample = av_get_bits_per_sample(ctx->codec_id);
-        bit_rate = bits_per_sample ? ctx->sample_rate * ctx->channels * bits_per_sample : ctx->bit_rate;
-        break;
-    default:
-        bit_rate = 0;
-        break;
-    }
-    return bit_rate;
+	switch(ctx->codec_type) 
+	{
+		case AVMEDIA_TYPE_VIDEO:
+		case AVMEDIA_TYPE_DATA:
+		case AVMEDIA_TYPE_SUBTITLE:
+		case AVMEDIA_TYPE_ATTACHMENT:
+			bit_rate = ctx->bit_rate;
+			break;
+		case AVMEDIA_TYPE_AUDIO:
+			bits_per_sample = av_get_bits_per_sample(ctx->codec_id);
+			bit_rate = bits_per_sample ? ctx->sample_rate * ctx->channels * bits_per_sample : ctx->bit_rate;
+			break;
+		default:
+			bit_rate = 0;
+			break;
+	}
+	return bit_rate;
 }
 
 size_t av_get_codec_tag_string(char *buf, size_t buf_size, unsigned int codec_tag)
 {
-    int i, len, ret = 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int i, len, ret = 0;
 
-    for (i = 0; i < 4; i++) {
-        len = snprintf(buf, buf_size,
-                       isprint(codec_tag&0xFF) ? "%c" : "[%d]", codec_tag&0xFF);
-        buf      += len;
-        buf_size  = buf_size > len ? buf_size - len : 0;
-        ret      += len;
-        codec_tag>>=8;
-    }
-    return ret;
+	for (i = 0; i < 4; i++) 
+	{
+		len = snprintf(buf, buf_size,isprint(codec_tag&0xFF) ? "%c" : "[%d]", codec_tag&0xFF);
+		buf      += len;
+		buf_size  = buf_size > len ? buf_size - len : 0;
+		ret      += len;
+		codec_tag>>=8;
+	}
+	return ret;
 }
 
 void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode)
 {
-    const char *codec_name;
-    const char *profile = NULL;
-    AVCodec *p;
-    char buf1[32];
-    int bitrate;
-    AVRational display_aspect_ratio;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	const char *codec_name;
+	const char *profile = NULL;
+	AVCodec *p;
+	char buf1[32];
+	int bitrate;
+	AVRational display_aspect_ratio;
 
-    if (encode)
-        p = avcodec_find_encoder(enc->codec_id);
-    else
-        p = avcodec_find_decoder(enc->codec_id);
+	if (encode)
+		p = avcodec_find_encoder(enc->codec_id);
+	else
+		p = avcodec_find_decoder(enc->codec_id);
 
-    if (p) {
-        codec_name = p->name;
-        profile = av_get_profile_name(p, enc->profile);
-    } else if (enc->codec_id == CODEC_ID_MPEG2TS) {
-        /* fake mpeg2 transport stream codec (currently not
-           registered) */
-        codec_name = "mpeg2ts";
-    } else if (enc->codec_name[0] != '\0') {
-        codec_name = enc->codec_name;
-    } else {
-        /* output avi tags */
-        char tag_buf[32];
-        av_get_codec_tag_string(tag_buf, sizeof(tag_buf), enc->codec_tag);
-        snprintf(buf1, sizeof(buf1), "%s / 0x%04X", tag_buf, enc->codec_tag);
-        codec_name = buf1;
-    }
+	if (p) 
+	{
+		codec_name = p->name;
+		profile = av_get_profile_name(p, enc->profile);
+	} 
+	else if (enc->codec_id == CODEC_ID_MPEG2TS) 
+	{
+		/* fake mpeg2 transport stream codec (currently not
+		registered) */
+		codec_name = "mpeg2ts";
+	} 
+	else if (enc->codec_name[0] != '\0') 
+	{
+		codec_name = enc->codec_name;
+	} 
+	else 
+	{
+		/* output avi tags */
+		char tag_buf[32];
+		av_get_codec_tag_string(tag_buf, sizeof(tag_buf), enc->codec_tag);
+		snprintf(buf1, sizeof(buf1), "%s / 0x%04X", tag_buf, enc->codec_tag);
+		codec_name = buf1;
+	}
 
-    switch(enc->codec_type) {
-    case AVMEDIA_TYPE_VIDEO:
-        snprintf(buf, buf_size,
-                 "Video: %s%s",
-                 codec_name, enc->mb_decision ? " (hq)" : "");
-        if (profile)
-            snprintf(buf + strlen(buf), buf_size - strlen(buf),
-                     " (%s)", profile);
-        if (enc->pix_fmt != PIX_FMT_NONE) {
-            snprintf(buf + strlen(buf), buf_size - strlen(buf),
-                     ", %s",
-                     avcodec_get_pix_fmt_name(enc->pix_fmt));
-        }
-        if (enc->width) {
-            snprintf(buf + strlen(buf), buf_size - strlen(buf),
-                     ", %dx%d",
-                     enc->width, enc->height);
-            if (enc->sample_aspect_ratio.num) {
-                av_reduce(&display_aspect_ratio.num, &display_aspect_ratio.den,
-                          enc->width*enc->sample_aspect_ratio.num,
-                          enc->height*enc->sample_aspect_ratio.den,
-                          1024*1024);
-                snprintf(buf + strlen(buf), buf_size - strlen(buf),
-                         " [PAR %d:%d DAR %d:%d]",
-                         enc->sample_aspect_ratio.num, enc->sample_aspect_ratio.den,
-                         display_aspect_ratio.num, display_aspect_ratio.den);
-            }
-            if(av_log_get_level() >= AV_LOG_DEBUG){
-                int g= av_gcd(enc->time_base.num, enc->time_base.den);
-                snprintf(buf + strlen(buf), buf_size - strlen(buf),
-                     ", %d/%d",
-                     enc->time_base.num/g, enc->time_base.den/g);
-            }
-        }
-        if (encode) {
-            snprintf(buf + strlen(buf), buf_size - strlen(buf),
-                     ", q=%d-%d", enc->qmin, enc->qmax);
-        }
-        break;
-    case AVMEDIA_TYPE_AUDIO:
-        snprintf(buf, buf_size,
-                 "Audio: %s",
-                 codec_name);
-        if (profile)
-            snprintf(buf + strlen(buf), buf_size - strlen(buf),
-                     " (%s)", profile);
-        if (enc->sample_rate) {
-            snprintf(buf + strlen(buf), buf_size - strlen(buf),
-                     ", %d Hz", enc->sample_rate);
-        }
-        av_strlcat(buf, ", ", buf_size);
-        av_get_channel_layout_string(buf + strlen(buf), buf_size - strlen(buf), enc->channels, enc->channel_layout);
-        if (enc->sample_fmt != AV_SAMPLE_FMT_NONE) {
-            snprintf(buf + strlen(buf), buf_size - strlen(buf),
-                     ", %s", av_get_sample_fmt_name(enc->sample_fmt));
-        }
-        break;
-    case AVMEDIA_TYPE_DATA:
-        snprintf(buf, buf_size, "Data: %s", codec_name);
-        break;
-    case AVMEDIA_TYPE_SUBTITLE:
-        snprintf(buf, buf_size, "Subtitle: %s", codec_name);
-        break;
-    case AVMEDIA_TYPE_ATTACHMENT:
-        snprintf(buf, buf_size, "Attachment: %s", codec_name);
-        break;
-    default:
-        snprintf(buf, buf_size, "Invalid Codec type %d", enc->codec_type);
-        return;
-    }
-    if (encode) {
-        if (enc->flags & CODEC_FLAG_PASS1)
-            snprintf(buf + strlen(buf), buf_size - strlen(buf),
-                     ", pass 1");
-        if (enc->flags & CODEC_FLAG_PASS2)
-            snprintf(buf + strlen(buf), buf_size - strlen(buf),
-                     ", pass 2");
-    }
-    bitrate = get_bit_rate(enc);
-    if (bitrate != 0) {
-        snprintf(buf + strlen(buf), buf_size - strlen(buf),
-                 ", %d kb/s", bitrate / 1000);
-    }
+	switch(enc->codec_type) 
+	{
+		case AVMEDIA_TYPE_VIDEO:
+			snprintf(buf, buf_size,"Video: %s%s",codec_name, enc->mb_decision ? " (hq)" : "");
+			if (profile)
+				snprintf(buf + strlen(buf), buf_size - strlen(buf)," (%s)", profile);
+			
+			if (enc->pix_fmt != PIX_FMT_NONE) 
+			{
+				snprintf(buf + strlen(buf), buf_size - strlen(buf),", %s",avcodec_get_pix_fmt_name(enc->pix_fmt));
+			}
+			
+			if (enc->width) 
+			{
+				snprintf(buf + strlen(buf), buf_size - strlen(buf),", %dx%d",enc->width, enc->height);
+				if (enc->sample_aspect_ratio.num) 
+				{
+					av_reduce(&display_aspect_ratio.num, &display_aspect_ratio.den,
+										enc->width*enc->sample_aspect_ratio.num,
+										enc->height*enc->sample_aspect_ratio.den,
+										1024*1024);
+					snprintf(buf + strlen(buf), buf_size - strlen(buf),
+										" [PAR %d:%d DAR %d:%d]",
+										enc->sample_aspect_ratio.num, enc->sample_aspect_ratio.den,
+										display_aspect_ratio.num, display_aspect_ratio.den);
+				}
+				
+				if(av_log_get_level() >= AV_LOG_DEBUG)
+				{
+					int g= av_gcd(enc->time_base.num, enc->time_base.den);
+					snprintf(buf + strlen(buf), buf_size - strlen(buf),", %d/%d",enc->time_base.num/g, enc->time_base.den/g);
+				}
+			}
+			
+			if (encode) 
+			{
+				snprintf(buf + strlen(buf), buf_size - strlen(buf),", q=%d-%d", enc->qmin, enc->qmax);
+			}
+			break;
+			
+		case AVMEDIA_TYPE_AUDIO:
+			snprintf(buf, buf_size,"Audio: %s",codec_name);
+			if (profile)
+				snprintf(buf + strlen(buf), buf_size - strlen(buf)," (%s)", profile);
+			if (enc->sample_rate) 
+			{
+				snprintf(buf + strlen(buf), buf_size - strlen(buf),", %d Hz", enc->sample_rate);
+			}
+			av_strlcat(buf, ", ", buf_size);
+			av_get_channel_layout_string(buf + strlen(buf), buf_size - strlen(buf), enc->channels, enc->channel_layout);
+			if (enc->sample_fmt != AV_SAMPLE_FMT_NONE) 
+			{
+				snprintf(buf + strlen(buf), buf_size - strlen(buf),", %s", av_get_sample_fmt_name(enc->sample_fmt));
+			}
+			break;
+			
+		case AVMEDIA_TYPE_DATA:
+			snprintf(buf, buf_size, "Data: %s", codec_name);
+			break;
+			
+		case AVMEDIA_TYPE_SUBTITLE:
+			snprintf(buf, buf_size, "Subtitle: %s", codec_name);
+			break;
+			
+		case AVMEDIA_TYPE_ATTACHMENT:
+			snprintf(buf, buf_size, "Attachment: %s", codec_name);
+			break;
+			
+		default:
+			snprintf(buf, buf_size, "Invalid Codec type %d", enc->codec_type);
+			return;
+	}
+	
+	if (encode) 
+	{
+		if (enc->flags & CODEC_FLAG_PASS1)
+			snprintf(buf + strlen(buf), buf_size - strlen(buf),", pass 1");
+		
+		if (enc->flags & CODEC_FLAG_PASS2)
+			snprintf(buf + strlen(buf), buf_size - strlen(buf),", pass 2");
+	}
+	
+	bitrate = get_bit_rate(enc);
+	if (bitrate != 0) 
+	{
+		snprintf(buf + strlen(buf), buf_size - strlen(buf),", %d kb/s", bitrate / 1000);
+	}
 }
 
 const char *av_get_profile_name(const AVCodec *codec, int profile)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
     const AVProfile *p;
     if (profile == FF_PROFILE_UNKNOWN || !codec->profiles)
         return NULL;
@@ -1054,139 +1315,260 @@ const char *av_get_profile_name(const AVCodec *codec, int profile)
 
 unsigned avcodec_version( void )
 {
-  return LIBAVCODEC_VERSION_INT;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return LIBAVCODEC_VERSION_INT;
 }
 
 const char *avcodec_configuration(void)
 {
-    return FFMPEG_CONFIGURATION;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+    	return FFMPEG_CONFIGURATION;
 }
 
 const char *avcodec_license(void)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #define LICENSE_PREFIX "libavcodec license: "
-    return LICENSE_PREFIX FFMPEG_LICENSE + sizeof(LICENSE_PREFIX) - 1;
+	return LICENSE_PREFIX FFMPEG_LICENSE + sizeof(LICENSE_PREFIX) - 1;
 }
 
 void avcodec_init(void)
 {
-    static int initialized = 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	static int initialized = 0;
 
-    if (initialized != 0)
-        return;
-    initialized = 1;
+	if (initialized != 0)
+		return;
+	initialized = 1;
 
-    dsputil_static_init();
+	dsputil_static_init();
 }
 
 void avcodec_flush_buffers(AVCodecContext *avctx)
 {
-    if(avctx->codec->flush)
-        avctx->codec->flush(avctx);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if(avctx->codec->flush)
+		avctx->codec->flush(avctx);
 }
 
-void avcodec_default_free_buffers(AVCodecContext *s){
-    int i, j;
+void avcodec_default_free_buffers(AVCodecContext *s)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int i, j;
 
-    if(s->internal_buffer==NULL) return;
+	if(s->internal_buffer==NULL) return;
 
-    if (s->internal_buffer_count)
-        av_log(s, AV_LOG_WARNING, "Found %i unreleased buffers!\n", s->internal_buffer_count);
-    for(i=0; i<INTERNAL_BUFFER_SIZE; i++){
-        InternalBuffer *buf= &((InternalBuffer*)s->internal_buffer)[i];
-        for(j=0; j<4; j++){
-            av_freep(&buf->base[j]);
-            buf->data[j]= NULL;
-        }
-    }
-    av_freep(&s->internal_buffer);
+	if (s->internal_buffer_count)
+		av_log(s, AV_LOG_WARNING, "Found %i unreleased buffers!\n", s->internal_buffer_count);
+	
+	for(i=0; i<INTERNAL_BUFFER_SIZE; i++)
+	{
+		InternalBuffer *buf= &((InternalBuffer*)s->internal_buffer)[i];
+		for(j=0; j<4; j++)
+		{
+			av_freep(&buf->base[j]);
+			buf->data[j]= NULL;
+		}
+	}
+	av_freep(&s->internal_buffer);
 
-    s->internal_buffer_count=0;
+	s->internal_buffer_count=0;
 }
 
-char av_get_pict_type_char(int pict_type){
-    switch(pict_type){
-    case FF_I_TYPE: return 'I';
-    case FF_P_TYPE: return 'P';
-    case FF_B_TYPE: return 'B';
-    case FF_S_TYPE: return 'S';
-    case FF_SI_TYPE:return 'i';
-    case FF_SP_TYPE:return 'p';
-    case FF_BI_TYPE:return 'b';
-    default:        return '?';
-    }
+char av_get_pict_type_char(int pict_type)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	switch(pict_type)
+	{
+		case FF_I_TYPE: return 'I';
+		case FF_P_TYPE: return 'P';
+		case FF_B_TYPE: return 'B';
+		case FF_S_TYPE: return 'S';
+		case FF_SI_TYPE:return 'i';
+		case FF_SP_TYPE:return 'p';
+		case FF_BI_TYPE:return 'b';
+		default:        return '?';
+	}
 }
 
-int av_get_bits_per_sample(enum CodecID codec_id){
-    switch(codec_id){
-    case CODEC_ID_ADPCM_SBPRO_2:
-        return 2;
-    case CODEC_ID_ADPCM_SBPRO_3:
-        return 3;
-    case CODEC_ID_ADPCM_SBPRO_4:
-    case CODEC_ID_ADPCM_CT:
-    case CODEC_ID_ADPCM_IMA_WAV:
-    case CODEC_ID_ADPCM_MS:
-    case CODEC_ID_ADPCM_YAMAHA:
-        return 4;
-    case CODEC_ID_PCM_ALAW:
-    case CODEC_ID_PCM_MULAW:
-    case CODEC_ID_PCM_S8:
-    case CODEC_ID_PCM_U8:
-    case CODEC_ID_PCM_ZORK:
-        return 8;
-    case CODEC_ID_PCM_S16BE:
-    case CODEC_ID_PCM_S16LE:
-    case CODEC_ID_PCM_S16LE_PLANAR:
-    case CODEC_ID_PCM_U16BE:
-    case CODEC_ID_PCM_U16LE:
-        return 16;
-    case CODEC_ID_PCM_S24DAUD:
-    case CODEC_ID_PCM_S24BE:
-    case CODEC_ID_PCM_S24LE:
-    case CODEC_ID_PCM_U24BE:
-    case CODEC_ID_PCM_U24LE:
-        return 24;
-    case CODEC_ID_PCM_S32BE:
-    case CODEC_ID_PCM_S32LE:
-    case CODEC_ID_PCM_U32BE:
-    case CODEC_ID_PCM_U32LE:
-    case CODEC_ID_PCM_F32BE:
-    case CODEC_ID_PCM_F32LE:
-        return 32;
-    case CODEC_ID_PCM_F64BE:
-    case CODEC_ID_PCM_F64LE:
-        return 64;
-    default:
-        return 0;
-    }
+int av_get_bits_per_sample(enum CodecID codec_id)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	switch(codec_id)
+	{
+		case CODEC_ID_ADPCM_SBPRO_2:
+			return 2;
+		case CODEC_ID_ADPCM_SBPRO_3:
+			return 3;
+		case CODEC_ID_ADPCM_SBPRO_4:
+		case CODEC_ID_ADPCM_CT:
+		case CODEC_ID_ADPCM_IMA_WAV:
+		case CODEC_ID_ADPCM_MS:
+		case CODEC_ID_ADPCM_YAMAHA:
+			return 4;
+		case CODEC_ID_PCM_ALAW:
+		case CODEC_ID_PCM_MULAW:
+		case CODEC_ID_PCM_S8:
+		case CODEC_ID_PCM_U8:
+		case CODEC_ID_PCM_ZORK:
+			return 8;
+		case CODEC_ID_PCM_S16BE:
+		case CODEC_ID_PCM_S16LE:
+		case CODEC_ID_PCM_S16LE_PLANAR:
+		case CODEC_ID_PCM_U16BE:
+		case CODEC_ID_PCM_U16LE:
+			return 16;
+		case CODEC_ID_PCM_S24DAUD:
+		case CODEC_ID_PCM_S24BE:
+		case CODEC_ID_PCM_S24LE:
+		case CODEC_ID_PCM_U24BE:
+		case CODEC_ID_PCM_U24LE:
+			return 24;
+		case CODEC_ID_PCM_S32BE:
+		case CODEC_ID_PCM_S32LE:
+		case CODEC_ID_PCM_U32BE:
+		case CODEC_ID_PCM_U32LE:
+		case CODEC_ID_PCM_F32BE:
+		case CODEC_ID_PCM_F32LE:
+			return 32;
+		case CODEC_ID_PCM_F64BE:
+		case CODEC_ID_PCM_F64LE:
+			return 64;
+		default:
+			return 0;
+	}
 }
 
 #if FF_API_OLD_SAMPLE_FMT
-int av_get_bits_per_sample_format(enum AVSampleFormat sample_fmt) {
-    return av_get_bits_per_sample_fmt(sample_fmt);
+int av_get_bits_per_sample_format(enum AVSampleFormat sample_fmt) 
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+    	return av_get_bits_per_sample_fmt(sample_fmt);
 }
 #endif
 
 #if !HAVE_THREADS
-int avcodec_thread_init(AVCodecContext *s, int thread_count){
-    s->thread_count = thread_count;
-    return -1;
+int avcodec_thread_init(AVCodecContext *s, int thread_count)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	s->thread_count = thread_count;
+	return -1;
 }
 #endif
 
 unsigned int av_xiphlacing(unsigned char *s, unsigned int v)
 {
-    unsigned int n = 0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	unsigned int n = 0;
 
-    while(v >= 0xff) {
-        *s++ = 0xff;
-        v -= 0xff;
-        n++;
-    }
-    *s = v;
-    n++;
-    return n;
+	while(v >= 0xff) 
+	{
+		*s++ = 0xff;
+		v -= 0xff;
+		n++;
+	}
+	*s = v;
+	n++;
+	return n;
 }
 
 #if LIBAVCODEC_VERSION_MAJOR < 53
@@ -1194,23 +1576,65 @@ unsigned int av_xiphlacing(unsigned char *s, unsigned int v)
 
 int av_parse_video_frame_size(int *width_ptr, int *height_ptr, const char *str)
 {
-    return av_parse_video_size(width_ptr, height_ptr, str);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+    	return av_parse_video_size(width_ptr, height_ptr, str);
 }
 
 int av_parse_video_frame_rate(AVRational *frame_rate, const char *arg)
 {
-    return av_parse_video_rate(frame_rate, arg);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+    	return av_parse_video_rate(frame_rate, arg);
 }
 #endif
 
-int ff_match_2uint16(const uint16_t (*tab)[2], int size, int a, int b){
-    int i;
-    for(i=0; i<size && !(tab[i][0]==a && tab[i][1]==b); i++);
-    return i;
+int ff_match_2uint16(const uint16_t (*tab)[2], int size, int a, int b)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int i;
+	for(i=0; i<size && !(tab[i][0]==a && tab[i][1]==b); i++);
+
+	return i;
 }
 
 void av_log_missing_feature(void *avc, const char *feature, int want_sample)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
     av_log(avc, AV_LOG_WARNING, "%s not implemented. Update your FFmpeg "
             "version to the newest one from Git. If the problem still "
             "occurs, it means that your file has a feature which has not "
@@ -1223,6 +1647,16 @@ void av_log_missing_feature(void *avc, const char *feature, int want_sample)
 
 void av_log_ask_for_sample(void *avc, const char *msg)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
     if (msg)
         av_log(avc, AV_LOG_WARNING, "%s ", msg);
     av_log(avc, AV_LOG_WARNING, "If you want to help, upload a sample "
@@ -1234,50 +1668,102 @@ static AVHWAccel *first_hwaccel = NULL; /* 保存硬件加速的所有数据结构的链表，见a
 
 void av_register_hwaccel(AVHWAccel *hwaccel)
 {
-    AVHWAccel **p = &first_hwaccel;
-    while (*p)
-        p = &(*p)->next;
-    *p = hwaccel;
-    hwaccel->next = NULL;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	AVHWAccel **p = &first_hwaccel;
+	while (*p)
+		p = &(*p)->next;
+	*p = hwaccel;
+	hwaccel->next = NULL;
 }
 
 AVHWAccel *av_hwaccel_next(AVHWAccel *hwaccel)
 {
-    return hwaccel ? hwaccel->next : first_hwaccel;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+    	return hwaccel ? hwaccel->next : first_hwaccel;
 }
 
 AVHWAccel *ff_find_hwaccel(enum CodecID codec_id, enum PixelFormat pix_fmt)
 {
-    AVHWAccel *hwaccel=NULL;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	AVHWAccel *hwaccel=NULL;
 
-    while((hwaccel= av_hwaccel_next(hwaccel))){
-        if (   hwaccel->id      == codec_id
-            && hwaccel->pix_fmt == pix_fmt)
-            return hwaccel;
-    }
-    return NULL;
+	while((hwaccel= av_hwaccel_next(hwaccel)))
+	{
+		if ( hwaccel->id      == codec_id  && hwaccel->pix_fmt == pix_fmt)
+			return hwaccel;
+	}
+	return NULL;
 }
 
 int av_lockmgr_register(int (*cb)(void **mutex, enum AVLockOp op))
 {
-    if (ff_lockmgr_cb) {
-        if (ff_lockmgr_cb(&codec_mutex, AV_LOCK_DESTROY))
-            return -1;
-    }
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (ff_lockmgr_cb) 
+	{
+		if (ff_lockmgr_cb(&codec_mutex, AV_LOCK_DESTROY))
+			return -1;
+	}
 
-    ff_lockmgr_cb = cb;
+	ff_lockmgr_cb = cb;
 
-    if (ff_lockmgr_cb) {
-        if (ff_lockmgr_cb(&codec_mutex, AV_LOCK_CREATE))
-            return -1;
-    }
-    return 0;
+	if (ff_lockmgr_cb)
+	{
+		if (ff_lockmgr_cb(&codec_mutex, AV_LOCK_CREATE))
+			return -1;
+	}
+	return 0;
 }
 
 unsigned int ff_toupper4(unsigned int x)
 {
-    return     toupper( x     &0xFF)
-            + (toupper((x>>8 )&0xFF)<<8 )
-            + (toupper((x>>16)&0xFF)<<16)
-            + (toupper((x>>24)&0xFF)<<24);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	return     toupper( x     &0xFF)
+			+ (toupper((x>>8 )&0xFF)<<8 )
+			+ (toupper((x>>16)&0xFF)<<16)
+			+ (toupper((x>>24)&0xFF)<<24);
 }

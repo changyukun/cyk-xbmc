@@ -2213,7 +2213,14 @@ typedef struct AVCodecContext {
      * - encoding: Set by libavcodec, user can override.
      * - decoding: Set by libavcodec, user can override.
      */
-    int (*execute)(struct AVCodecContext *c, int (*func)(struct AVCodecContext *c2, void *arg), void *arg2, int *ret, int count, int size); /* 见函数avcodec_get_context_defaults2  中对其赋值，等于 avcodec_default_execute*/
+
+    /* 
+    	见函数avcodec_thread_init  的说明，此函数被调用一次，就会间接启动所有解
+    	码线程都执行一次循环，每个线程在这一次循环内部都会调用func  函数
+    	完成一次func  的功能操作。
+    	见函数avcodec_get_context_defaults2  中对其赋值，等于 avcodec_default_execute
+    */
+    int (*execute)(struct AVCodecContext *c, int (*func)(struct AVCodecContext *c2, void *arg), void *arg2, int *ret, int count, int size); 
 
     /**
      * thread opaque
@@ -2743,7 +2750,14 @@ typedef struct AVCodecContext {
      * - encoding: Set by libavcodec, user can override.
      * - decoding: Set by libavcodec, user can override.
      */
-    int (*execute2)(struct AVCodecContext *c, int (*func)(struct AVCodecContext *c2, void *arg, int jobnr, int threadnr), void *arg2, int *ret, int count); /* 见函数avcodec_get_context_defaults2  中对其赋值，等于 avcodec_default_execute2*/
+
+    /* 
+    	见函数avcodec_thread_init  的说明，此函数被调用一次，就会间接启动所有解
+    	码线程都执行一次循环，每个线程在这一次循环内部都会调用func  函数
+    	完成一次func  的功能操作。
+    	见函数avcodec_get_context_defaults2  中对其赋值，等于 avcodec_default_execute2
+    */
+    int (*execute2)(struct AVCodecContext *c, int (*func)(struct AVCodecContext *c2, void *arg, int jobnr, int threadnr), void *arg2, int *ret, int count); 
 
     /**
      * explicit P-frame weighted prediction analysis method
