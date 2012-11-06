@@ -450,111 +450,154 @@ void avcodec_get_frame_defaults(AVFrame *pic){
     pic->key_frame= 1;
 }
 
-AVFrame *avcodec_alloc_frame(void){
-    AVFrame *pic= av_malloc(sizeof(AVFrame));
+AVFrame *avcodec_alloc_frame(void)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、分配一个AVFrame  的内存空间，并对其进行初始化
+*/
+	AVFrame *pic= av_malloc(sizeof(AVFrame));
 
-    if(pic==NULL) return NULL;
+	if(pic==NULL) 
+		return NULL;
 
-    avcodec_get_frame_defaults(pic);
+	avcodec_get_frame_defaults(pic);
 
-    return pic;
+	return pic;
 }
 
 int attribute_align_arg avcodec_open(AVCodecContext *avctx, AVCodec *codec)
 {
-    int ret= -1;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int ret= -1;
 
-    /* If there is a user-supplied mutex locking routine, call it. */
-    if (ff_lockmgr_cb) {
-        if ((*ff_lockmgr_cb)(&codec_mutex, AV_LOCK_OBTAIN))
-            return -1;
-    }
+	/* If there is a user-supplied mutex locking routine, call it. */
+	if (ff_lockmgr_cb) 
+	{
+		if ((*ff_lockmgr_cb)(&codec_mutex, AV_LOCK_OBTAIN))
+			return -1;
+	}
 
-    entangled_thread_counter++;
-    if(entangled_thread_counter != 1){
-        av_log(avctx, AV_LOG_ERROR, "insufficient thread locking around avcodec_open/close()\n");
-        goto end;
-    }
+	entangled_thread_counter++;
+	if(entangled_thread_counter != 1)
+	{
+		av_log(avctx, AV_LOG_ERROR, "insufficient thread locking around avcodec_open/close()\n");
+		goto end;
+	}
 
-    if(avctx->codec || !codec)
-        goto end;
+	if(avctx->codec || !codec)
+		goto end;
 
-    if (codec->priv_data_size > 0) {
-      if(!avctx->priv_data){
-        avctx->priv_data = av_mallocz(codec->priv_data_size);
-        if (!avctx->priv_data) {
-            ret = AVERROR(ENOMEM);
-            goto end;
-        }
-        if(codec->priv_class){ //this can be droped once all user apps use   avcodec_get_context_defaults3()
-            *(AVClass**)avctx->priv_data= codec->priv_class;
-            av_opt_set_defaults(avctx->priv_data);
-        }
-      }
-    } else {
-        avctx->priv_data = NULL;
-    }
+	if (codec->priv_data_size > 0) 
+	{
+		if(!avctx->priv_data)
+		{
+			avctx->priv_data = av_mallocz(codec->priv_data_size);
+			if (!avctx->priv_data)
+			{
+				ret = AVERROR(ENOMEM);
+				goto end;
+			}
+			
+			if(codec->priv_class)
+			{ //this can be droped once all user apps use   avcodec_get_context_defaults3()
+				*(AVClass**)avctx->priv_data= codec->priv_class;
+				av_opt_set_defaults(avctx->priv_data);
+			}
+		}
+	}
+	else 
+	{
+		avctx->priv_data = NULL;
+	}
 
-    if(avctx->coded_width && avctx->coded_height)
-        avcodec_set_dimensions(avctx, avctx->coded_width, avctx->coded_height);
-    else if(avctx->width && avctx->height)
-        avcodec_set_dimensions(avctx, avctx->width, avctx->height);
+	if(avctx->coded_width && avctx->coded_height)
+		avcodec_set_dimensions(avctx, avctx->coded_width, avctx->coded_height);
+	else if(avctx->width && avctx->height)
+		avcodec_set_dimensions(avctx, avctx->width, avctx->height);
 
-    if ((avctx->coded_width || avctx->coded_height || avctx->width || avctx->height)
-        && (  av_image_check_size(avctx->coded_width, avctx->coded_height, 0, avctx) < 0
-           || av_image_check_size(avctx->width,       avctx->height,       0, avctx) < 0)) {
-        av_log(avctx, AV_LOG_WARNING, "ignoring invalid width/height values\n");
-        avcodec_set_dimensions(avctx, 0, 0);
-    }
+	if ((avctx->coded_width || avctx->coded_height || avctx->width || avctx->height)
+						&& (  av_image_check_size(avctx->coded_width, avctx->coded_height, 0, avctx) < 0
+						|| av_image_check_size(avctx->width,       avctx->height,       0, avctx) < 0)) 
+	{
+		av_log(avctx, AV_LOG_WARNING, "ignoring invalid width/height values\n");
+		avcodec_set_dimensions(avctx, 0, 0);
+	}
 
-    /* if the decoder init function was already called previously,
-       free the already allocated subtitle_header before overwriting it */
-    if (codec->decode)
-        av_freep(&avctx->subtitle_header);
+	/* if the decoder init function was already called previously,
+	free the already allocated subtitle_header before overwriting it */
+	if (codec->decode)
+		av_freep(&avctx->subtitle_header);
 
 #define SANE_NB_CHANNELS 128U
-    if (avctx->channels > SANE_NB_CHANNELS) {
-        ret = AVERROR(EINVAL);
-        goto free_and_end;
-    }
+	if (avctx->channels > SANE_NB_CHANNELS)
+	{
+		ret = AVERROR(EINVAL);
+		goto free_and_end;
+	}
 
-    avctx->codec = codec;
-    if ((avctx->codec_type == AVMEDIA_TYPE_UNKNOWN || avctx->codec_type == codec->type) &&
-        avctx->codec_id == CODEC_ID_NONE) {
-        avctx->codec_type = codec->type;
-        avctx->codec_id   = codec->id;
-    }
-    if (avctx->codec_id != codec->id || (avctx->codec_type != codec->type
-                           && avctx->codec_type != AVMEDIA_TYPE_ATTACHMENT)) {
-        av_log(avctx, AV_LOG_ERROR, "codec type or id mismatches\n");
-        goto free_and_end;
-    }
-    avctx->frame_number = 0;
-    if (avctx->codec->max_lowres < avctx->lowres) {
-        av_log(avctx, AV_LOG_ERROR, "The maximum value for lowres supported by the decoder is %d\n",
-               avctx->codec->max_lowres);
-        goto free_and_end;
-    }
+	avctx->codec = codec;
+	if ((avctx->codec_type == AVMEDIA_TYPE_UNKNOWN || avctx->codec_type == codec->type) && avctx->codec_id == CODEC_ID_NONE) 
+	{
+		avctx->codec_type = codec->type;
+		avctx->codec_id   = codec->id;
+	}
+	
+	if (avctx->codec_id != codec->id || (avctx->codec_type != codec->type && avctx->codec_type != AVMEDIA_TYPE_ATTACHMENT)) 
+	{
+		av_log(avctx, AV_LOG_ERROR, "codec type or id mismatches\n");
+		goto free_and_end;
+	}
+	
+	avctx->frame_number = 0;
+	if (avctx->codec->max_lowres < avctx->lowres) 
+	{
+		av_log(avctx, AV_LOG_ERROR, "The maximum value for lowres supported by the decoder is %d\n",
+		avctx->codec->max_lowres);
+		goto free_and_end;
+	}
 
-    if(avctx->codec->init){
-        ret = avctx->codec->init(avctx);
-        if (ret < 0) {
-            goto free_and_end;
-        }
-    }
-    ret=0;
+	if(avctx->codec->init)
+	{
+		ret = avctx->codec->init(avctx);
+		if (ret < 0) 
+		{
+			goto free_and_end;
+		}
+	}
+	
+	ret=0;
+	
 end:
-    entangled_thread_counter--;
+	entangled_thread_counter--;
 
-    /* Release any user-supplied mutex. */
-    if (ff_lockmgr_cb) {
-        (*ff_lockmgr_cb)(&codec_mutex, AV_LOCK_RELEASE);
-    }
-    return ret;
+	/* Release any user-supplied mutex. */
+	if (ff_lockmgr_cb)
+	{
+		(*ff_lockmgr_cb)(&codec_mutex, AV_LOCK_RELEASE);
+	}
+	
+	return ret;
+	
 free_and_end:
-    av_freep(&avctx->priv_data);
-    avctx->codec= NULL;
-    goto end;
+	av_freep(&avctx->priv_data);
+	avctx->codec= NULL;
+	goto end;
 }
 
 int attribute_align_arg avcodec_encode_audio(AVCodecContext *avctx, uint8_t *buf, int buf_size,
@@ -807,14 +850,25 @@ AVCodec *avcodec_find_encoder_by_name(const char *name)
 
 AVCodec *avcodec_find_decoder(enum CodecID id)
 {
-    AVCodec *p;
-    p = first_avcodec;
-    while (p) {
-        if (p->decode != NULL && p->id == id)
-            return p;
-        p = p->next;
-    }
-    return NULL;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、实质就是在链表中查找匹配的
+*/
+	AVCodec *p;
+	p = first_avcodec;
+	while (p) 
+	{
+		if (p->decode != NULL && p->id == id)
+			return p;
+		p = p->next;
+	}
+	return NULL;
 }
 
 AVCodec *avcodec_find_decoder_by_name(const char *name)

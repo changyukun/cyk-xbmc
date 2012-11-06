@@ -198,7 +198,8 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 	m_dllAvFilter.avfilter_register_all(); /* 注册所有的视频filter */
 
 	m_bSoftware     = hints.software;
-	m_pCodecContext = m_dllAvCodec.avcodec_alloc_context();
+	
+	m_pCodecContext = m_dllAvCodec.avcodec_alloc_context(); /* 见ffmpeg/libavcodec/option.c  文件中定义*/
 
 	pCodec = NULL;
 
@@ -223,7 +224,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 	{
 		while((pCodec = m_dllAvCodec.av_codec_next(pCodec))) 
 		{
-			if(pCodec->id == hints.codec&& pCodec->capabilities & CODEC_CAP_HWACCEL_VDPAU)
+			if(pCodec->id == hints.codec && pCodec->capabilities & CODEC_CAP_HWACCEL_VDPAU) /* 支持硬解*/
 			{
 				if ((pCodec->id == CODEC_ID_MPEG4) && !g_advancedSettings.m_videoAllowMpeg4VDPAU)
 					continue;
@@ -252,7 +253,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 	if(pCodec == NULL)
 		pCodec = m_dllAvCodec.avcodec_find_decoder(hints.codec); /* 在ffmpeg  注册的所有解码器数据结构中查找相匹配的那个*/
 
-	if(pCodec == NULL)
+	if(pCodec == NULL)/* 没找到对应的解码器*/
 	{
 		CLog::Log(LOGDEBUG,"CDVDVideoCodecFFmpeg::Open() Unable to find codec %d", hints.codec);
 		return false;
@@ -274,7 +275,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 #else
 	if (pCodec->id != CODEC_ID_H264 && pCodec->capabilities & CODEC_CAP_DR1
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(52,69,0)
-	&& pCodec->id != CODEC_ID_VP8
+				&& pCodec->id != CODEC_ID_VP8
 #endif
 	)
 		m_pCodecContext->flags |= CODEC_FLAG_EMU_EDGE;
@@ -320,17 +321,19 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 			初始化并创建对应个数的解码线程
 			linux 系统的见ffmpeg/libavcodec/pthread.c   文件中
 			win32 系统的见ffmpeg/libavcodec/w32thread.c  文件中
+
+			新版本的ffmpeg  修改了此方法，将创建线程的实现放到了open 里面了啊，见新版本ffmpeg  的avcodec_open2 方法
 		*/
 		m_dllAvCodec.avcodec_thread_init(m_pCodecContext, num_threads); 
 	}
 
-	if (m_dllAvCodec.avcodec_open(m_pCodecContext, pCodec) < 0)
+	if (m_dllAvCodec.avcodec_open(m_pCodecContext, pCodec) < 0) /* 见ffmpeg  对此函数的定义*/
 	{
 		CLog::Log(LOGDEBUG,"CDVDVideoCodecFFmpeg::Open() Unable to open codec");
 		return false;
 	}
 
-	m_pFrame = m_dllAvCodec.avcodec_alloc_frame();
+	m_pFrame = m_dllAvCodec.avcodec_alloc_frame(); /* 见ffmpeg  对此函数的定义*/
 	if (!m_pFrame) 
 		return false;
 

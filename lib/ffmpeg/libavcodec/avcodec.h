@@ -1155,7 +1155,7 @@ typedef struct AVCodecContext {
      * information on struct for av_log
      * - set by avcodec_alloc_context
      */
-    const AVClass *av_class;
+    const AVClass *av_class; /* 见函数avcodec_get_context_defaults2  中对其赋值*/
     /**
      * the average bitrate
      * - encoding: Set by user; unused for constant quantizer encoding.
@@ -1518,7 +1518,7 @@ typedef struct AVCodecContext {
      * - encoding: unused
      * - decoding: Set by libavcodec, user can override.
      */
-    int (*get_buffer)(struct AVCodecContext *c, AVFrame *pic);
+    int (*get_buffer)(struct AVCodecContext *c, AVFrame *pic); /* 见函数avcodec_get_context_defaults2  中对其赋值，等于avcodec_default_get_buffer */
 
     /**
      * Called to release buffers which were allocated with get_buffer.
@@ -1527,7 +1527,7 @@ typedef struct AVCodecContext {
      * - encoding: unused
      * - decoding: Set by libavcodec, user can override.
      */
-    void (*release_buffer)(struct AVCodecContext *c, AVFrame *pic);
+    void (*release_buffer)(struct AVCodecContext *c, AVFrame *pic); /* 见函数avcodec_get_context_defaults2  中对其赋值，等于avcodec_default_release_buffer */
 
     /**
      * Size of the frame reordering buffer in the decoder.
@@ -1951,7 +1951,8 @@ typedef struct AVCodecContext {
      * - encoding: unused
      * - decoding: Set by user, if not set the native format will be chosen.
      */
-    enum PixelFormat (*get_format)(struct AVCodecContext *s, const enum PixelFormat * fmt);
+    enum PixelFormat (*get_format)(struct AVCodecContext *s, const enum PixelFormat * fmt); /* 见函数avcodec_get_context_defaults2  中对其赋默认值avcodec_default_get_format，而
+    																					真正的值是在CDVDVideoCodecFFmpeg::Open  方法中赋的值为CDVDVideoCodecFFmpeg::GetFormat*/
 
     /**
      * DTG active format information (additional aspect ratio
@@ -2148,7 +2149,7 @@ typedef struct AVCodecContext {
      * - encoding: unused
      * - decoding: Set by libavcodec, user can override.
      */
-    int (*reget_buffer)(struct AVCodecContext *c, AVFrame *pic);
+    int (*reget_buffer)(struct AVCodecContext *c, AVFrame *pic); /* 见函数avcodec_get_context_defaults2  中对其赋值，等于 avcodec_default_reget_buffer*/
 
     /**
      * Number of bits which should be loaded into the rc buffer before decoding starts.
@@ -2212,7 +2213,7 @@ typedef struct AVCodecContext {
      * - encoding: Set by libavcodec, user can override.
      * - decoding: Set by libavcodec, user can override.
      */
-    int (*execute)(struct AVCodecContext *c, int (*func)(struct AVCodecContext *c2, void *arg), void *arg2, int *ret, int count, int size);
+    int (*execute)(struct AVCodecContext *c, int (*func)(struct AVCodecContext *c2, void *arg), void *arg2, int *ret, int count, int size); /* 见函数avcodec_get_context_defaults2  中对其赋值，等于 avcodec_default_execute*/
 
     /**
      * thread opaque
@@ -2742,7 +2743,7 @@ typedef struct AVCodecContext {
      * - encoding: Set by libavcodec, user can override.
      * - decoding: Set by libavcodec, user can override.
      */
-    int (*execute2)(struct AVCodecContext *c, int (*func)(struct AVCodecContext *c2, void *arg, int jobnr, int threadnr), void *arg2, int *ret, int count);
+    int (*execute2)(struct AVCodecContext *c, int (*func)(struct AVCodecContext *c2, void *arg, int jobnr, int threadnr), void *arg2, int *ret, int count); /* 见函数avcodec_get_context_defaults2  中对其赋值，等于 avcodec_default_execute2*/
 
     /**
      * explicit P-frame weighted prediction analysis method
@@ -2862,6 +2863,8 @@ typedef struct AVProfile {
 /**
  * AVCodec.
  */
+
+/* 解码器数据结构的定义，就是各种类型码流解码定义 的那个数据结构*/
 typedef struct AVCodec {
     /**
      * Name of the codec implementation.

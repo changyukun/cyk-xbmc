@@ -443,82 +443,146 @@ static const AVOption options[]={
 
 static const AVClass av_codec_context_class = { "AVCodecContext", context_to_name, options, LIBAVUTIL_VERSION_INT, OFFSET(log_level_offset) };
 
-void avcodec_get_context_defaults2(AVCodecContext *s, enum AVMediaType codec_type){
-    int flags=0;
-    memset(s, 0, sizeof(AVCodecContext));
+void avcodec_get_context_defaults2(AVCodecContext *s, enum AVMediaType codec_type)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、分配一个AVCodecContext  类型的内存
+*/
+	int flags=0;
+	memset(s, 0, sizeof(AVCodecContext));
 
-    s->av_class= &av_codec_context_class;
+	s->av_class= &av_codec_context_class;
 
-    s->codec_type = codec_type;
-    if(codec_type == AVMEDIA_TYPE_AUDIO)
-        flags= AV_OPT_FLAG_AUDIO_PARAM;
-    else if(codec_type == AVMEDIA_TYPE_VIDEO)
-        flags= AV_OPT_FLAG_VIDEO_PARAM;
-    else if(codec_type == AVMEDIA_TYPE_SUBTITLE)
-        flags= AV_OPT_FLAG_SUBTITLE_PARAM;
-    av_opt_set_defaults2(s, flags, flags);
+	s->codec_type = codec_type;
+	if(codec_type == AVMEDIA_TYPE_AUDIO)
+		flags= AV_OPT_FLAG_AUDIO_PARAM;
+	else if(codec_type == AVMEDIA_TYPE_VIDEO)
+		flags= AV_OPT_FLAG_VIDEO_PARAM;
+	else if(codec_type == AVMEDIA_TYPE_SUBTITLE)
+		flags= AV_OPT_FLAG_SUBTITLE_PARAM;
+	
+	av_opt_set_defaults2(s, flags, flags);
 
-    s->time_base= (AVRational){0,1};
-    s->get_buffer= avcodec_default_get_buffer;
-    s->release_buffer= avcodec_default_release_buffer;
-    s->get_format= avcodec_default_get_format;
-    s->execute= avcodec_default_execute;
-    s->execute2= avcodec_default_execute2;
-    s->sample_aspect_ratio= (AVRational){0,1};
-    s->pix_fmt= PIX_FMT_NONE;
-    s->sample_fmt= AV_SAMPLE_FMT_NONE;
+	s->time_base= (AVRational){0,1};
+	s->get_buffer= avcodec_default_get_buffer;
+	s->release_buffer= avcodec_default_release_buffer;
+	s->get_format= avcodec_default_get_format;
+	s->execute= avcodec_default_execute;
+	s->execute2= avcodec_default_execute2;
+	s->sample_aspect_ratio= (AVRational){0,1};
+	s->pix_fmt= PIX_FMT_NONE;
+	s->sample_fmt= AV_SAMPLE_FMT_NONE;
 
-    s->palctrl = NULL;
-    s->reget_buffer= avcodec_default_reget_buffer;
-    s->reordered_opaque= AV_NOPTS_VALUE;
+	s->palctrl = NULL;
+	s->reget_buffer= avcodec_default_reget_buffer;
+	s->reordered_opaque= AV_NOPTS_VALUE;
 }
 
-int avcodec_get_context_defaults3(AVCodecContext *s, AVCodec *codec){
-    avcodec_get_context_defaults2(s, codec ? codec->type : AVMEDIA_TYPE_UNKNOWN);
-    if(codec && codec->priv_data_size){
-        if(!s->priv_data){
-            s->priv_data= av_mallocz(codec->priv_data_size);
-            if (!s->priv_data) {
-                return AVERROR(ENOMEM);
-            }
-        }
-        if(codec->priv_class){
-            *(AVClass**)s->priv_data= codec->priv_class;
-            av_opt_set_defaults(s->priv_data);
-        }
-    }
-    return 0;
+int avcodec_get_context_defaults3(AVCodecContext *s, AVCodec *codec)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	avcodec_get_context_defaults2(s, codec ? codec->type : AVMEDIA_TYPE_UNKNOWN);
+	if(codec && codec->priv_data_size)
+	{
+		if(!s->priv_data)
+		{
+			s->priv_data= av_mallocz(codec->priv_data_size);
+			if (!s->priv_data) 
+			{
+				return AVERROR(ENOMEM);
+			}
+		}
+		
+		if(codec->priv_class)
+		{
+			*(AVClass**)s->priv_data= codec->priv_class;
+			av_opt_set_defaults(s->priv_data);
+		}
+	}
+	return 0;
 }
 
-AVCodecContext *avcodec_alloc_context3(AVCodec *codec){
-    AVCodecContext *avctx= av_malloc(sizeof(AVCodecContext));
+AVCodecContext *avcodec_alloc_context3(AVCodec *codec)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	AVCodecContext *avctx= av_malloc(sizeof(AVCodecContext));
 
-    if(avctx==NULL) return NULL;
+	if(avctx==NULL)
+		return NULL;
 
-    if(avcodec_get_context_defaults3(avctx, codec) < 0){
-        av_free(avctx);
-        return NULL;
-    }
+	if(avcodec_get_context_defaults3(avctx, codec) < 0)
+	{
+		av_free(avctx);
+		return NULL;
+	}
 
-    return avctx;
+	return avctx;
 }
 
-AVCodecContext *avcodec_alloc_context2(enum AVMediaType codec_type){
-    AVCodecContext *avctx= av_malloc(sizeof(AVCodecContext));
+AVCodecContext *avcodec_alloc_context2(enum AVMediaType codec_type)
+{
+/*
+	参数:
+		1、codec_type	: 传入一个解码的类型
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	AVCodecContext *avctx= av_malloc(sizeof(AVCodecContext)); /* 分配内存*/
 
-    if(avctx==NULL) return NULL;
+	if(avctx==NULL) 
+		return NULL;
 
-    avcodec_get_context_defaults2(avctx, codec_type);
+	avcodec_get_context_defaults2(avctx, codec_type); /* 获取默认值填充AVCodecContext   内存*/
 
-    return avctx;
+	return avctx;
 }
 
 void avcodec_get_context_defaults(AVCodecContext *s){
     avcodec_get_context_defaults2(s, AVMEDIA_TYPE_UNKNOWN);
 }
 
-AVCodecContext *avcodec_alloc_context(void){
-    return avcodec_alloc_context2(AVMEDIA_TYPE_UNKNOWN);
+AVCodecContext *avcodec_alloc_context(void)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、分配一个AVCodecContext  类型的内存
+*/
+    	return avcodec_alloc_context2(AVMEDIA_TYPE_UNKNOWN); /* 解码类型为unknown  的*/
 }
 
 int avcodec_copy_context(AVCodecContext *dest, const AVCodecContext *src)
