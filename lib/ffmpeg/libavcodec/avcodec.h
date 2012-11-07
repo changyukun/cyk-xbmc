@@ -1055,7 +1055,10 @@ typedef struct AVPanScan{
 #define FF_BUFFER_HINTS_PRESERVE 0x04 // User must not alter buffer content.
 #define FF_BUFFER_HINTS_REUSABLE 0x08 // Codec will reuse the buffer (update).
 
-typedef struct AVPacket {
+
+/* 视频包数据结构*/
+typedef struct AVPacket 
+{
     /**
      * Presentation timestamp in AVStream->time_base units; the time at which
      * the decompressed packet will be presented to the user.
@@ -1065,15 +1068,15 @@ typedef struct AVPacket {
      * the terms dts and pts/cts to mean something different. Such timestamps
      * must be converted to true pts/dts before they are stored in AVPacket.
      */
-    int64_t pts;
+    int64_t pts; /* 包对应的pts  时间*/
     /**
      * Decompression timestamp in AVStream->time_base units; the time at which
      * the packet is decompressed.
      * Can be AV_NOPTS_VALUE if it is not stored in the file.
      */
-    int64_t dts;
-    uint8_t *data;
-    int   size;
+    int64_t dts; /* 包对应的dts  时间*/
+    uint8_t *data; /* 指向存放视频包的数据的buffer */
+    int   size; /* 存放视频包数据buffer  的长度*/
     int   stream_index;
     int   flags;
     /**
@@ -2214,12 +2217,34 @@ typedef struct AVCodecContext {
      * - decoding: Set by libavcodec, user can override.
      */
 
-    /* 
-    	见函数avcodec_thread_init  的说明，此函数被调用一次，就会间接启动所有解
-    	码线程都执行一次循环，每个线程在这一次循环内部都会调用func  函数
-    	完成一次func  的功能操作。
-    	见函数avcodec_get_context_defaults2  中对其赋值，等于 avcodec_default_execute
-    */
+/* 
+	见函数avcodec_thread_init  的说明，此函数被调用一次，就会间接启动所有解
+	码线程都执行一次循环，每个线程在这一次循环内部都会调用func  函数
+	完成一次func  的功能操作。
+	见函数avcodec_get_context_defaults2  中对其赋值，等于 avcodec_default_execute
+
+	此函数被调用的一条通路如
+
+	= 1=>  	CDVDPlayer::Process()					dvdplayer 线程	:  读取数据包、分析数据包处理
+	= 2=>  	CDVDPlayer::ProcessPacket()			dvdplayer 线程	:  接收到数据包进行处理
+	= 3=>  	CDVDPlayer::ProcessVideoData()			dvdplayer 线程	:  区分包的类型( 视频、音频等)  调用视频包处理函数
+	= 4=>  	m_dvdPlayerVideo.SendMessage			dvdplayer 线程	:  发送一个视频包的消息给视频解码器
+	= 5=>  	CDVDPlayerVideo::Process()				video 线程		:  接收到dvdplayer 主线程发送一个视频包的消息
+	= 6=>  	m_pVideoCodec->Decode()				video 线程		:  调用具体解码器的解码方法( 如ffmpeg  解码器)
+	= 7=>  	CDVDVideoCodecFFmpeg::Decode()  		video 线程		:  调用ffmpeg  解码方法 (  通过动态库加载方式调用ffmpeg  )
+	= 8=>  	m_dllAvCodec.avcodec_decode_video2()  	video 线程		:  调用真正的ffmpeg  的内部方法( 视频解码的入口方法)
+	= 9=>   	avcodec_decode_video2()				video 线程		:  调用ffmpeg  视频解码的入口方法
+	=10=>  	avctx->codec->decode()				video 线程		:  调用具体码流类型的解码器函数
+	=11=>  	mpeg_decode_frame()  					video 线程		:  比如调用mpeg  解码函数
+	=12=>  	decode_chunks()  						video 线程		:  mpeg  解码函数内部调用
+	=13=>  	avctx->execute()						video 线程		:  调用到本函数
+	说明:  此函数被调用了，即开始执行func  函数。至于func  函数是在video  线程中还是在thread_func  线程中，
+			需要看具体的execute  被赋予什么样的值
+			1)  	如果execute = avcodec_thread_execute() ，则avcodec_thread_execute()  函数内部通过传递func  参数的方式并启动
+				了thread_func  线程工作，即func  函数是在thread_func  线程中完成的
+			2)	如果execute = avcodec_default_execute()，则avcodec_default_execute()  函数中只是直接的对func  函数的调用，所以
+				func  函数是在线程video  中完成的
+*/
     int (*execute)(struct AVCodecContext *c, int (*func)(struct AVCodecContext *c2, void *arg), void *arg2, int *ret, int count, int size); 
 
     /**
@@ -2751,12 +2776,14 @@ typedef struct AVCodecContext {
      * - decoding: Set by libavcodec, user can override.
      */
 
-    /* 
-    	见函数avcodec_thread_init  的说明，此函数被调用一次，就会间接启动所有解
-    	码线程都执行一次循环，每个线程在这一次循环内部都会调用func  函数
-    	完成一次func  的功能操作。
-    	见函数avcodec_get_context_defaults2  中对其赋值，等于 avcodec_default_execute2
-    */
+/* 
+	参看execute  成员函数的详细说明
+
+	见函数avcodec_thread_init  的说明，此函数被调用一次，就会间接启动所有解
+	码线程都执行一次循环，每个线程在这一次循环内部都会调用func  函数
+	完成一次func  的功能操作。
+	见函数avcodec_get_context_defaults2  中对其赋值，等于 avcodec_default_execute2
+*/
     int (*execute2)(struct AVCodecContext *c, int (*func)(struct AVCodecContext *c2, void *arg, int jobnr, int threadnr), void *arg2, int *ret, int count); 
 
     /**

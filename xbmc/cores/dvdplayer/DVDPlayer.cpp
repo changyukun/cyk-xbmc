@@ -1166,6 +1166,30 @@ bool CDVDPlayer::IsBetterStream(CCurrentStream& current, CDemuxStream* stream)
 	return false;
 }
 
+/* 
+	解码器工作的大致流程如下( 下面是video  的，audio  的于此类似)
+
+	= 1=>  	CDVDPlayer::Process()					dvdplayer 线程	:  读取数据包、分析数据包处理
+	= 2=>  	CDVDPlayer::ProcessPacket()			dvdplayer 线程	:  接收到数据包进行处理
+	= 3=>  	CDVDPlayer::ProcessVideoData()			dvdplayer 线程	:  区分包的类型( 视频、音频等)  调用视频包处理函数
+	= 4=>  	m_dvdPlayerVideo.SendMessage			dvdplayer 线程	:  发送一个视频包的消息给视频解码器
+	= 5=>  	CDVDPlayerVideo::Process()				video 线程		:  接收到dvdplayer 主线程发送一个视频包的消息
+	= 6=>  	m_pVideoCodec->Decode()				video 线程		:  调用具体解码器的解码方法( 如ffmpeg  解码器)
+	= 7=>  	CDVDVideoCodecFFmpeg::Decode()  		video 线程		:  调用ffmpeg  解码方法 (  通过动态库加载方式调用ffmpeg  )
+	= 8=>  	m_dllAvCodec.avcodec_decode_video2()  	video 线程		:  调用真正的ffmpeg  的内部方法( 视频解码的入口方法)
+	= 9=>   	avcodec_decode_video2()				video 线程		:  调用ffmpeg  视频解码的入口方法
+	=10=>  	avctx->codec->decode()				video 线程		:  调用具体码流类型的解码器函数
+	=11=>  	mpeg_decode_frame()  					video 线程		:  比如调用mpeg  解码函数
+	=12=>  	decode_chunks()  						video 线程		:  mpeg  解码函数内部调用
+	=13=>  	avctx->execute()						video 线程		:  调用到本函数
+	说明:  此函数被调用了，即开始执行func  函数。至于func  函数是在video  线程中还是在thread_func  线程中，
+			需要看具体的execute  被赋予什么样的值
+			1)  	如果execute = avcodec_thread_execute() ，则avcodec_thread_execute()  函数内部通过传递func  参数的方式并启动
+				了thread_func  线程工作，即func  函数是在thread_func  线程中完成的
+			2)	如果execute = avcodec_default_execute()，则avcodec_default_execute()  函数中只是直接的对func  函数的调用，所以
+				func  函数是在线程video  中完成的
+*/
+
 void CDVDPlayer::Process()
 {
 /*

@@ -503,13 +503,16 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 {
 /*
 	参数:
-		1、
+		1、pData	: 传入包的数据
+		2、iSize	: 传入包数据的长度
+		3、dts		: 传入包的dts  值
+		4、pts		: 传入包的pts  值
 		
 	返回:
 		1、
 		
 	说明:
-		1、
+		1、此函数相当于解码一帧的数据
 */
 	int iGotPicture = 0, len = 0;
 
@@ -517,10 +520,10 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 		return VC_ERROR;
 
 	if(pData)
-		m_iLastKeyframe++;
+		m_iLastKeyframe++; /* 对key  帧的数量进行统计*/
 
 	shared_ptr<CSingleLock> lock;
-	if(m_pHardware)
+	if(m_pHardware) /* 是否硬解码*/
 	{
 		CCriticalSection* section = m_pHardware->Section();
 		if(section)
@@ -536,6 +539,10 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 			return result;
 	}
 
+	/* 
+		程序执行到此处应该是走的软解码
+	*/
+
 	if(m_pFilterGraph)
 	{
 		int result = 0;
@@ -548,14 +555,17 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 	m_dts = dts;
 	m_pCodecContext->reordered_opaque = pts_dtoi(pts);
 
-	AVPacket avpkt;
-	m_dllAvCodec.av_init_packet(&avpkt);
+	AVPacket avpkt; /* 定义一个解码数据包的数据结构*/
+	
+	m_dllAvCodec.av_init_packet(&avpkt); /* 初始化视频包*/
+	
 	avpkt.data = pData;
 	avpkt.size = iSize;
 	/* We lie, but this flag is only used by pngdec.c.
 	* Setting it correctly would allow CorePNG decoding. */
 	avpkt.flags = AV_PKT_FLAG_KEY;
-	len = m_dllAvCodec.avcodec_decode_video2(m_pCodecContext, m_pFrame, &iGotPicture, &avpkt);
+	
+	len = m_dllAvCodec.avcodec_decode_video2(m_pCodecContext, m_pFrame, &iGotPicture, &avpkt); /* 进入ffmpeg  解码函数*/
 
 	if(m_iLastKeyframe < m_pCodecContext->has_b_frames + 2)
 		m_iLastKeyframe = m_pCodecContext->has_b_frames + 2;
@@ -572,7 +582,7 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 	if (!iGotPicture)
 		return VC_BUFFER;
 
-	if(m_pFrame->key_frame)
+	if(m_pFrame->key_frame) /* 是否为key 帧*/
 	{
 		m_started = true;
 		m_iLastKeyframe = m_pCodecContext->has_b_frames + 2;
@@ -586,11 +596,9 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 	if(m_pCodecContext->codec_id == CODEC_ID_H264)
 		m_started = true;
 
-	if(m_pCodecContext->pix_fmt != PIX_FMT_YUV420P
-					&& m_pCodecContext->pix_fmt != PIX_FMT_YUVJ420P
-					&& m_pHardware == NULL)
+	if(m_pCodecContext->pix_fmt != PIX_FMT_YUV420P && m_pCodecContext->pix_fmt != PIX_FMT_YUVJ420P && m_pHardware == NULL)
 	{
-		if (!m_dllSwScale.IsLoaded() && !m_dllSwScale.Load())
+		if (!m_dllSwScale.IsLoaded() && !m_dllSwScale.Load()) /* 加载ffmpeg  动态库*/
 			return VC_ERROR;
 
 		if (!m_pConvertFrame)
@@ -599,9 +607,9 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 			m_pConvertFrame = (AVPicture*)m_dllAvUtil.av_mallocz(sizeof(AVPicture));
 			// Due to a bug in swsscale we need to allocate one extra line of data
 			if(m_dllAvCodec.avpicture_alloc( m_pConvertFrame
-			                 , PIX_FMT_YUV420P
-			                 , m_pCodecContext->width
-			                 , m_pCodecContext->height+1) < 0)
+								                 , PIX_FMT_YUV420P
+								                 , m_pCodecContext->width
+								                 , m_pCodecContext->height+1) < 0)
 			{
 				m_dllAvUtil.av_free(m_pConvertFrame);
 				m_pConvertFrame = NULL;
@@ -610,9 +618,16 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 		}
 
 		// convert the picture
-		struct SwsContext *context = m_dllSwScale.sws_getContext(m_pCodecContext->width, m_pCodecContext->height,
-												                     m_pCodecContext->pix_fmt, m_pCodecContext->width, m_pCodecContext->height,
-												                     PIX_FMT_YUV420P, SWS_FAST_BILINEAR | SwScaleCPUFlags(), NULL, NULL, NULL);
+		struct SwsContext *context = m_dllSwScale.sws_getContext(m_pCodecContext->width, 
+															m_pCodecContext->height,
+												                     m_pCodecContext->pix_fmt, 
+												                     m_pCodecContext->width, 
+												                     m_pCodecContext->height,
+												                     PIX_FMT_YUV420P, 
+												                     SWS_FAST_BILINEAR | SwScaleCPUFlags(), 
+												                     NULL, 
+												                     NULL, 
+												                     NULL);
 
 		if(context == NULL)
 		{

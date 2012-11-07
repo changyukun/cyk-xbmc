@@ -242,6 +242,9 @@ private:
  \brief
  */
 
-XBMC_GLOBAL(CGraphicContext,g_graphicsContext);
+/*
+	g_graphicsContext  定义-------------------------------> 此处实现了对g_graphicsContext  的定义
+*/
+XBMC_GLOBAL(CGraphicContext,g_graphicsContext); /* 见此宏*/
 
 #endif

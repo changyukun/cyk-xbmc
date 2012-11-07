@@ -47,6 +47,7 @@ struct DVDVideoPicture;
 
 #define ERRORBUFFSIZE 30
 
+/* xbmc  ‰÷»æ¿‡*/
 class CXBMCRenderManager
 {
 public:

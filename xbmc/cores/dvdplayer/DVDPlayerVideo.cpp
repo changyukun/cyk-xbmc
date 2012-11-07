@@ -268,6 +268,7 @@ bool CDVDPlayerVideo::OpenStream( CDVDStreamInfo &hint )
 		
 		CLog::Log(LOGNOTICE, "Creating video thread");
 		m_messageQueue.Init();
+		
 		Create(); /* changyukun AAA--3--AAA  间接创建启动视频解码器线程，即线程函数CDVDPlayerVideo::Process() */
 	}
 	return true;
@@ -466,8 +467,9 @@ void CDVDPlayerVideo::Process()
 		/*
 			程序执行到此处，已经读取到消息了
 		*/
-		
-		if (pMsg->IsType(CDVDMsg::GENERAL_SYNCHRONIZE)) /* ---->> 同步消息*/
+
+/* ---->> 同步消息*/
+		if (pMsg->IsType(CDVDMsg::GENERAL_SYNCHRONIZE)) 
 		{
 			((CDVDMsgGeneralSynchronize*)pMsg)->Wait( &m_bStop, SYNCSOURCE_VIDEO );
 			
@@ -479,7 +481,8 @@ void CDVDPlayerVideo::Process()
 			m_iNrOfPicturesNotToSkip = 5;
 			continue;
 		}
-		else if (pMsg->IsType(CDVDMsg::GENERAL_RESYNC)) /* ---->> reset 同步消息*/
+/* ---->> reset 同步消息*/
+		else if (pMsg->IsType(CDVDMsg::GENERAL_RESYNC)) 
 		{
 			CDVDMsgGeneralResync* pMsgGeneralResync = (CDVDMsgGeneralResync*)pMsg;
 
@@ -504,7 +507,8 @@ void CDVDPlayerVideo::Process()
 			pMsgGeneralResync->Release();
 			continue;
 		}
-		else if (pMsg->IsType(CDVDMsg::GENERAL_DELAY)) /* ---->> delay 消息*/
+/* ---->> delay 消息*/
+		else if (pMsg->IsType(CDVDMsg::GENERAL_DELAY)) 
 		{
 			if (m_speed != DVD_PLAYSPEED_PAUSE)
 			{
@@ -519,12 +523,14 @@ void CDVDPlayerVideo::Process()
 					Sleep(1);
 			}
 		}
-		else if (pMsg->IsType(CDVDMsg::VIDEO_SET_ASPECT)) /* ---->> aspect 消息*/
+/* ---->> aspect 消息*/
+		else if (pMsg->IsType(CDVDMsg::VIDEO_SET_ASPECT)) 
 		{
 			CLog::Log(LOGDEBUG, "CDVDPlayerVideo - CDVDMsg::VIDEO_SET_ASPECT");
 			m_fForcedAspectRatio = *((CDVDMsgDouble*)pMsg);
 		}
-		else if (pMsg->IsType(CDVDMsg::GENERAL_RESET)) /* ---->> reset 消息*/
+/* ---->> reset 消息*/
+		else if (pMsg->IsType(CDVDMsg::GENERAL_RESET)) 
 		{
 			if(m_pVideoCodec)
 				m_pVideoCodec->Reset();
@@ -532,7 +538,8 @@ void CDVDPlayerVideo::Process()
 			m_packets.clear();
 			m_started = false;
 		}
-		else if (pMsg->IsType(CDVDMsg::GENERAL_FLUSH)) /* ---->> flush 消息*/  // private message sent by (CDVDPlayerVideo::Flush())
+/* ---->> flush 消息*/
+		else if (pMsg->IsType(CDVDMsg::GENERAL_FLUSH))   // private message sent by (CDVDPlayerVideo::Flush())
 		{
 			if(m_pVideoCodec)
 				m_pVideoCodec->Reset();
@@ -547,7 +554,8 @@ void CDVDPlayerVideo::Process()
 			m_stalled = true;
 			m_started = false;
 		}
-		else if (pMsg->IsType(CDVDMsg::VIDEO_NOSKIP)) /* ---->> noskip 消息*/
+/* ---->> noskip 消息*/
+		else if (pMsg->IsType(CDVDMsg::VIDEO_NOSKIP)) 
 		{
 			// libmpeg2 is also returning incomplete frames after a dvd cell change
 			// so the first few pictures are not the correct ones to display in some cases
@@ -555,18 +563,21 @@ void CDVDPlayerVideo::Process()
 			// (setting it to 2 will skip some menu stills, 5 is working ok for me).
 			m_iNrOfPicturesNotToSkip = 5;
 		}
-		else if (pMsg->IsType(CDVDMsg::PLAYER_SETSPEED)) /* ---->> 设定速度消息*/
+/* ---->> 设定速度消息*/
+		else if (pMsg->IsType(CDVDMsg::PLAYER_SETSPEED)) 
 		{
 			m_speed = static_cast<CDVDMsgInt*>(pMsg)->m_value;
 			if(m_speed == DVD_PLAYSPEED_PAUSE)
 				m_iNrOfPicturesNotToSkip = 0;
 		}
-		else if (pMsg->IsType(CDVDMsg::PLAYER_STARTED)) /* ---->> 启动播放消息*/
+/* ---->> 启动播放消息*/
+		else if (pMsg->IsType(CDVDMsg::PLAYER_STARTED)) 
 		{
 			if(m_started)
 				m_messageParent.Put(new CDVDMsgInt(CDVDMsg::PLAYER_STARTED, DVDPLAYER_VIDEO)); /* 向父消息队列发送消息，即CDVDPlayer->m_messenger 消息队列，此消息队列是在CDVDPlayer::HandleMessages() 方法中处理的*/
 		}
-		else if (pMsg->IsType(CDVDMsg::GENERAL_STREAMCHANGE)) /* ---->> 流变化消息*/
+/* ---->> 流变化消息*/
+		else if (pMsg->IsType(CDVDMsg::GENERAL_STREAMCHANGE)) 
 		{
 			CDVDMsgVideoCodecChange* msg(static_cast<CDVDMsgVideoCodecChange*>(pMsg));
 			OpenStream(msg->m_hints, msg->m_codec);
@@ -574,7 +585,16 @@ void CDVDPlayerVideo::Process()
 			picture.iFlags &= ~DVP_FLAG_ALLOCATED;
 		}
 
-		if (pMsg->IsType(CDVDMsg::DEMUXER_PACKET)) /* ---->> 数据包消息*/
+
+		/*
+			程序执行到此处，已经对上面的各种类型的消息进行了处理，此时
+			需要判断一下此消息是否为数据包，如果是进行数据包的处理( 如解码
+			显示等等)，如果不是数据包就直接返回进入下一次循环
+		*/
+
+
+/* ---->> 数据包消息*/
+		if (pMsg->IsType(CDVDMsg::DEMUXER_PACKET)) 
 		{
 			DemuxPacket* pPacket = ((CDVDMsgDemuxerPacket*)pMsg)->GetPacket();
 			bool bPacketDrop     = ((CDVDMsgDemuxerPacket*)pMsg)->GetPacketDrop();
@@ -1261,6 +1281,7 @@ int CDVDPlayerVideo::OutputPicture(const DVDVideoPicture* src, double pts)
 		}
 
 		CLog::Log(LOGDEBUG,"%s - change configuration. %dx%d. framerate: %4.2f. format: %s",__FUNCTION__,pPicture->iWidth, pPicture->iHeight, config_framerate, formatstr.c_str());
+
 		if(!g_renderManager.Configure(pPicture->iWidth, pPicture->iHeight, pPicture->iDisplayWidth, pPicture->iDisplayHeight, config_framerate, flags, pPicture->extended_format))
 		{
 			CLog::Log(LOGERROR, "%s - failed to configure renderer", __FUNCTION__);
