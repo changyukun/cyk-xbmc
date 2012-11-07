@@ -1182,6 +1182,7 @@ bool CDVDPlayer::IsBetterStream(CCurrentStream& current, CDemuxStream* stream)
 	=11=>  	mpeg_decode_frame()  					video 线程		:  比如调用mpeg  解码函数
 	=12=>  	decode_chunks()  						video 线程		:  mpeg  解码函数内部调用
 	=13=>  	avctx->execute()						video 线程		:  调用到本函数
+	
 	说明:  此函数被调用了，即开始执行func  函数。至于func  函数是在video  线程中还是在thread_func  线程中，
 			需要看具体的execute  被赋予什么样的值
 			1)  	如果execute = avcodec_thread_execute() ，则avcodec_thread_execute()  函数内部通过传递func  参数的方式并启动

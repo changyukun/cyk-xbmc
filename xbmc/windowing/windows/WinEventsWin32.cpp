@@ -473,7 +473,7 @@ LRESULT CALLBACK CWinEventsWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 			GWL_HINSTANCE  		得到应用程序运行实例的句柄
 			GWL_HWNDPARENT 	得到父窗口的句柄
 			GWL_ID         			得到窗口的标识符
-			GWL_USERDATA   		得到和窗口相关联的32 位的值（每一个窗口都有一个有意留给创建窗口的应用程序是用的32位的值）
+			GWL_USERDATA   		得到和窗口相关联的32 位的值（每一个窗口都有一个有意留给创建窗口的应用程序时用的32位的值）
 			
 
 		GetWindowLong 使用的例子:

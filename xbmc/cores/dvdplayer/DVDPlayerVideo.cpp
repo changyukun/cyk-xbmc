@@ -142,12 +142,10 @@ public:
 };
 
 
-CDVDPlayerVideo::CDVDPlayerVideo( CDVDClock* pClock
-                                , CDVDOverlayContainer* pOverlayContainer
-                                , CDVDMessageQueue& parent)
-: CThread("CDVDPlayerVideo")
-, m_messageQueue("video")
-, m_messageParent(parent) /* 传入一个父消息队列*/
+CDVDPlayerVideo::CDVDPlayerVideo( CDVDClock* pClock, CDVDOverlayContainer* pOverlayContainer, CDVDMessageQueue& parent)
+							: CThread("CDVDPlayerVideo")
+							, m_messageQueue("video")
+							, m_messageParent(parent) /* 传入一个父消息队列*/
 {
 /*
 	参数:

@@ -3174,6 +3174,7 @@ void CApplication::FrameMove(bool processEvents)
 		
 	说明:
 		1、此函数会在CXBApplicationEx::Run() 中被调用，即在Run()  中被一个死循环内循环调用
+		2、此函数也可能在对话框模态显示的相当于死循环中被调用，见CGUIDialog::DoModal_Internal  ==>  CGUIWindowManager::ProcessRenderLoop
 */
 	MEASURE_FUNCTION;
 
