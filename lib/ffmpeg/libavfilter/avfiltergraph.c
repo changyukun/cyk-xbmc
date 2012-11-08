@@ -29,51 +29,102 @@
 
 AVFilterGraph *avfilter_graph_alloc(void)
 {
-    return av_mallocz(sizeof(AVFilterGraph));
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、实质就是分配一个AVFilterGraph  的内存空间
+*/
+    	return av_mallocz(sizeof(AVFilterGraph));
 }
 
 void avfilter_graph_free(AVFilterGraph *graph)
 {
-    if (!graph)
-        return;
-    for (; graph->filter_count > 0; graph->filter_count --)
-        avfilter_free(graph->filters[graph->filter_count - 1]);
-    av_freep(&graph->scale_sws_opts);
-    av_freep(&graph->filters);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、释放掉传入的数据结构，及其内部指向的各个filter  的内存空间
+*/
+	if (!graph)
+		return;
+	
+	for (; graph->filter_count > 0; graph->filter_count --)
+		avfilter_free(graph->filters[graph->filter_count - 1]);
+	
+	av_freep(&graph->scale_sws_opts);
+	av_freep(&graph->filters);
 }
 
 int avfilter_graph_add_filter(AVFilterGraph *graph, AVFilterContext *filter)
 {
-    AVFilterContext **filters = av_realloc(graph->filters,
-                                           sizeof(AVFilterContext*) * (graph->filter_count+1));
-    if (!filters)
-        return AVERROR(ENOMEM);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、实质就是将传入的滤镜上下文数据结构插入到数据结构graph  的队列中，并更新其队列的计数
+*/
+	AVFilterContext **filters = av_realloc(graph->filters, sizeof(AVFilterContext*) * (graph->filter_count+1));
+	if (!filters)
+		return AVERROR(ENOMEM);
 
-    graph->filters = filters;
-    graph->filters[graph->filter_count++] = filter;
+	graph->filters = filters;
+	graph->filters[graph->filter_count++] = filter;
 
-    return 0;
+	return 0;
 }
 
 int avfilter_graph_create_filter(AVFilterContext **filt_ctx, AVFilter *filt,
-                                 const char *name, const char *args, void *opaque,
-                                 AVFilterGraph *graph_ctx)
+								const char *name, const char *args, void *opaque,
+								AVFilterGraph *graph_ctx)
 {
-    int ret;
+/*
+	参数:
+		1、filt_ctx		: 用于返回的
+		2、filt			: 传入一个filter  指针
+		3、name		: 传入一个名字
+		4、args			: 传入参数( 最后会传递给滤镜filt  的初始化函数)
+		5、opaque		: 传入参数( 最后会传递给滤镜filt  的初始化函数)
+		6、graph_ctx	: 传入一个AVFilterGraph  指针
+		
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int ret;
 
-    if ((ret = avfilter_open(filt_ctx, filt, name)) < 0)
-        goto fail;
-    if ((ret = avfilter_init_filter(*filt_ctx, args, opaque)) < 0)
-        goto fail;
-    if ((ret = avfilter_graph_add_filter(graph_ctx, *filt_ctx)) < 0)
-        goto fail;
-    return 0;
+	if ((ret = avfilter_open(filt_ctx, filt, name)) < 0) /* 见avfilter_open  函数*/
+		goto fail;
+	
+	if ((ret = avfilter_init_filter(*filt_ctx, args, opaque)) < 0) /* 见avfilter_init_filter  函数*/
+		goto fail;
+	
+	if ((ret = avfilter_graph_add_filter(graph_ctx, *filt_ctx)) < 0) /* 见avfilter_graph_add_filter  函数*/
+		goto fail;
+	
+	return 0;
 
 fail:
-    if (*filt_ctx)
-        avfilter_free(*filt_ctx);
-    *filt_ctx = NULL;
-    return ret;
+	if (*filt_ctx)
+		avfilter_free(*filt_ctx);
+	
+	*filt_ctx = NULL;
+	return ret;
 }
 
 int ff_avfilter_graph_check_validity(AVFilterGraph *graph, AVClass *log_ctx)
@@ -228,14 +279,26 @@ int ff_avfilter_graph_config_formats(AVFilterGraph *graph, AVClass *log_ctx)
 
 int avfilter_graph_config(AVFilterGraph *graphctx, AVClass *log_ctx)
 {
-    int ret;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int ret;
 
-    if ((ret = ff_avfilter_graph_check_validity(graphctx, log_ctx)))
-        return ret;
-    if ((ret = ff_avfilter_graph_config_formats(graphctx, log_ctx)))
-        return ret;
-    if ((ret = ff_avfilter_graph_config_links(graphctx, log_ctx)))
-        return ret;
+	if ((ret = ff_avfilter_graph_check_validity(graphctx, log_ctx)))
+		return ret;
+	
+	if ((ret = ff_avfilter_graph_config_formats(graphctx, log_ctx)))
+		return ret;
+	
+	if ((ret = ff_avfilter_graph_config_links(graphctx, log_ctx)))
+		return ret;
 
-    return 0;
+	return 0;
 }

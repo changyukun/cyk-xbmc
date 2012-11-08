@@ -222,7 +222,7 @@ protected:
   bool                 m_bConfigured;
   SVideoBuffer        *m_VideoBuffers[NUM_BUFFERS];
   RenderMethod         m_renderMethod;
-  DXVA::CProcessor     m_processor;
+  DXVA::CProcessor     m_processor; /* ´¦ÀíÆ÷*/
 
   // software scale libraries (fallback if required pixel shaders version is not available)
   DllAvUtil           *m_dllAvUtil;

@@ -47,7 +47,7 @@ struct DVDVideoPicture;
 
 #define ERRORBUFFSIZE 30
 
-/* xbmc  渲染类*/
+/* xbmc  渲染管理类*/
 class CXBMCRenderManager
 {
 public:
@@ -168,12 +168,14 @@ public:
     return 0;
   }
 
+
+
 #ifdef HAS_GL
   CLinuxRendererGL *m_pRenderer;
 #elif HAS_GLES == 2
   CLinuxRendererGLES *m_pRenderer;
 #elif defined(HAS_DX)
-  CWinRenderer *m_pRenderer;
+  CWinRenderer *m_pRenderer; /* 见CXBMCRenderManager::PreInit()  方法中创建的真正的渲染实例的*/
 #elif defined(HAS_SDL)
   CLinuxRenderer *m_pRenderer;
 #endif

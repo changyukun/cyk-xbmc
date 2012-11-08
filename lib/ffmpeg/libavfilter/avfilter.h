@@ -314,13 +314,14 @@ void avfilter_formats_changeref(AVFilterFormats **oldref,
 /**
  * A filter pad used for either input or output.
  */
-struct AVFilterPad {
+struct AVFilterPad 
+{
     /**
      * Pad name. The name is unique among inputs and among outputs, but an
      * input may have the same name as an output. This may be NULL if this
      * pad has no need to ever be referenced by name.
      */
-    const char *name;
+    const char *name; /* 所有的输入pad 名字不能重复，所有的输出pad  名字不能重复*/
 
     /**
      * AVFilterPad type. Only video supported now, hopefully someone will
@@ -355,7 +356,7 @@ struct AVFilterPad {
      *
      * Input video pads only.
      */
-    void (*start_frame)(AVFilterLink *link, AVFilterBufferRef *picref);
+    void (*start_frame)(AVFilterLink *link, AVFilterBufferRef *picref); /* 请求一个buffer来保存输出帧。一个指向此buffer 的引用存储在hook 到滤镜的输出的link的“outpic”成员中。下一个滤镜的start_frame( )  回调会被调用，传入一个此buffer的引用。*/
 
     /**
      * Callback function to get a video buffer. If NULL, the filter system will
@@ -363,7 +364,7 @@ struct AVFilterPad {
      *
      * Input video pads only.
      */
-    AVFilterBufferRef *(*get_video_buffer)(AVFilterLink *link, int perms, int w, int h);
+    AVFilterBufferRef *(*get_video_buffer)(AVFilterLink *link, int perms, int w, int h); /* 返回一个在要求的权限上加一个AV_PERM_READ权限的buffer*/
 
     /**
      * Callback function to get an audio buffer. If NULL, the filter system will
@@ -382,7 +383,7 @@ struct AVFilterPad {
      *
      * Input video pads only.
      */
-    void (*end_frame)(AVFilterLink *link);
+    void (*end_frame)(AVFilterLink *link); /* 调用下一个滤镜的end_frame()回调函数。释放指向输出link的“outpic”成员的引用，如果那成员被设置了（比如说使用了默认的start_frame()方法）。释放输入link的“cur_pic”引用*/
 
     /**
      * Slice drawing callback. This is where a filter receives video data
@@ -390,7 +391,7 @@ struct AVFilterPad {
      *
      * Input video pads only.
      */
-    void (*draw_slice)(AVFilterLink *link, int y, int height, int slice_dir);
+    void (*draw_slice)(AVFilterLink *link, int y, int height, int slice_dir); /* 滤镜中最重要的方法，它实际处理图像 */
 
     /**
      * Samples filtering callback. This is where a filter receives audio data
@@ -418,7 +419,7 @@ struct AVFilterPad {
      *
      * Output video pads only.
      */
-    int (*request_frame)(AVFilterLink *link);
+    int (*request_frame)(AVFilterLink *link); /* 从滤镜链中前一个滤镜那请求一个帧*/
 
     /**
      * Link configuration callback.
@@ -434,7 +435,10 @@ struct AVFilterPad {
      * For both input and output filters, this should return zero on success,
      * and another value on error.
      */
-    int (*config_props)(AVFilterLink *link);
+    int (*config_props)(AVFilterLink *link); /* 	on output pad 		把输出的图像尺寸设置成和输入一样
+										on an input pad   	input  填充的config_props()负责验证是否支持
+														输入pad的属性，也负责更新滤镜的属性上下文。
+									*/
 };
 
 /** default handler for start_frame() for video inputs */
@@ -499,63 +503,102 @@ AVFilterBufferRef *avfilter_null_get_audio_buffer(AVFilterLink *link, int perms,
  * Filter definition. This defines the pads a filter contains, and all the
  * callback functions used to interact with the filter.
  */
-typedef struct AVFilter {
-    const char *name;         ///< filter name
 
-    int priv_size;      ///< size of private data to allocate for the filter
+/*
+	注意三个数据结构的关系
+	
+	1、AVFilter  			滤镜
+	2、AVFilterContext	滤镜上下文
+	3、AVFilterGraph		滤镜图表
 
-    /**
-     * Filter initialization function. Args contains the user-supplied
-     * parameters. FIXME: maybe an AVOption-based system would be better?
-     * opaque is data provided by the code requesting creation of the filter,
-     * and is used to pass data to the filter.
-     */
-    int (*init)(AVFilterContext *ctx, const char *args, void *opaque);
+	相当于由大到小，即包含的关心
 
-    /**
-     * Filter uninitialization function. Should deallocate any memory held
-     * by the filter, release any buffer references, etc. This does not need
-     * to deallocate the AVFilterContext->priv memory itself.
-     */
-    void (*uninit)(AVFilterContext *ctx);
+	3 ==>  2 ==> 1
+*/
 
-    /**
-     * Queries formats supported by the filter and its pads, and sets the
-     * in_formats for links connected to its output pads, and out_formats
-     * for links connected to its input pads.
-     *
-     * @return zero on success, a negative value corresponding to an
-     * AVERROR code otherwise
-     */
-    int (*query_formats)(AVFilterContext *);
+/*  滤镜数据结构*/
+typedef struct AVFilter 
+{
+	const char *name;  /* 滤镜的名字*/       ///< filter name
 
-    const AVFilterPad *inputs;  ///< NULL terminated list of inputs. NULL if none
-    const AVFilterPad *outputs; ///< NULL terminated list of outputs. NULL if none
+	int priv_size;      ///< size of private data to allocate for the filter
 
-    /**
-     * A description for the filter. You should use the
-     * NULL_IF_CONFIG_SMALL() macro to define it.
-     */
-    const char *description;
+	/**
+	* Filter initialization function. Args contains the user-supplied
+	* parameters. FIXME: maybe an AVOption-based system would be better?
+	* opaque is data provided by the code requesting creation of the filter,
+	* and is used to pass data to the filter.
+	*/
+	int (*init)(AVFilterContext *ctx, const char *args, void *opaque); /* 滤镜的初始化函数*/
+
+	/**
+	* Filter uninitialization function. Should deallocate any memory held
+	* by the filter, release any buffer references, etc. This does not need
+	* to deallocate the AVFilterContext->priv memory itself.
+	*/
+	void (*uninit)(AVFilterContext *ctx); /* 滤镜的去初始化函数*/
+
+	/**
+	* Queries formats supported by the filter and its pads, and sets the
+	* in_formats for links connected to its output pads, and out_formats
+	* for links connected to its input pads.
+	*
+	* @return zero on success, a negative value corresponding to an
+	* AVERROR code otherwise
+	*/
+	int (*query_formats)(AVFilterContext *); /* 	方法用于设置可以接受的输入图像格式和输出的图像格式（用于滤镜链分
+											辨哪些滤镜可以组合在一起用）。
+											设置所有面上都支持的格式列表，这样别人就要按照这个列表来。默认包
+											含大多数的YUV和RGB／BGR格式
+										*/
+
+
+	/*
+		两个滤镜就是通过这些输入、输出pad  进行关联的，即相当于上一个
+		滤镜的输出与下一个滤镜的输入相关联，见函数avfilter_link  的说明及作用
+	*/
+	const AVFilterPad *inputs;  	/* 滤镜的输入，是个数组*/						///< NULL terminated list of inputs. NULL if none
+	const AVFilterPad *outputs; /* 滤镜的输出，是个数组*/						///< NULL terminated list of outputs. NULL if none
+
+	/**
+	* A description for the filter. You should use the
+	* NULL_IF_CONFIG_SMALL() macro to define it.
+	*/
+	const char *description;
 } AVFilter;
 
 /** An instance of a filter */
-struct AVFilterContext {
-    const AVClass *av_class;              ///< needed for av_log()
 
-    AVFilter *filter;               ///< the AVFilter of which this is an instance
+/*
+	注意三个数据结构的关系
+	
+	1、AVFilter  			滤镜
+	2、AVFilterContext	滤镜上下文
+	3、AVFilterGraph		滤镜图表
 
-    char *name;                     ///< name of this filter instance
+	相当于由大到小，即包含的关心
 
-    unsigned input_count;           ///< number of input pads
-    AVFilterPad   *input_pads;      ///< array of input pads
-    AVFilterLink **inputs;          ///< array of pointers to input links
+	3 ==>  2 ==> 1
+*/
 
-    unsigned output_count;          ///< number of output pads
-    AVFilterPad   *output_pads;     ///< array of output pads
-    AVFilterLink **outputs;         ///< array of pointers to output links
+/* 滤镜上下文数据结构*/
+struct AVFilterContext 
+{
+	const AVClass *av_class; 	/* 见函数avfilter_open  中对其进行赋值，默认赋值为全局变量avfilter_class*/          ///< needed for av_log()
 
-    void *priv;                     ///< private data for use by the filter
+	AVFilter *filter; /* 指向具体的filter */          ///< the AVFilter of which this is an instance
+
+	char *name;      /* 此filter  实例上下文的名字*/                ///< name of this filter instance
+
+	unsigned input_count;           ///< number of input pads
+	AVFilterPad   *input_pads;      ///< array of input pads
+	AVFilterLink **inputs;      /* 指向一个滤镜链数据结构，用于将上级滤镜与下级滤镜进行连接的*/   				 ///< array of pointers to input links
+
+	unsigned output_count;          ///< number of output pads
+	AVFilterPad   *output_pads;     ///< array of output pads
+	AVFilterLink **outputs;    /* 指向一个滤镜链数据结构，用于将上级滤镜与下级滤镜进行连接的*/     ///< array of pointers to output links
+
+	void *priv;                     ///< private data for use by the filter
 };
 
 /**
@@ -565,59 +608,63 @@ struct AVFilterContext {
  * which have been negotiated and agreed upon between the filter, such as
  * image dimensions, format, etc.
  */
-struct AVFilterLink {
-    AVFilterContext *src;       ///< source filter
-    AVFilterPad *srcpad;        ///< output pad on the source filter
 
-    AVFilterContext *dst;       ///< dest filter
-    AVFilterPad *dstpad;        ///< input pad on the dest filter
+/* 滤镜链数据结构*/
+struct AVFilterLink 
+{
+	AVFilterContext *src;       ///< source filter
+	AVFilterPad *srcpad;        ///< output pad on the source filter
 
-    /** stage of the initialization of the link properties (dimensions, etc) */
-    enum {
-        AVLINK_UNINIT = 0,      ///< not started
-        AVLINK_STARTINIT,       ///< started, but incomplete
-        AVLINK_INIT             ///< complete
-    } init_state;
+	AVFilterContext *dst;       ///< dest filter
+	AVFilterPad *dstpad;        ///< input pad on the dest filter
 
-    enum AVMediaType type;      ///< filter media type
+	/** stage of the initialization of the link properties (dimensions, etc) */
+	enum
+	{
+		AVLINK_UNINIT = 0,      ///< not started
+		AVLINK_STARTINIT,       ///< started, but incomplete
+		AVLINK_INIT             ///< complete
+	} init_state;
 
-    /* These two parameters apply only to video */
-    int w;                      ///< agreed upon image width
-    int h;                      ///< agreed upon image height
-    /* These two parameters apply only to audio */
-    int64_t channel_layout;     ///< channel layout of current buffer (see libavcore/audioconvert.h)
-    int64_t sample_rate;        ///< samples per second
+	enum AVMediaType type;      ///< filter media type
 
-    int format;                 ///< agreed upon media format
+	/* These two parameters apply only to video */
+	int w;                      ///< agreed upon image width
+	int h;                      ///< agreed upon image height
+	/* These two parameters apply only to audio */
+	int64_t channel_layout;     ///< channel layout of current buffer (see libavcore/audioconvert.h)
+	int64_t sample_rate;        ///< samples per second
 
-    /**
-     * Lists of formats supported by the input and output filters respectively.
-     * These lists are used for negotiating the format to actually be used,
-     * which will be loaded into the format member, above, when chosen.
-     */
-    AVFilterFormats *in_formats;
-    AVFilterFormats *out_formats;
+	int format;                 ///< agreed upon media format
 
-    /**
-     * The buffer reference currently being sent across the link by the source
-     * filter. This is used internally by the filter system to allow
-     * automatic copying of buffers which do not have sufficient permissions
-     * for the destination. This should not be accessed directly by the
-     * filters.
-     */
-    AVFilterBufferRef *src_buf;
+	/**
+	* Lists of formats supported by the input and output filters respectively.
+	* These lists are used for negotiating the format to actually be used,
+	* which will be loaded into the format member, above, when chosen.
+	*/
+	AVFilterFormats *in_formats;
+	AVFilterFormats *out_formats;
 
-    AVFilterBufferRef *cur_buf;
-    AVFilterBufferRef *out_buf;
+	/**
+	* The buffer reference currently being sent across the link by the source
+	* filter. This is used internally by the filter system to allow
+	* automatic copying of buffers which do not have sufficient permissions
+	* for the destination. This should not be accessed directly by the
+	* filters.
+	*/
+	AVFilterBufferRef *src_buf;
 
-    /**
-     * Define the time base used by the PTS of the frames/samples
-     * which will pass through this link.
-     * During the configuration stage, each filter is supposed to
-     * change only the output timebase, while the timebase of the
-     * input link is assumed to be an unchangeable property.
-     */
-    AVRational time_base;
+	AVFilterBufferRef *cur_buf;
+	AVFilterBufferRef *out_buf;
+
+	/**
+	* Define the time base used by the PTS of the frames/samples
+	* which will pass through this link.
+	* During the configuration stage, each filter is supposed to
+	* change only the output timebase, while the timebase of the
+	* input link is assumed to be an unchangeable property.
+	*/
+	AVRational time_base;
 };
 
 /**

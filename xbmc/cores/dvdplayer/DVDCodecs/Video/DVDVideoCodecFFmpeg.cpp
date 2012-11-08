@@ -73,8 +73,12 @@ enum PixelFormat CDVDVideoCodecFFmpeg::GetFormat( struct AVCodecContext * avctx 
 */
 	CDVDVideoCodecFFmpeg* ctx  = (CDVDVideoCodecFFmpeg*)avctx->opaque;
 
-	if(!ctx->IsHardwareAllowed())
+	if(!ctx->IsHardwareAllowed()) /* 如果不是硬解，则获取第一个软解的像素格式对应的数据结构类型*/
 		return ctx->m_dllAvCodec.avcodec_default_get_format(avctx, fmt);
+
+	/*
+		程序执行到此处时应该是确定需要硬解了
+	*/
 
 	const PixelFormat * cur = fmt;
 	while(*cur != PIX_FMT_NONE)
@@ -262,7 +266,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 	CLog::Log(LOGNOTICE,"CDVDVideoCodecFFmpeg::Open() Using codec: %s",pCodec->long_name ? pCodec->long_name : pCodec->name);
 
 	/* 对数据结构进行相应的填充*/
-	m_pCodecContext->opaque = (void*)this;
+	m_pCodecContext->opaque = (void*)this; /* 保存此CDVDVideoCodecFFmpeg  的实例，即此值为CDVDPlayerVideo::m_pVideoCodec  */
 	m_pCodecContext->debug_mv = 0;
 	m_pCodecContext->debug = 0;
 	m_pCodecContext->workaround_bugs = FF_BUG_AUTODETECT;
@@ -281,11 +285,12 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 		m_pCodecContext->flags |= CODEC_FLAG_EMU_EDGE;
 #endif
 
+	/* 保存解码图片的宽、高*/
 	// if we don't do this, then some codecs seem to fail.
 	m_pCodecContext->coded_height = hints.height;
 	m_pCodecContext->coded_width = hints.width;
 
-	if( hints.extradata && hints.extrasize > 0 )
+	if( hints.extradata && hints.extrasize > 0 ) /* 为扩展数据分配内粗，并保存数据*/
 	{
 		m_pCodecContext->extradata_size = hints.extrasize;
 		m_pCodecContext->extradata = (uint8_t*)m_dllAvUtil.av_mallocz(hints.extrasize + FF_INPUT_BUFFER_PADDING_SIZE);
@@ -440,15 +445,15 @@ unsigned int CDVDVideoCodecFFmpeg::SetFilters(unsigned int flags)
 */
 	m_filters_next.Empty();
 
-	if(m_pHardware)
+	if(m_pHardware) /* 硬解不需要设定*/
 		return 0;
 
 	if(flags & FILTER_DEINTERLACE_YADIF)
 	{
 		if(flags & FILTER_DEINTERLACE_HALFED)
-			m_filters_next = "yadif=0:-1";
+			m_filters_next = "yadif=0:-1"; /* 见全局变量avfilter_vf_yadif 滤镜*/
 		else
-			m_filters_next = "yadif=1:-1";
+			m_filters_next = "yadif=1:-1"; /* 见全局变量avfilter_vf_yadif 滤镜*/
 
 		if(flags & FILTER_DEINTERLACE_FLAGGED)
 			m_filters_next += ":1";
@@ -522,6 +527,12 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 	if(pData)
 		m_iLastKeyframe++; /* 对key  帧的数量进行统计*/
 
+
+/* ------------------------------->  第1  步
+	判断是否为硬解，如果是硬解则直接调用硬解码器进行解码，解码
+	成功就直接返回，如果失败了就进行ffmpeg  解码
+*/
+
 	shared_ptr<CSingleLock> lock;
 	if(m_pHardware) /* 是否硬解码*/
 	{
@@ -535,12 +546,12 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 		else
 			result = m_pHardware->Decode(m_pCodecContext, NULL);
 
-		if(result)
+		if(result) /* 硬解成功就返回，失败了继续进行软解*/
 			return result;
 	}
 
 	/* 
-		程序执行到此处应该是走的软解码
+		程序执行到此处应该是软解码或者是硬解失败
 	*/
 
 	if(m_pFilterGraph)
@@ -564,10 +575,17 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 	/* We lie, but this flag is only used by pngdec.c.
 	* Setting it correctly would allow CorePNG decoding. */
 	avpkt.flags = AV_PKT_FLAG_KEY;
-	
-	len = m_dllAvCodec.avcodec_decode_video2(m_pCodecContext, m_pFrame, &iGotPicture, &avpkt); /* 进入ffmpeg  解码函数*/
 
-	if(m_iLastKeyframe < m_pCodecContext->has_b_frames + 2)
+/* ------------------------------->  第2  步
+	程序执行到此处时需要解码的包数据为两种情况
+		A、需要软解的
+		B、硬解失败的
+		
+	调用ffmpeg  对包数据进行解码
+*/
+	len = m_dllAvCodec.avcodec_decode_video2(m_pCodecContext, m_pFrame, &iGotPicture, &avpkt); /* 进入ffmpeg  解码函数，即进入ffmpeg  进行解码*/
+
+	if(m_iLastKeyframe < m_pCodecContext->has_b_frames + 2) /* 统计关键帧的个数*/
 		m_iLastKeyframe = m_pCodecContext->has_b_frames + 2;
 
 	if (len < 0)
@@ -596,16 +614,23 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 	if(m_pCodecContext->codec_id == CODEC_ID_H264)
 		m_started = true;
 
-	if(m_pCodecContext->pix_fmt != PIX_FMT_YUV420P && m_pCodecContext->pix_fmt != PIX_FMT_YUVJ420P && m_pHardware == NULL)
+
+/* ------------------------------->  第3  步
+	根据图像的像素格式、软硬解等信息对第2  步中解码出来的帧进行转换
+*/
+
+	/* 像素格式既不是PIX_FMT_YUV420P ，也不是PIX_FMT_YUVJ420P，还需要软解，则需要对帧进行转换*/
+	if(m_pCodecContext->pix_fmt != PIX_FMT_YUV420P && m_pCodecContext->pix_fmt != PIX_FMT_YUVJ420P && m_pHardware == NULL) 
 	{
 		if (!m_dllSwScale.IsLoaded() && !m_dllSwScale.Load()) /* 加载ffmpeg  动态库*/
 			return VC_ERROR;
 
-		if (!m_pConvertFrame)
+		if (!m_pConvertFrame) /* 还没有分配保存转换后帧结果的内存空间*/
 		{
 			// Allocate an AVFrame structure
-			m_pConvertFrame = (AVPicture*)m_dllAvUtil.av_mallocz(sizeof(AVPicture));
-			// Due to a bug in swsscale we need to allocate one extra line of data
+			m_pConvertFrame = (AVPicture*)m_dllAvUtil.av_mallocz(sizeof(AVPicture)); /* 分配数据结构空间*/
+			
+			// Due to a bug in swsscale we need to allocate one extra line of data /* 分配扩展线性数据空间*/
 			if(m_dllAvCodec.avpicture_alloc( m_pConvertFrame
 								                 , PIX_FMT_YUV420P
 								                 , m_pCodecContext->width
@@ -618,6 +643,7 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 		}
 
 		// convert the picture
+		/* 获取ffmpeg  中帧转换的设备描述上下文，即context */
 		struct SwsContext *context = m_dllSwScale.sws_getContext(m_pCodecContext->width, 
 															m_pCodecContext->height,
 												                     m_pCodecContext->pix_fmt, 
@@ -628,13 +654,14 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 												                     NULL, 
 												                     NULL, 
 												                     NULL);
-
+		/* 获取上下文失败，返回*/
 		if(context == NULL)
 		{
 			CLog::Log(LOGERROR, "CDVDVideoCodecFFmpeg::Decode - unable to obtain sws context for w:%i, h:%i, pixfmt: %i", m_pCodecContext->width, m_pCodecContext->height, m_pCodecContext->pix_fmt);
 			return VC_ERROR;
 		}
 
+		/* 调用ffmpeg  对帧进行转换，结果保存于m_pConvertFrame  中*/
 		m_dllSwScale.sws_scale(context
 						      , m_pFrame->data
 						      , m_pFrame->linesize
@@ -645,7 +672,7 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 
 		m_dllSwScale.sws_freeContext(context);
 	}
-	else
+	else /* 硬解、PIX_FMT_YUV420P、PIX_FMT_YUVJ420P  情况下不需要进行帧转换，所以如果分配了转换帧的保存空间就释放掉*/
 	{
 		// no need to convert, just free any existing convert buffers
 		if (m_pConvertFrame)
@@ -656,6 +683,7 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 		}
 	}
 
+	/* 打开滤镜处理。。。。。。。*/
 	// try to setup new filters
 	if (!m_filters.Equals(m_filters_next))
 	{
@@ -664,11 +692,18 @@ int CDVDVideoCodecFFmpeg::Decode(BYTE* pData, int iSize, double dts, double pts)
 			FilterClose();
 	}
 
+
+/* ------------------------------->  第4 步
+	对经过第3  步转换后的帧进行再处理( 见第2  步中的两种数据，做不同的处理)
+		A、需要软解的:  调用filter  进行处理
+		B、硬解失败的:  再调用硬解码器进行一次解码
+*/
+
 	int result;
 	if(m_pHardware)
-		result = m_pHardware->Decode(m_pCodecContext, m_pFrame);
+		result = m_pHardware->Decode(m_pCodecContext, m_pFrame); /* 调用硬解*/
 	else if(m_pFilterGraph)
-		result = FilterProcess(m_pFrame);
+		result = FilterProcess(m_pFrame); /* filter 处理*/
 	else
 		result = VC_PICTURE | VC_BUFFER;
 
@@ -863,7 +898,7 @@ int CDVDVideoCodecFFmpeg::FilterOpen(const CStdString& filters)
 		1、
 		
 	说明:
-		1、
+		1、打开滤镜
 */
 	int result;
 
@@ -873,7 +908,7 @@ int CDVDVideoCodecFFmpeg::FilterOpen(const CStdString& filters)
 	if (filters.IsEmpty())
 		return 0;
 
-	if (!(m_pFilterGraph = m_dllAvFilter.avfilter_graph_alloc()))
+	if (!(m_pFilterGraph = m_dllAvFilter.avfilter_graph_alloc())) /* 分配m_pFilterGraph  的内存空间*/
 	{
 		CLog::Log(LOGERROR, "CDVDVideoCodecFFmpeg::FilterOpen - unable to alloc filter graph");
 		return -1;
@@ -888,27 +923,27 @@ int CDVDVideoCodecFFmpeg::FilterOpen(const CStdString& filters)
 	//                                   |                        |
 	//                                   +------------------------+
 	//
-	AVFilter* srcFilter = m_dllAvFilter.avfilter_get_by_name("buffer");
-	AVFilter* outFilter = m_dllAvFilter.avfilter_get_by_name("nullsink"); // should be last filter in the graph for now
+	AVFilter* srcFilter = m_dllAvFilter.avfilter_get_by_name("buffer"); 	/* 获取名字为buffer  的filter，实质找到的是全局变量avfilter_vsrc_buffer  */
+	AVFilter* outFilter = m_dllAvFilter.avfilter_get_by_name("nullsink"); 	/* 获取名字为nullsink  的filter，实质找到的是全局变量avfilter_vsink_nullsink  */ 			// should be last filter in the graph for now
 
 	CStdString args;
 
 	args.Format("%d:%d:%d:%d:%d:%d:%d",
-	m_pCodecContext->width,
-	m_pCodecContext->height,
-	m_pCodecContext->pix_fmt,
-	m_pCodecContext->time_base.num,
-	m_pCodecContext->time_base.den,
-	m_pCodecContext->sample_aspect_ratio.num,
-	m_pCodecContext->sample_aspect_ratio.den);
+				m_pCodecContext->width,
+				m_pCodecContext->height,
+				m_pCodecContext->pix_fmt,
+				m_pCodecContext->time_base.num,
+				m_pCodecContext->time_base.den,
+				m_pCodecContext->sample_aspect_ratio.num,
+				m_pCodecContext->sample_aspect_ratio.den);
 
-	if ((result = m_dllAvFilter.avfilter_graph_create_filter(&m_pFilterIn, srcFilter, "src", args, NULL, m_pFilterGraph)) < 0)
+	if ((result = m_dllAvFilter.avfilter_graph_create_filter(&m_pFilterIn, srcFilter, "src", args, NULL, m_pFilterGraph)) < 0) /* 见此函数的说明*/
 	{
 		CLog::Log(LOGERROR, "CDVDVideoCodecFFmpeg::FilterOpen - avfilter_graph_create_filter: src");
 		return result;
 	}
 
-	if ((result = m_dllAvFilter.avfilter_graph_create_filter(&m_pFilterOut, outFilter, "out", NULL, NULL/*nullsink=>NULL*/, m_pFilterGraph)) < 0)
+	if ((result = m_dllAvFilter.avfilter_graph_create_filter(&m_pFilterOut, outFilter, "out", NULL, NULL/*nullsink=>NULL*/, m_pFilterGraph)) < 0) /* 见此函数的说明*/
 	{
 		CLog::Log(LOGERROR, "CDVDVideoCodecFFmpeg::FilterOpen - avfilter_graph_create_filter: out");
 		return result;
@@ -916,20 +951,20 @@ int CDVDVideoCodecFFmpeg::FilterOpen(const CStdString& filters)
 
 	if (!filters.empty())
 	{
-		AVFilterInOut* outputs = m_dllAvFilter.avfilter_inout_alloc();
-		AVFilterInOut* inputs  = m_dllAvFilter.avfilter_inout_alloc();
+		AVFilterInOut* outputs = m_dllAvFilter.avfilter_inout_alloc();	/* 分配一个输出pad */
+		AVFilterInOut* inputs  = m_dllAvFilter.avfilter_inout_alloc();	/* 分配一个输入pad */
 
-		outputs->name    = m_dllAvUtil.av_strdup("in");
-		outputs->filter_ctx = m_pFilterIn;
-		outputs->pad_idx = 0;
-		outputs->next    = NULL;
+		outputs->name    	= m_dllAvUtil.av_strdup("in");
+		outputs->filter_ctx	= m_pFilterIn;
+		outputs->pad_idx 	= 0;
+		outputs->next    	= NULL;
 
-		inputs->name    = m_dllAvUtil.av_strdup("out");
-		inputs->filter_ctx = m_pFilterOut;
-		inputs->pad_idx = 0;
-		inputs->next    = NULL;
+		inputs->name    	= m_dllAvUtil.av_strdup("out");
+		inputs->filter_ctx 	= m_pFilterOut;
+		inputs->pad_idx 	= 0;
+		inputs->next    	= NULL;
 
-		if ((result = m_dllAvFilter.avfilter_graph_parse(m_pFilterGraph, (const char*)m_filters.c_str(), &inputs, &outputs, NULL)) < 0)
+		if ((result = m_dllAvFilter.avfilter_graph_parse(m_pFilterGraph, (const char*)m_filters.c_str(), &inputs, &outputs, NULL)) < 0) /* 见函数说明*/
 		{
 			CLog::Log(LOGERROR, "CDVDVideoCodecFFmpeg::FilterOpen - avfilter_graph_parse");
 			return result;
@@ -940,7 +975,7 @@ int CDVDVideoCodecFFmpeg::FilterOpen(const CStdString& filters)
 	}
 	else
 	{
-		if ((result = m_dllAvFilter.avfilter_link(m_pFilterIn, 0, m_pFilterOut, 0)) < 0)
+		if ((result = m_dllAvFilter.avfilter_link(m_pFilterIn, 0, m_pFilterOut, 0)) < 0) /* 对输入、输出两个滤镜进行关联*/
 		{
 			CLog::Log(LOGERROR, "CDVDVideoCodecFFmpeg::FilterOpen - avfilter_link");
 			return result;

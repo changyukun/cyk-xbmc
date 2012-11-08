@@ -112,8 +112,7 @@ protected:
   CEvent                       m_event;
 };
 
-class CProcessor
-  : public ID3DResource
+class CProcessor : public ID3DResource
 {
 public:
   CProcessor();

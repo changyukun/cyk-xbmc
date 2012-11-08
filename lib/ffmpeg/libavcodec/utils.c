@@ -477,6 +477,7 @@ enum PixelFormat avcodec_default_get_format(struct AVCodecContext *s, const enum
 */
 	while (*fmt != PIX_FMT_NONE && ff_is_hwaccel_pix_fmt(*fmt))
 		++fmt;
+	
 	return fmt[0];
 }
 

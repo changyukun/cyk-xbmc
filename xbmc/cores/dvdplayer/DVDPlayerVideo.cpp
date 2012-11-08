@@ -243,6 +243,7 @@ bool CDVDPlayerVideo::OpenStream( CDVDStreamInfo &hint )
 #endif
 
 	CLog::Log(LOGNOTICE, "Creating video codec with codec id: %i", hint.codec);
+
 	CDVDVideoCodec* codec = CDVDFactoryCodec::CreateVideoCodec(hint, surfaces); /* 创建一个真正的解码器实例，如CDVDVideoCodecFFmpeg  实例*/
 	if(!codec)
 	{
@@ -651,7 +652,7 @@ void CDVDPlayerVideo::Process()
 					mFilters |=  CDVDVideoCodec::FILTER_DEINTERLACE_FLAGGED;
 			}
 
-			mFilters = m_pVideoCodec->SetFilters(mFilters);
+			mFilters = m_pVideoCodec->SetFilters(mFilters); /* 设定滤镜*/
 
 			/* 调用解码，对数据进行解码*/
 			int iDecoderState = m_pVideoCodec->Decode(pPacket->pData, pPacket->iSize, pPacket->dts, pPacket->pts);

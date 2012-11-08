@@ -26,77 +26,154 @@
 
 #ifdef HAS_DX
 
-CWinSystemWin32DX::CWinSystemWin32DX()
-: CRenderSystemDX()
+CWinSystemWin32DX::CWinSystemWin32DX() : CRenderSystemDX()
 {
+/*
+	参数:
+		1、
 
+	返回:
+		1、
+
+	说明:
+		1、
+*/
 }
 
 CWinSystemWin32DX::~CWinSystemWin32DX()
 {
+/*
+	参数:
+		1、
 
+	返回:
+		1、
+
+	说明:
+		1、
+*/
 }
 
 bool CWinSystemWin32DX::UseWindowedDX(bool fullScreen)
 {
-  return (g_guiSettings.GetBool("videoscreen.fakefullscreen") || !fullScreen);
+/*
+	参数:
+		1、
+
+	返回:
+		1、
+
+	说明:
+		1、
+*/
+  	return (g_guiSettings.GetBool("videoscreen.fakefullscreen") || !fullScreen);
 }
 
 bool CWinSystemWin32DX::CreateNewWindow(CStdString name, bool fullScreen, RESOLUTION_INFO& res, PHANDLE_EVENT_FUNC userFunction)
 {
-  CWinSystemWin32::CreateNewWindow(name, fullScreen, res, userFunction);
+/*
+	参数:
+		1、
 
-  if(m_hWnd == NULL)
-    return false;
+	返回:
+		1、
 
-  SetFocusWnd(m_hWnd);
-  SetDeviceWnd(m_hWnd);
-  CRenderSystemDX::m_interlaced = ((res.dwFlags & D3DPRESENTFLAG_INTERLACED) != 0);
-  CRenderSystemDX::m_useWindowedDX = UseWindowedDX(fullScreen);
-  SetRenderParams(m_nWidth, m_nHeight, fullScreen, res.fRefreshRate);
-  SetMonitor(GetMonitor(res.iScreen).hMonitor);
+	说明:
+		1、
+*/
+	CWinSystemWin32::CreateNewWindow(name, fullScreen, res, userFunction);
 
-  return true;
+	if(m_hWnd == NULL)
+		return false;
+
+	SetFocusWnd(m_hWnd);
+	SetDeviceWnd(m_hWnd);
+	CRenderSystemDX::m_interlaced = ((res.dwFlags & D3DPRESENTFLAG_INTERLACED) != 0);
+	CRenderSystemDX::m_useWindowedDX = UseWindowedDX(fullScreen);
+	SetRenderParams(m_nWidth, m_nHeight, fullScreen, res.fRefreshRate);
+	SetMonitor(GetMonitor(res.iScreen).hMonitor);
+
+	return true;
 }
 
 void CWinSystemWin32DX::UpdateMonitor()
 {
-  SetMonitor(GetMonitor(m_nScreen).hMonitor);
+/*
+	参数:
+		1、
+
+	返回:
+		1、
+
+	说明:
+		1、
+*/
+  	SetMonitor(GetMonitor(m_nScreen).hMonitor);
 }
 
 bool CWinSystemWin32DX::ResizeWindow(int newWidth, int newHeight, int newLeft, int newTop)
 {
-  CWinSystemWin32::ResizeWindow(newWidth, newHeight, newLeft, newTop);
-  CRenderSystemDX::ResetRenderSystem(newWidth, newHeight, false, 0);
+/*
+	参数:
+		1、
 
-  return true;
+	返回:
+		1、
+
+	说明:
+		1、
+*/
+	CWinSystemWin32::ResizeWindow(newWidth, newHeight, newLeft, newTop);
+	CRenderSystemDX::ResetRenderSystem(newWidth, newHeight, false, 0);
+
+	return true;
 }
 
 void CWinSystemWin32DX::OnMove(int x, int y)
 {
-  CRenderSystemDX::OnMove();
+/*
+	参数:
+		1、
+
+	返回:
+		1、
+
+	说明:
+		1、
+*/
+  	CRenderSystemDX::OnMove();
 }
 
 bool CWinSystemWin32DX::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool blankOtherDisplays)
 {
-  // When going DX fullscreen -> windowed, we must reset the D3D device first to
-  // get it out of fullscreen mode because it restores a former resolution.
-  // We then change to the mode we want.
-  // In other cases, set the window/mode then reset the D3D device.
+/*
+	参数:
+		1、
 
-  bool FS2Windowed = !m_useWindowedDX && UseWindowedDX(fullScreen);
+	返回:
+		1、
 
-  SetMonitor(GetMonitor(res.iScreen).hMonitor);
-  CRenderSystemDX::m_interlaced = ((res.dwFlags & D3DPRESENTFLAG_INTERLACED) != 0);
-  CRenderSystemDX::m_useWindowedDX = UseWindowedDX(fullScreen);
+	说明:
+		1、
+*/
+	// When going DX fullscreen -> windowed, we must reset the D3D device first to
+	// get it out of fullscreen mode because it restores a former resolution.
+	// We then change to the mode we want.
+	// In other cases, set the window/mode then reset the D3D device.
 
-  if (FS2Windowed)
-    CRenderSystemDX::ResetRenderSystem(res.iWidth, res.iHeight, fullScreen, res.fRefreshRate);
+	bool FS2Windowed = !m_useWindowedDX && UseWindowedDX(fullScreen);
 
-  CWinSystemWin32::SetFullScreen(fullScreen, res, blankOtherDisplays);
-  CRenderSystemDX::ResetRenderSystem(res.iWidth, res.iHeight, fullScreen, res.fRefreshRate);
+	SetMonitor(GetMonitor(res.iScreen).hMonitor);
+	CRenderSystemDX::m_interlaced = ((res.dwFlags & D3DPRESENTFLAG_INTERLACED) != 0);
+	CRenderSystemDX::m_useWindowedDX = UseWindowedDX(fullScreen);
 
-  return true;
+	if (FS2Windowed)
+	CRenderSystemDX::ResetRenderSystem(res.iWidth, res.iHeight, fullScreen, res.fRefreshRate);
+
+	CWinSystemWin32::SetFullScreen(fullScreen, res, blankOtherDisplays);
+	CRenderSystemDX::ResetRenderSystem(res.iWidth, res.iHeight, fullScreen, res.fRefreshRate);
+
+	return true;
 }
 
 #endif

@@ -101,34 +101,48 @@ void avfilter_insert_pad(unsigned idx, unsigned *count, size_t padidx_off,
             (*(unsigned *)((uint8_t *) *links[i] + padidx_off))++;
 }
 
-int avfilter_link(AVFilterContext *src, unsigned srcpad,
-                  AVFilterContext *dst, unsigned dstpad)
+int avfilter_link(AVFilterContext *src, unsigned srcpad, AVFilterContext *dst, unsigned dstpad)
 {
-    AVFilterLink *link;
+/*
+	参数:
+		1、src		: 传入源的滤镜上下文
+		2、srcpad	: 传入源的output_pads  数组的一个单元的序号( 输出pad 的一个序号)
+		3、dst		: 传入目标的滤镜上下文
+		4、dstpad	: 传入目标的input_pads  数组的一个单元的序号( 输入pad 的一个序号)
+		
+	返回:
+		1、
+		
+	说明:
+		1、此函数实现将源和目标进行一个连接的作用，大致说明如下
 
-    if (src->output_count <= srcpad || dst->input_count <= dstpad ||
-        src->outputs[srcpad]        || dst->inputs[dstpad])
-        return -1;
+			源的输出与目标的输入通过一个连接件相当于连接起来，即将
+			源的
 
-    if (src->output_pads[srcpad].type != dst->input_pads[dstpad].type) {
-        av_log(src, AV_LOG_ERROR,
-               "Media type mismatch between the '%s' filter output pad %d and the '%s' filter input pad %d\n",
-               src->name, srcpad, dst->name, dstpad);
-        return AVERROR(EINVAL);
-    }
+		2、参考linphone  源码中的filter  连接的关系
+*/
+	AVFilterLink *link;
 
-    src->outputs[srcpad] =
-    dst-> inputs[dstpad] = link = av_mallocz(sizeof(AVFilterLink));
+	if (src->output_count <= srcpad || dst->input_count <= dstpad || src->outputs[srcpad] || dst->inputs[dstpad])
+		return -1;
 
-    link->src     = src;
-    link->dst     = dst;
-    link->srcpad  = &src->output_pads[srcpad];
-    link->dstpad  = &dst->input_pads[dstpad];
-    link->type    = src->output_pads[srcpad].type;
-    assert(PIX_FMT_NONE == -1 && AV_SAMPLE_FMT_NONE == -1);
-    link->format  = -1;
+	if (src->output_pads[srcpad].type != dst->input_pads[dstpad].type) 
+	{
+		av_log(src, AV_LOG_ERROR,"Media type mismatch between the '%s' filter output pad %d and the '%s' filter input pad %d\n",src->name, srcpad, dst->name, dstpad);
+		return AVERROR(EINVAL);
+	}
 
-    return 0;
+	src->outputs[srcpad] = dst-> inputs[dstpad] = link = av_mallocz(sizeof(AVFilterLink)); /* 分配一个滤镜链数据结构*/
+
+	link->src     	= src;
+	link->dst     	= dst;
+	link->srcpad  	= &src->output_pads[srcpad];
+	link->dstpad  	= &dst->input_pads[dstpad];
+	link->type    	= src->output_pads[srcpad].type;
+	assert(PIX_FMT_NONE == -1 && AV_SAMPLE_FMT_NONE == -1);
+	link->format  	= -1;
+
+	return 0;
 }
 
 int avfilter_insert_filter(AVFilterLink *link, AVFilterContext *filt,
@@ -508,33 +522,64 @@ void avfilter_filter_samples(AVFilterLink *link, AVFilterBufferRef *samplesref)
 
 #define MAX_REGISTERED_AVFILTERS_NB 64
 
-static AVFilter *registered_avfilters[MAX_REGISTERED_AVFILTERS_NB + 1];
+static AVFilter *registered_avfilters[MAX_REGISTERED_AVFILTERS_NB + 1]; /* 通过函数avfilter_register_all  进行对其填充的*/
 
 static int next_registered_avfilter_idx = 0;
 
 AVFilter *avfilter_get_by_name(const char *name)
 {
-    int i;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、实质就是在全局数组registered_avfilters  中查找与传入名字相互匹配的那个单元
+*/
+	int i;
 
-    for (i = 0; registered_avfilters[i]; i++)
-        if (!strcmp(registered_avfilters[i]->name, name))
-            return registered_avfilters[i];
+	for (i = 0; registered_avfilters[i]; i++)
+		if (!strcmp(registered_avfilters[i]->name, name))
+			return registered_avfilters[i];
 
-    return NULL;
+	return NULL;
 }
 
 int avfilter_register(AVFilter *filter)
 {
-    if (next_registered_avfilter_idx == MAX_REGISTERED_AVFILTERS_NB)
-        return -1;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、实质就是将传入的filter  添加到全局数组registered_avfilters  中，并更新数组中有效单元的总数
+*/
+	if (next_registered_avfilter_idx == MAX_REGISTERED_AVFILTERS_NB)
+		return -1;
 
-    registered_avfilters[next_registered_avfilter_idx++] = filter;
-    return 0;
+	registered_avfilters[next_registered_avfilter_idx++] = filter;
+	return 0;
 }
 
 AVFilter **av_filter_next(AVFilter **filter)
 {
-    return filter ? ++filter : &registered_avfilters[0];
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、实质就是返回传入filter  的下一个filter，即返回传入filter  在全局数组registered_avfilters  中的下一个单元，
+			如果传入的filter  为空，则返回全局数组registered_avfilters  的第一个单元
+*/
+    	return filter ? ++filter : &registered_avfilters[0];
 }
 
 void avfilter_uninit(void)
@@ -566,79 +611,119 @@ static const AVClass avfilter_class = {
 
 int avfilter_open(AVFilterContext **filter_ctx, AVFilter *filter, const char *inst_name)
 {
-    AVFilterContext *ret;
-    *filter_ctx = NULL;
+/*
+	参数:
+		1、filter_ctx		: 用于返回的
+		2、filfiltert		: 传入一个filter  指针
+		3、inst_name	: 传入一个名字
+		
+	返回:
+		1、
+		
+	说明:
+		1、此函数实质就是分配一个AVFilterContext  类型的内存空间，然后通过参数filter_ctx  将其返回，
+			在此函数中对其进行填充
+*/
+	AVFilterContext *ret;
+	*filter_ctx = NULL;
 
-    if (!filter)
-        return AVERROR(EINVAL);
+	if (!filter)
+		return AVERROR(EINVAL);
 
-    ret = av_mallocz(sizeof(AVFilterContext));
+	ret = av_mallocz(sizeof(AVFilterContext));
 
-    ret->av_class = &avfilter_class;
-    ret->filter   = filter;
-    ret->name     = inst_name ? av_strdup(inst_name) : NULL;
-    ret->priv     = av_mallocz(filter->priv_size);
+	ret->av_class 	= &avfilter_class;
+	ret->filter   		= filter;
+	ret->name     	= inst_name ? av_strdup(inst_name) : NULL;
+	ret->priv     		= av_mallocz(filter->priv_size);
 
-    ret->input_count  = pad_count(filter->inputs);
-    if (ret->input_count) {
-        ret->input_pads   = av_malloc(sizeof(AVFilterPad) * ret->input_count);
-        memcpy(ret->input_pads, filter->inputs, sizeof(AVFilterPad) * ret->input_count);
-        ret->inputs       = av_mallocz(sizeof(AVFilterLink*) * ret->input_count);
-    }
+	ret->input_count  	= pad_count(filter->inputs);
+	if (ret->input_count) 
+	{
+		ret->input_pads   = av_malloc(sizeof(AVFilterPad) * ret->input_count);
+		memcpy(ret->input_pads, filter->inputs, sizeof(AVFilterPad) * ret->input_count);
+		ret->inputs  = av_mallocz(sizeof(AVFilterLink*) * ret->input_count);
+	}
 
-    ret->output_count = pad_count(filter->outputs);
-    if (ret->output_count) {
-        ret->output_pads  = av_malloc(sizeof(AVFilterPad) * ret->output_count);
-        memcpy(ret->output_pads, filter->outputs, sizeof(AVFilterPad) * ret->output_count);
-        ret->outputs      = av_mallocz(sizeof(AVFilterLink*) * ret->output_count);
-    }
+	ret->output_count 	= pad_count(filter->outputs);
+	if (ret->output_count) 
+	{
+		ret->output_pads  = av_malloc(sizeof(AVFilterPad) * ret->output_count);
+		memcpy(ret->output_pads, filter->outputs, sizeof(AVFilterPad) * ret->output_count);
+		ret->outputs      = av_mallocz(sizeof(AVFilterLink*) * ret->output_count);
+	}
 
-    *filter_ctx = ret;
-    return 0;
+	*filter_ctx = ret;
+	return 0;
 }
 
 void avfilter_free(AVFilterContext *filter)
 {
-    int i;
-    AVFilterLink *link;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、释放掉参数filter  数据结构的内存空间，同时释放掉其内部所指向的滤镜等内存空间
+*/
+	int i;
+	AVFilterLink *link;
 
-    if (filter->filter->uninit)
-        filter->filter->uninit(filter);
+	if (filter->filter->uninit)
+		filter->filter->uninit(filter);
 
-    for (i = 0; i < filter->input_count; i++) {
-        if ((link = filter->inputs[i])) {
-            if (link->src)
-                link->src->outputs[link->srcpad - link->src->output_pads] = NULL;
-            avfilter_formats_unref(&link->in_formats);
-            avfilter_formats_unref(&link->out_formats);
-        }
-        av_freep(&link);
-    }
-    for (i = 0; i < filter->output_count; i++) {
-        if ((link = filter->outputs[i])) {
-            if (link->dst)
-                link->dst->inputs[link->dstpad - link->dst->input_pads] = NULL;
-            avfilter_formats_unref(&link->in_formats);
-            avfilter_formats_unref(&link->out_formats);
-        }
-        av_freep(&link);
-    }
+	for (i = 0; i < filter->input_count; i++) 
+	{
+		if ((link = filter->inputs[i]))
+		{
+			if (link->src)
+				link->src->outputs[link->srcpad - link->src->output_pads] = NULL;
+			avfilter_formats_unref(&link->in_formats);
+			avfilter_formats_unref(&link->out_formats);
+		}
+		av_freep(&link);
+	}
+	
+	for (i = 0; i < filter->output_count; i++) 
+	{
+		if ((link = filter->outputs[i])) 
+		{
+			if (link->dst)
+				link->dst->inputs[link->dstpad - link->dst->input_pads] = NULL;
+			avfilter_formats_unref(&link->in_formats);
+			avfilter_formats_unref(&link->out_formats);
+		}
+		av_freep(&link);
+	}
 
-    av_freep(&filter->name);
-    av_freep(&filter->input_pads);
-    av_freep(&filter->output_pads);
-    av_freep(&filter->inputs);
-    av_freep(&filter->outputs);
-    av_freep(&filter->priv);
-    av_free(filter);
+	av_freep(&filter->name);
+	av_freep(&filter->input_pads);
+	av_freep(&filter->output_pads);
+	av_freep(&filter->inputs);
+	av_freep(&filter->outputs);
+	av_freep(&filter->priv);
+	av_free(filter);
 }
 
 int avfilter_init_filter(AVFilterContext *filter, const char *args, void *opaque)
 {
-    int ret=0;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、实质就是调用参数filter  中具体滤镜的初始化函数，
+*/
+	int ret=0;
 
-    if (filter->filter->init)
-        ret = filter->filter->init(filter, args, opaque);
-    return ret;
+	if (filter->filter->init)
+		ret = filter->filter->init(filter, args, opaque);
+	return ret;
 }
 

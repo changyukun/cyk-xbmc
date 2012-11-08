@@ -24,11 +24,25 @@
 
 #include "avfilter.h"
 
-typedef struct AVFilterGraph {
-    unsigned filter_count;
-    AVFilterContext **filters;
+/*
+	注意三个数据结构的关系
+	
+	1、AVFilter  			滤镜
+	2、AVFilterContext	滤镜上下文
+	3、AVFilterGraph		滤镜图表
 
-    char *scale_sws_opts; ///< sws options to use for the auto-inserted scale filters
+	相当于由大到小，即包含的关心
+
+	3 ==>  2 ==> 1
+*/
+
+/* 滤镜图标数据结构*/
+typedef struct AVFilterGraph 
+{
+	unsigned filter_count; 	/* 滤镜上下文 的数量*/
+	AVFilterContext **filters;	/* 指向滤镜上下文 的数组*/
+
+	char *scale_sws_opts; ///< sws options to use for the auto-inserted scale filters
 } AVFilterGraph;
 
 /**
@@ -92,18 +106,19 @@ void avfilter_graph_free(AVFilterGraph *graph);
  * pad contained in the graph, the filter context and the pad index
  * required for establishing a link.
  */
-typedef struct AVFilterInOut {
-    /** unique name for this input/output in the list */
-    char *name;
+typedef struct AVFilterInOut 
+{
+	/** unique name for this input/output in the list */
+	char *name; /* 名字*/
 
-    /** filter context associated to this input/output */
-    AVFilterContext *filter_ctx;
+	/** filter context associated to this input/output */
+	AVFilterContext *filter_ctx; /* 指向其属于的滤镜上下文，一个滤镜上下文与一个滤镜相对应，则相当于此结构与一个滤镜关联上了*/
 
-    /** index of the filt_ctx pad to use for linking */
-    int pad_idx;
+	/** index of the filt_ctx pad to use for linking */
+	int pad_idx; /* 此数据结构在其所属于的滤镜上下文中的序号*/
 
-    /** next input/input in the list, NULL if this is the last */
-    struct AVFilterInOut *next;
+	/** next input/input in the list, NULL if this is the last */
+	struct AVFilterInOut *next;
 } AVFilterInOut;
 
 /**

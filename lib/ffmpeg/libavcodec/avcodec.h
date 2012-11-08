@@ -1250,7 +1250,7 @@ typedef struct AVCodecContext {
      * - encoding: Set by user.
      * - decoding: Set by user if known, overridden by libavcodec if known
      */
-    enum PixelFormat pix_fmt;
+    enum PixelFormat pix_fmt; /* 保存码流的像素格式*/
 
     /**
      * Frame rate emulation. If not zero, the lower layer (i.e. format handler)
@@ -1410,7 +1410,7 @@ typedef struct AVCodecContext {
      * - encoding: Set by user.
      * - decoding: Set by user.
      */
-    void *opaque;
+    void *opaque; /* 通常指向的是CDVDVideoCodecFFmpeg  数据结构，通常此值为即此值为CDVDPlayerVideo::m_pVideoCodec ，见open  方法中的赋值*/
 
     char codec_name[32];
     enum AVMediaType codec_type; /* see AVMEDIA_TYPE_xxx */
@@ -1538,7 +1538,7 @@ typedef struct AVCodecContext {
      * - encoding: Set by libavcodec.
      * - decoding: Set by libavcodec.
      */
-    int has_b_frames;
+    int has_b_frames; /* 拥有b  帧的数量*/
 
     /**
      * number of bytes per packet if constant and known or 0
@@ -2355,7 +2355,7 @@ typedef struct AVCodecContext {
      * - encoding: unused
      * - decoding: Set by user before init if known. Codec should override / dynamically change if needed.
      */
-    int coded_width, coded_height;
+    int coded_width, coded_height; /* 保存解码图片的宽、高，见open  方法中对其赋值*/
 
     /**
      * frame skip threshold

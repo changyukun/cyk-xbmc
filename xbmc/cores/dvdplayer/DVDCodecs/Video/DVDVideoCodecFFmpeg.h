@@ -66,10 +66,10 @@ public:
   IHardwareDecoder * GetHardware()                           { return m_pHardware; };
   void               SetHardware(IHardwareDecoder* hardware) 
   {
-    SAFE_RELEASE(m_pHardware);
-    m_pHardware = hardware;
-    m_name += "-";
-    m_name += m_pHardware->Name();
+	SAFE_RELEASE(m_pHardware);
+	m_pHardware = hardware;  /* 设定硬解的解码器*/
+	m_name += "-";
+	m_name += m_pHardware->Name();
   }
 
 protected:
@@ -82,12 +82,12 @@ protected:
   AVFrame* m_pFrame;
   AVCodecContext* m_pCodecContext;
 
-  AVPicture* m_pConvertFrame;
+  AVPicture* m_pConvertFrame; /* 用于帧转换存储转换后的帧结果的，在decode  方法中分配的内存*/
   CStdString       m_filters;
   CStdString       m_filters_next;
-  AVFilterGraph*   m_pFilterGraph;
-  AVFilterContext* m_pFilterIn;
-  AVFilterContext* m_pFilterOut;
+  AVFilterGraph*   m_pFilterGraph; /* 在函数FilterOpen  中分配的内存空间*/
+  AVFilterContext* m_pFilterIn; 	/* 输入滤镜的上下文*/
+  AVFilterContext* m_pFilterOut; /* 输出滤镜的上下文*/
   AVFilterLink*    m_pFilterLink;
 
   int m_iPictureWidth;
@@ -105,7 +105,7 @@ protected:
 
   std::string m_name;
   bool              m_bSoftware;
-  IHardwareDecoder *m_pHardware;
+  IHardwareDecoder *m_pHardware; /* 见方法SetHardware  中对其进行设定的*/
   int m_iLastKeyframe;
   double m_dts;
   bool   m_started;

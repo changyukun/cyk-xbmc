@@ -57,6 +57,8 @@
  *       and that all newly added little endian formats have pix_fmt&1==0
  *       this allows simpler detection of big vs little endian.
  */
+
+/* 像素格式枚举定义*/
 enum PixelFormat {
     PIX_FMT_NONE= -1,
     PIX_FMT_YUV420P,   ///< planar YUV 4:2:0, 12bpp, (1 Cr & Cb sample per 2x2 Y samples)

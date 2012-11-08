@@ -100,7 +100,7 @@ CXBMCRenderManager::CXBMCRenderManager()
 		1、
 		
 	说明:
-		1、
+		1、渲染管理的构造函数
 */
 	m_pRenderer = NULL;
 	m_bPauseDrawing = false;
@@ -159,7 +159,7 @@ static double wrap(double x, double minimum, double maximum)
 		1、
 		
 	说明:
-		1、
+		1、实质就是将x  转换到两个参数之间的一个值
 */
 	if(x >= minimum && x <= maximum)
 		return x;
@@ -425,7 +425,8 @@ unsigned int CXBMCRenderManager::PreInit()
 
 	m_bIsStarted = false;
 	m_bPauseDrawing = false;
-	
+
+	/* 创建一个渲染的实例*/
 	if (!m_pRenderer)
 	{
 #if defined(HAS_GL)
@@ -1074,13 +1075,13 @@ int CXBMCRenderManager::AddVideoPicture(DVDVideoPicture& pic)
 		1、
 		
 	说明:
-		1、
+		1、解码出来的一帧视频就是通过此方法进行渲染显示的
 */
 	CSharedLock lock(m_sharedSection);
 	if (!m_pRenderer)
 		return -1;
 
-	if(m_pRenderer->AddVideoPicture(&pic))
+	if(m_pRenderer->AddVideoPicture(&pic)) /* 调用渲染类实例的添加视频图像的方法*/
 		return 1;
 
 	YV12Image image;
