@@ -39,6 +39,7 @@ enum PCI_Vendors
 
 class ID3DResource;
 
+/* 系统渲染类，基于DirectX  的渲染系统*/
 class CRenderSystemDX : public CRenderSystemBase
 {
 public:

@@ -652,9 +652,10 @@ void CDVDPlayerVideo::Process()
 					mFilters |=  CDVDVideoCodec::FILTER_DEINTERLACE_FLAGGED;
 			}
 
-			mFilters = m_pVideoCodec->SetFilters(mFilters); /* 设定滤镜*/
+			/* ---> 设定滤镜*/
+			mFilters = m_pVideoCodec->SetFilters(mFilters); 
 
-			/* 调用解码，对数据进行解码*/
+			/* ---> 调用解码，对数据进行解码*/
 			int iDecoderState = m_pVideoCodec->Decode(pPacket->pData, pPacket->iSize, pPacket->dts, pPacket->pts);
 
 			// buffer packets so we can recover should decoder flush for some reason
@@ -794,7 +795,8 @@ void CDVDPlayerVideo::Process()
 							picture.iDuration *= picture.iRepeatPicture + 1;
 
 #if 1
-						int iResult = OutputPicture(&picture, pts); /* 将解码图片显示出去。。。*/
+						/* ---> 将解码图片显示出去。。。*/
+						int iResult = OutputPicture(&picture, pts); 
 #elif 0
 						// testing NV12 rendering functions
 						DVDVideoPicture* pTempNV12Picture = CDVDCodecUtils::ConvertToNV12Picture(&picture);

@@ -165,7 +165,11 @@ bool CWinSystemWin32::CreateNewWindow(const CStdString& name, bool fullScreen, R
 {
 /*
 	参数:
-		1、
+		1、name		: 传入注册窗口的名字
+		2、fullScreen	: 是否全屏
+		3、res			: 传入资源信息
+		4、userFunction	: 传入一个用户指定的函数，见窗口的过程函数也就是窗口的消息
+						  回调函数CWinEventsWin32::WndProc()  中的m_pEventFunc ，就是传入的这个函数
 		
 	返回:
 		1、

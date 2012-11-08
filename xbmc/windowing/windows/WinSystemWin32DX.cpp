@@ -81,7 +81,7 @@ bool CWinSystemWin32DX::CreateNewWindow(CStdString name, bool fullScreen, RESOLU
 	说明:
 		1、
 */
-	CWinSystemWin32::CreateNewWindow(name, fullScreen, res, userFunction);
+	CWinSystemWin32::CreateNewWindow(name, fullScreen, res, userFunction); /* 调用父类的创建窗口函数，见此函数的说明*/
 
 	if(m_hWnd == NULL)
 		return false;

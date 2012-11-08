@@ -236,7 +236,7 @@ void CApplicationMessenger::SendMessage(ThreadMessage& message, bool wait)
 
 
 	/* 将消息添加到相应的消息队列中，即m_vecWindowMessages、m_vecMessages  中的一个*/
-	if (msg->dwMessage == TMSG_DIALOG_DOMODAL)
+	if (msg->dwMessage == TMSG_DIALOG_DOMODAL)/* 模态显示的消息*/
 		m_vecWindowMessages.push(msg);
 	else
 		m_vecMessages.push(msg);

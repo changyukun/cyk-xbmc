@@ -846,6 +846,11 @@ bool CApplication::Create()
 	bool bFullScreen = g_guiSettings.m_LookAndFeelResolution != RES_WINDOW;
 	/* 
 		调用不同系统的窗口创建函数，如CWinSystemWin32::CreateNewWindow() 
+
+		注意，g_Windowing 是继承了操作系统窗口类CWinSystemWin32、渲染类的子类CRenderSystemDX
+		如DirectX  方式下
+		class CWinSystemWin32DX : public CWinSystemWin32, public CRenderSystemDX
+		CWinSystemWin32DX    g_Windowing；	
 	*/
 	if (!g_Windowing.CreateNewWindow("XBMC", bFullScreen, g_settings.m_ResInfo[g_guiSettings.m_LookAndFeelResolution], OnEvent)) 
 	{
