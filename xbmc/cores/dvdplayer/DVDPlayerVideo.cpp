@@ -1463,7 +1463,8 @@ int CDVDPlayerVideo::OutputPicture(const DVDVideoPicture* src, double pts)
 			mDisplayField = FS_BOT;
 	}
 
-	ProcessOverlays(pPicture, pts);
+	ProcessOverlays(pPicture, pts); /* 见函数内部处理*/
+	
 	AutoCrop(pPicture);
 
 	int index = g_renderManager.AddVideoPicture(*pPicture);

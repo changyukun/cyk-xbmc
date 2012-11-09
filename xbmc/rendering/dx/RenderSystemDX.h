@@ -124,12 +124,12 @@ protected:
   BOOL IsDepthFormatOk(D3DFORMAT DepthFormat, D3DFORMAT RenderTargetFormat);
   void OnMove();
 
-  LPDIRECT3D9                 m_pD3D;
+  LPDIRECT3D9                 m_pD3D; /* 在方法CRenderSystemDX::InitRenderSystem()  得到创建*/
 
   // our adapter could change as we go
   bool                        m_needNewDevice;
   unsigned int                m_adapter;
-  LPDIRECT3DDEVICE9           m_pD3DDevice;
+  LPDIRECT3DDEVICE9           m_pD3DDevice;  /* 在方法CRenderSystemDX::InitRenderSystem() ==> CRenderSystemDX::CreateDevice()  得到创建*/
   unsigned int                m_screenHeight;
 
   D3DDEVTYPE                  m_devType;

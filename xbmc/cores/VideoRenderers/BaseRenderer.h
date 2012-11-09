@@ -52,38 +52,45 @@ enum ERENDERFEATURE
 
 struct DVDVideoPicture;
 
+/*
+	不同的操作系统针对视频渲染会使用不同的渲染方法，见方法CXBMCRenderManager::PreInit()  中创建的
+	视频渲染实例
+
+	但是无论是何种操作系统的渲染实例，他们的基类都是此类，此类主要用于一些窗口大小计
+	算之类的。。。。，即跟具体的操作系统没关系，所以作为他们的基类
+*/
 class CBaseRenderer
 {
 public:
-  CBaseRenderer();
-  virtual ~CBaseRenderer();
+	CBaseRenderer();
+	virtual ~CBaseRenderer();
 
-  void SetViewMode(int viewMode);
-  RESOLUTION GetResolution() const;
-  void GetVideoRect(CRect &source, CRect &dest);
-  float GetAspectRatio() const;
+	void SetViewMode(int viewMode);
+	RESOLUTION GetResolution() const;
+	void GetVideoRect(CRect &source, CRect &dest);
+	float GetAspectRatio() const;
 
-  virtual bool AddVideoPicture(DVDVideoPicture* picture) { return false; }
-  virtual void Flush() {};
+	virtual bool AddVideoPicture(DVDVideoPicture* picture) { return false; }
+	virtual void Flush() {};
 
-  virtual unsigned int GetProcessorSize() { return 0; }
+	virtual unsigned int GetProcessorSize() { return 0; }
 
 protected:
-  void       ChooseBestResolution(float fps);
-  bool       FindResolutionFromOverride(float fps, float& weight, bool fallback);
-  void       FindResolutionFromFpsMatch(float fps, float& weight);
-  RESOLUTION FindClosestResolution(float fps, float multiplier, RESOLUTION current, float& weight);
-  float      RefreshWeight(float refresh, float fps);
-  void       CalcNormalDisplayRect(float offsetX, float offsetY, float screenWidth, float screenHeight, float inputFrameRatio, float zoomAmount, float verticalShift);
-  void       CalculateFrameAspectRatio(unsigned int desired_width, unsigned int desired_height);
-  void       ManageDisplay();
+	void       ChooseBestResolution(float fps);
+	bool       FindResolutionFromOverride(float fps, float& weight, bool fallback);
+	void       FindResolutionFromFpsMatch(float fps, float& weight);
+	RESOLUTION FindClosestResolution(float fps, float multiplier, RESOLUTION current, float& weight);
+	float      RefreshWeight(float refresh, float fps);
+	void       CalcNormalDisplayRect(float offsetX, float offsetY, float screenWidth, float screenHeight, float inputFrameRatio, float zoomAmount, float verticalShift);
+	void       CalculateFrameAspectRatio(unsigned int desired_width, unsigned int desired_height);
+	void       ManageDisplay();
 
-  RESOLUTION m_resolution;    // the resolution we're running in
-  unsigned int m_sourceWidth;
-  unsigned int m_sourceHeight;
-  float m_sourceFrameRatio;
-  float m_fps;
+	RESOLUTION m_resolution;    // the resolution we're running in
+	unsigned int m_sourceWidth;
+	unsigned int m_sourceHeight;
+	float m_sourceFrameRatio;
+	float m_fps;
 
-  CRect m_destRect;
-  CRect m_sourceRect;
+	CRect m_destRect;
+	CRect m_sourceRect;
 };

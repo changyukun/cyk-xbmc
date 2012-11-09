@@ -135,7 +135,7 @@ bool CRenderSystemDX::InitRenderSystem()
 		1、
 		
 	说明:
-		1、
+		1、初始化渲染系统，见CApplication::Create()  中对此的调用
 */
 	m_bVSync = true;
 
@@ -178,7 +178,7 @@ bool CRenderSystemDX::InitRenderSystem()
 
 	UpdateMonitor();
 
-	if(CreateDevice()==false)
+	if(CreateDevice()==false) /* 创建设备*/
 		return false;
 
 	return true;
@@ -544,7 +544,7 @@ bool CRenderSystemDX::CreateDevice()
 		1、
 		
 	说明:
-		1、
+		1、此函数相当于创建了directx 设备，保存在m_pD3DDevice  中
 */
 	// Code based on Ogre 3D engine
 	CSingleLock lock(m_resourceSection);
@@ -584,8 +584,14 @@ bool CRenderSystemDX::CreateDevice()
 
 	if (m_useD3D9Ex)
 	{
-		hr = ((IDirect3D9Ex*)m_pD3D)->CreateDeviceEx(m_adapter, m_devType, m_hFocusWnd,
-		VertexProcessingFlags | D3DCREATE_MULTITHREADED, &m_D3DPP, m_D3DPP.Windowed ? NULL : &m_D3DDMEX, (IDirect3DDevice9Ex**)&m_pD3DDevice );
+		/* 创建设备*/
+		hr = ((IDirect3D9Ex*)m_pD3D)->CreateDeviceEx(	m_adapter, 
+													m_devType, 
+													m_hFocusWnd,
+													VertexProcessingFlags | D3DCREATE_MULTITHREADED, 
+													&m_D3DPP,
+													m_D3DPP.Windowed ? NULL : &m_D3DDMEX, 
+													(IDirect3DDevice9Ex**)&m_pD3DDevice );
 		if (FAILED(hr))
 		{
 			CLog::Log(LOGWARNING, __FUNCTION__" - initial wanted device config failed");
@@ -604,8 +610,13 @@ bool CRenderSystemDX::CreateDevice()
 	}
 	else
 	{
-		hr = m_pD3D->CreateDevice(m_adapter, m_devType, m_hFocusWnd,
-		VertexProcessingFlags | D3DCREATE_MULTITHREADED, &m_D3DPP, &m_pD3DDevice );
+		/* 创建设备*/
+		hr = m_pD3D->CreateDevice(	m_adapter, 
+									m_devType, 
+									m_hFocusWnd,
+									VertexProcessingFlags | D3DCREATE_MULTITHREADED, 
+									&m_D3DPP, 
+									&m_pD3DDevice );
 		if (FAILED(hr))
 		{
 			CLog::Log(LOGWARNING, __FUNCTION__" - initial wanted device config failed");

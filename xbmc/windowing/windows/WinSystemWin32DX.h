@@ -37,18 +37,18 @@
 class CWinSystemWin32DX : public CWinSystemWin32, public CRenderSystemDX
 {
 public:
-  CWinSystemWin32DX();
-  ~CWinSystemWin32DX();
+	CWinSystemWin32DX();
+	~CWinSystemWin32DX();
 
-  virtual bool CreateNewWindow(CStdString name, bool fullScreen, RESOLUTION_INFO& res, PHANDLE_EVENT_FUNC userFunction);
-  virtual bool ResizeWindow(int newWidth, int newHeight, int newLeft, int newTop);
-  virtual void OnMove(int x, int y);
-  virtual bool SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool blankOtherDisplays);
-  virtual bool WindowedMode() { return CRenderSystemDX::m_useWindowedDX; }
+	virtual bool CreateNewWindow(CStdString name, bool fullScreen, RESOLUTION_INFO& res, PHANDLE_EVENT_FUNC userFunction);
+	virtual bool ResizeWindow(int newWidth, int newHeight, int newLeft, int newTop);
+	virtual void OnMove(int x, int y);
+	virtual bool SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool blankOtherDisplays);
+	virtual bool WindowedMode() { return CRenderSystemDX::m_useWindowedDX; }
 
 protected:
-  virtual void UpdateMonitor();
-  bool UseWindowedDX(bool fullScreen);
+	virtual void UpdateMonitor();
+	bool UseWindowedDX(bool fullScreen);
 };
 
 XBMC_GLOBAL_REF(CWinSystemWin32DX,g_Windowing);

@@ -756,6 +756,7 @@ void CXBMCRenderManager::FlipPage(volatile bool& bStop, double timestamp /* = 0L
 
 	{
 		CRetakeLock<CExclusiveLock> lock(m_sharedSection);
+		
 		if(!m_pRenderer) 
 			return;
 

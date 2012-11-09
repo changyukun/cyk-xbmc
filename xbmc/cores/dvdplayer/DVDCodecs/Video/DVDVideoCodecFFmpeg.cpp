@@ -199,6 +199,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 		return false;
 
 	m_dllAvCodec.avcodec_register_all(); /* 注册所有的视频解码器*/
+	
 	m_dllAvFilter.avfilter_register_all(); /* 注册所有的视频filter */
 
 	m_bSoftware     = hints.software;

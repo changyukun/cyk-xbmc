@@ -575,6 +575,28 @@ void CApplication::Preflight()
 #endif
 }
 
+
+/*
+		关于g_Windowing  的相关说明:
+	
+			
+			第1  层					   ( g_Windowing ) <CWinSystemWin32DX>
+											/     		\
+										      /		 \
+										     /			  \
+			第2  层		 <CWinSystemWin32>      <CRenderSystemDX> ( 此类调用DirectX  的接口实现渲染)
+									/						\
+								      /					 	 \
+								     /						         \
+			第3  层		<CWinSystemBase>			<CRenderSystemBase>  ( 此类的主要功能是为子类提供虚函数定义)
+
+
+		备注:  第3  层主要是为第二层提供一些基本的共有功能及为其子类提供虚函数
+				的定义，各个操作系统的区分在第二层来实现的
+	
+*/
+
+
 bool CApplication::Create()
 {
 /*
@@ -859,6 +881,7 @@ bool CApplication::Create()
 	}
 #endif
 
+	/* 初始化渲染系统*/
 	if (!g_Windowing.InitRenderSystem())
 	{
 		CLog::Log(LOGFATAL, "CApplication::Create: Unable to init rendering system");
@@ -2414,6 +2437,7 @@ void CApplication::NewFrame()
 
 	m_frameCond.notifyAll();
 }
+
 
 void CApplication::Render()
 {

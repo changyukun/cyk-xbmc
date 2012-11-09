@@ -61,74 +61,78 @@ enum
   RENDER_QUIRKS_BROKEN_OCCLUSION_QUERY       = 1 << 2,
 };
 
+/*
+	各种操作系统使用的渲染机制不同，但是他们定义的渲染类的接口都差不多，所以
+	他们都继承了此类，作为他们的基类，保证他们拥有大部分相同的方法
+*/
 class CRenderSystemBase
 {
 public:
-  CRenderSystemBase();
-  virtual ~CRenderSystemBase();
+	CRenderSystemBase();
+	virtual ~CRenderSystemBase();
 
-  // Retrieve
-  RenderingSystemType GetRenderingSystemType() { return m_enumRenderingSystem; }
+	// Retrieve
+	RenderingSystemType GetRenderingSystemType() { return m_enumRenderingSystem; }
 
-  virtual bool InitRenderSystem() = 0;
-  virtual bool DestroyRenderSystem() = 0;
-  virtual bool ResetRenderSystem(int width, int height, bool fullScreen, float refreshRate) = 0;
+	virtual bool InitRenderSystem() = 0;
+	virtual bool DestroyRenderSystem() = 0;
+	virtual bool ResetRenderSystem(int width, int height, bool fullScreen, float refreshRate) = 0;
 
-  virtual bool BeginRender() = 0;
-  virtual bool EndRender() = 0;
-  virtual bool PresentRender(const CDirtyRegionList& dirty) = 0;
-  virtual bool ClearBuffers(color_t color) = 0;
-  virtual bool IsExtSupported(const char* extension) = 0;
+	virtual bool BeginRender() = 0;
+	virtual bool EndRender() = 0;
+	virtual bool PresentRender(const CDirtyRegionList& dirty) = 0;
+	virtual bool ClearBuffers(color_t color) = 0;
+	virtual bool IsExtSupported(const char* extension) = 0;
 
-  virtual void SetVSync(bool vsync) = 0;
-  bool GetVSync() { return m_bVSync; }
+	virtual void SetVSync(bool vsync) = 0;
+	bool GetVSync() { return m_bVSync; }
 
-  virtual void SetViewPort(CRect& viewPort) = 0;
-  virtual void GetViewPort(CRect& viewPort) = 0;
+	virtual void SetViewPort(CRect& viewPort) = 0;
+	virtual void GetViewPort(CRect& viewPort) = 0;
 
-  virtual void SetScissors(const CRect &rect) = 0;
-  virtual void ResetScissors() = 0;
+	virtual void SetScissors(const CRect &rect) = 0;
+	virtual void ResetScissors() = 0;
 
-  virtual void CaptureStateBlock() = 0;
-  virtual void ApplyStateBlock() = 0;
+	virtual void CaptureStateBlock() = 0;
+	virtual void ApplyStateBlock() = 0;
 
-  virtual void SetCameraPosition(const CPoint &camera, int screenWidth, int screenHeight) = 0;
-  virtual void ApplyHardwareTransform(const TransformMatrix &matrix) = 0;
-  virtual void RestoreHardwareTransform() = 0;
+	virtual void SetCameraPosition(const CPoint &camera, int screenWidth, int screenHeight) = 0;
+	virtual void ApplyHardwareTransform(const TransformMatrix &matrix) = 0;
+	virtual void RestoreHardwareTransform() = 0;
 
-  virtual bool TestRender() = 0;
+	virtual bool TestRender() = 0;
 
-  /**
-   * Project (x,y,z) 3d scene coordinates to (x,y) 2d screen coordinates
-   */
-  virtual void Project(float &x, float &y, float &z) { }
+	/**
+	* Project (x,y,z) 3d scene coordinates to (x,y) 2d screen coordinates
+	*/
+	virtual void Project(float &x, float &y, float &z) { }
 
-  void GetRenderVersion(unsigned int& major, unsigned int& minor) const;
-  const CStdString& GetRenderVendor() const { return m_RenderVendor; }
-  const CStdString& GetRenderRenderer() const { return m_RenderRenderer; }
-  const CStdString& GetRenderVersionString() const { return m_RenderVersion; }
-  bool SupportsDXT() const;
-  bool SupportsBGRA() const;
-  bool SupportsBGRAApple() const;
-  bool SupportsNPOT(bool dxt) const;
-  unsigned int GetMaxTextureSize() const { return m_maxTextureSize; }
-  unsigned int GetMinDXTPitch() const { return m_minDXTPitch; }
-  unsigned int GetRenderQuirks() const { return m_renderQuirks; }
+	void GetRenderVersion(unsigned int& major, unsigned int& minor) const;
+	const CStdString& GetRenderVendor() const { return m_RenderVendor; }
+	const CStdString& GetRenderRenderer() const { return m_RenderRenderer; }
+	const CStdString& GetRenderVersionString() const { return m_RenderVersion; }
+	bool SupportsDXT() const;
+	bool SupportsBGRA() const;
+	bool SupportsBGRAApple() const;
+	bool SupportsNPOT(bool dxt) const;
+	unsigned int GetMaxTextureSize() const { return m_maxTextureSize; }
+	unsigned int GetMinDXTPitch() const { return m_minDXTPitch; }
+	unsigned int GetRenderQuirks() const { return m_renderQuirks; }
 
 protected:
-  bool                m_bRenderCreated;
-  RenderingSystemType m_enumRenderingSystem;
-  bool                m_bVSync;
-  unsigned int        m_maxTextureSize;
-  unsigned int        m_minDXTPitch;
+	bool                m_bRenderCreated;
+	RenderingSystemType m_enumRenderingSystem;
+	bool                m_bVSync;
+	unsigned int        m_maxTextureSize;
+	unsigned int        m_minDXTPitch;
 
-  CStdString   m_RenderRenderer;
-  CStdString   m_RenderVendor;
-  CStdString   m_RenderVersion;
-  int          m_RenderVersionMinor;
-  int          m_RenderVersionMajor;
-  unsigned int m_renderCaps;
-  unsigned int m_renderQuirks;
+	CStdString   m_RenderRenderer;
+	CStdString   m_RenderVendor;
+	CStdString   m_RenderVersion;
+	int          m_RenderVersionMinor;
+	int          m_RenderVersionMajor;
+	unsigned int m_renderCaps;
+	unsigned int m_renderQuirks;
 };
 
 #endif // RENDER_SYSTEM_H
