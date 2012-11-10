@@ -584,21 +584,27 @@ typedef struct AVFilter
 /* 滤镜上下文数据结构*/
 struct AVFilterContext 
 {
-	const AVClass *av_class; 	/* 见函数avfilter_open  中对其进行赋值，默认赋值为全局变量avfilter_class*/          ///< needed for av_log()
+	const AVClass *av_class; 	/* 	见函数avfilter_open  中对其进行赋值，默
+								认赋值为全局变量avfilter_class*/          							///< needed for av_log()
 
-	AVFilter *filter; /* 指向具体的filter */          ///< the AVFilter of which this is an instance
+	AVFilter *filter; 			/* 指向具体的filter */          											///< the AVFilter of which this is an instance
+	char *name;      			/* 此filter  实例上下文的名字*/                							///< name of this filter instance
 
-	char *name;      /* 此filter  实例上下文的名字*/                ///< name of this filter instance
+	unsigned input_count;        /* 	见函数avfilter_open  中的代码，此值等于
+								域成员filter 的inputs 域成员数组的长度*/   					///< number of input pads
+	AVFilterPad   *input_pads; 	/* 	见函数avfilter_open  中的代码，此数组为
+								域成员filter 的inputs 域成员的一个拷贝*/       				///< array of input pads
+	AVFilterLink **inputs;      	/* 	指向一个滤镜链数据结构，用于将上
+								级滤镜与下级滤镜进行连接的*/   						///< array of pointers to input links
 
-	unsigned input_count;           ///< number of input pads
-	AVFilterPad   *input_pads;      ///< array of input pads
-	AVFilterLink **inputs;      /* 指向一个滤镜链数据结构，用于将上级滤镜与下级滤镜进行连接的*/   				 ///< array of pointers to input links
+	unsigned output_count;   	/* 	见函数avfilter_open  中的代码，此值等于
+								域成员filter 的outputs 域成员数组的长度*/       					///< number of output pads
+	AVFilterPad* output_pads;	/* 	见函数avfilter_open  中的代码，此数组为
+								域成员filter 的outputs 域成员的一个拷贝*/ 					///< array of output pads
+	AVFilterLink **outputs;    	/* 	指向一个滤镜链数据结构，用于将上
+								级滤镜与下级滤镜进行连接的*/     						///< array of pointers to output links
 
-	unsigned output_count;          ///< number of output pads
-	AVFilterPad   *output_pads;     ///< array of output pads
-	AVFilterLink **outputs;    /* 指向一个滤镜链数据结构，用于将上级滤镜与下级滤镜进行连接的*/     ///< array of pointers to output links
-
-	void *priv;                     ///< private data for use by the filter
+	void *priv;                     	///< private data for use by the filter
 };
 
 /**

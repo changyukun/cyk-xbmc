@@ -250,6 +250,7 @@ static AVFilterInOut *extract_inout(const char *label, AVFilterInOut **links)
 		1、此函数的实质就是在输入的links  链表中查找与传入的名字
 			相匹配的单元，然后将找到的这个匹配的单元返回，同时
 			将参数links  定位到此单元的下一个上
+		2、注意此时并没有将找到的单元从队列中清除
 */
 	AVFilterInOut *ret;
 
@@ -274,7 +275,8 @@ static void insert_inout(AVFilterInOut **inouts, AVFilterInOut *element)
 		1、
 		
 	说明:
-		1、
+		1、此函数的实质就是将参数element  插入到参数inouts  队列
+			的前面，然后将参数inouts  指向这个新队列的前面
 */
 	element->next = *inouts;
 	*inouts = element;
@@ -349,7 +351,7 @@ static int parse_inputs(const char **buf, AVFilterInOut **curr_inputs,  AVFilter
 	参数:
 		1、buf			: 传入一个字符串( 描述滤镜连接信息的)
 		2、curr_inputs	: 用于返回的
-		3、open_outputs	: 传入输出io
+		3、open_outputs	: 传入输出io，指向需要打开输出io  的那些滤镜上下文
 		4、log_ctx		: 	
 		
 	返回:
@@ -362,6 +364,9 @@ static int parse_inputs(const char **buf, AVFilterInOut **curr_inputs,  AVFilter
 				[2222]
 				[3333]
 			则返回的pad = 3
+			
+		3、此函数实质是用来分析作为输入一级的滤镜，所以参数open_outputs  是
+			相应需要打开输出的滤镜
 			
 */
 	int pad = 0;
@@ -499,9 +504,18 @@ int avfilter_graph_parse(	AVFilterGraph *graph,
 		*/
 		filters += strspn(filters, WHITESPACES); /* 相当于越过回车换行*/
 
+		/*
+			第一步，分析输入的源，要作为输入的源，就是要打开输出io  的，所以从
+			打开输出io  的队列中查找与名字相匹配的那些将其插入到curr_inputs  队列中，
+			即作为当前输入的源。
+		*/
 		if ((ret = parse_inputs(&filters, &curr_inputs, &open_outputs, log_ctx)) < 0)
 			goto fail;
 
+
+		/*
+			第二步，根据字符串的描述找到一个对应滤镜的实例( 也对应一个滤镜上下文)
+		*/
 		if ((ret = parse_filter(&filter, &filters, graph, index, log_ctx)) < 0)
 			goto fail;
 
@@ -513,9 +527,19 @@ int avfilter_graph_parse(	AVFilterGraph *graph,
 				goto fail;
 		}
 
+		/*
+			第三步，将当前输入的源，即curr_inputs  队列中的有效单元与第二步中找到的
+			那个滤镜上下文的所有输入io  进行链接，对于curr_inputs  队列中无效的单元则
+			对其内容更新( 见函数的代码)，使其变为有效，但将其加入到目标的队列
+			中(  做为目标滤镜的需要打开输入io  )，即插入到打开输入io  队列中
+		*/
 		if ((ret = link_filter_inouts(filter, &curr_inputs, &open_inputs, log_ctx)) < 0)
 			goto fail;
 
+
+		/*
+			第四步，
+		*/
 		if ((ret = parse_outputs(&filters, &curr_inputs, &open_inputs, &open_outputs, log_ctx)) < 0)
 			goto fail;
 

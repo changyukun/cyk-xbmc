@@ -117,7 +117,7 @@ int avfilter_link(AVFilterContext *src, unsigned srcpad, AVFilterContext *dst, u
 		1、此函数实现将源和目标进行一个连接的作用，大致说明如下
 
 			源的输出与目标的输入通过一个连接件相当于连接起来，即将
-			源的
+			源的出与目标的输入构成连接
 
 		2、参考linphone  源码中的filter  连接的关系
 */
