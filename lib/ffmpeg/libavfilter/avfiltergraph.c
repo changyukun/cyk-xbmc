@@ -129,30 +129,46 @@ fail:
 
 int ff_avfilter_graph_check_validity(AVFilterGraph *graph, AVClass *log_ctx)
 {
-    AVFilterContext *filt;
-    int i, j;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、实质就是对滤镜图表中所有的滤镜上下文进行判断，判断是否
+			所有的输入、输出io  都已经连接完成
+*/
+	AVFilterContext *filt;
+	int i, j;
 
-    for (i = 0; i < graph->filter_count; i++) {
-        filt = graph->filters[i];
+	for (i = 0; i < graph->filter_count; i++) /* 遍历图表中所有滤镜的上下文*/
+	{
+		filt = graph->filters[i];
 
-        for (j = 0; j < filt->input_count; j++) {
-            if (!filt->inputs[j] || !filt->inputs[j]->src) {
-                av_log(log_ctx, AV_LOG_ERROR,
-                       "Input pad \"%s\" for the filter \"%s\" of type \"%s\" not connected to any source\n",
-                       filt->input_pads[j].name, filt->name, filt->filter->name);
-                return -1;
-            }
-        }
+		for (j = 0; j < filt->input_count; j++) /* 遍历输入io  */
+		{
+			if (!filt->inputs[j] || !filt->inputs[j]->src) /* 如果输入io   为空，或者于此输入io  相连接的源为空，即有问题了*/
+			{
+				av_log(log_ctx, AV_LOG_ERROR,
+								"Input pad \"%s\" for the filter \"%s\" of type \"%s\" not connected to any source\n",
+								filt->input_pads[j].name, filt->name, filt->filter->name);
+				return -1;
+			}
+		}
 
-        for (j = 0; j < filt->output_count; j++) {
-            if (!filt->outputs[j] || !filt->outputs[j]->dst) {
-                av_log(log_ctx, AV_LOG_ERROR,
-                       "Output pad \"%s\" for the filter \"%s\" of type \"%s\" not connected to any destination\n",
-                       filt->output_pads[j].name, filt->name, filt->filter->name);
-                return -1;
-            }
-        }
-    }
+		for (j = 0; j < filt->output_count; j++)  /* 遍历输出io  */ 
+		{
+			if (!filt->outputs[j] || !filt->outputs[j]->dst) /* 如果输出io   为空，或者于此输出io  相连接的源为空，即有问题了*/
+			{
+				av_log(log_ctx, AV_LOG_ERROR,
+								"Output pad \"%s\" for the filter \"%s\" of type \"%s\" not connected to any destination\n",
+								filt->output_pads[j].name, filt->name, filt->filter->name);
+				return -1;
+			}
+		}
+	}
 
     return 0;
 }
@@ -266,6 +282,16 @@ static void pick_formats(AVFilterGraph *graph)
 
 int ff_avfilter_graph_config_formats(AVFilterGraph *graph, AVClass *log_ctx)
 {
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
     /* find supported formats from sub-filters, and merge along links */
     if (query_formats(graph, log_ctx))
         return -1;
@@ -287,14 +313,14 @@ int avfilter_graph_config(AVFilterGraph *graphctx, AVClass *log_ctx)
 		1、
 		
 	说明:
-		1、
+		1、实质就是对滤镜图表进行再次的确认
 */
 	int ret;
 
-	if ((ret = ff_avfilter_graph_check_validity(graphctx, log_ctx)))
+	if ((ret = ff_avfilter_graph_check_validity(graphctx, log_ctx))) /* 见函数分析*/
 		return ret;
 	
-	if ((ret = ff_avfilter_graph_config_formats(graphctx, log_ctx)))
+	if ((ret = ff_avfilter_graph_config_formats(graphctx, log_ctx))) /* 见函数分析*/
 		return ret;
 	
 	if ((ret = ff_avfilter_graph_config_links(graphctx, log_ctx)))

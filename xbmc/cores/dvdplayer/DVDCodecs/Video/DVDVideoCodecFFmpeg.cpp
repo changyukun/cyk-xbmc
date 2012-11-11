@@ -952,8 +952,8 @@ int CDVDVideoCodecFFmpeg::FilterOpen(const CStdString& filters)
 
 	if (!filters.empty())
 	{
-		AVFilterInOut* outputs = m_dllAvFilter.avfilter_inout_alloc();	/* 分配一个输出pad */
-		AVFilterInOut* inputs  = m_dllAvFilter.avfilter_inout_alloc();	/* 分配一个输入pad */
+		AVFilterInOut* outputs = m_dllAvFilter.avfilter_inout_alloc();	/* 分配一个输出 */
+		AVFilterInOut* inputs  = m_dllAvFilter.avfilter_inout_alloc();	/* 分配一个输入 */
 
 		outputs->name    	= m_dllAvUtil.av_strdup("in");
 		outputs->filter_ctx	= m_pFilterIn;
