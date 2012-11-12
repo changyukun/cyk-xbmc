@@ -679,11 +679,11 @@ void CDVDPlayerVideo::Process()
 			}
 
 			// loop while no error
-			while (!m_bStop)
+			while (!m_bStop) /* 如何跳出此循环的，见此循环的后面几行代码的分析，通过设定解码器的返回状态实现的*/
 			{
 
 				// if decoder was flushed, we need to seek back again to resume rendering
-				if (iDecoderState & VC_FLUSHED)
+				if (iDecoderState & VC_FLUSHED) /* 解码器丢失状态了，需要重新启动解码*/
 				{
 					CLog::Log(LOGDEBUG, "CDVDPlayerVideo - video decoder was flushed");
 					while(!m_packets.empty())
@@ -703,14 +703,14 @@ void CDVDPlayerVideo::Process()
 				}
 
 				// if decoder had an error, tell it to reset to avoid more problems
-				if (iDecoderState & VC_ERROR)
+				if (iDecoderState & VC_ERROR) /* 解码器发生错误了*/
 				{
 					CLog::Log(LOGDEBUG, "CDVDPlayerVideo - video decoder returned error");
 					break;
 				}
 
 				// check for a new picture
-				if (iDecoderState & VC_PICTURE)
+				if (iDecoderState & VC_PICTURE) /* 解码器正确解出来图片了*/
 				{
 
 					// try to retrieve the picture (should never fail!), unless there is a demuxer bug ofcours
@@ -868,6 +868,7 @@ void CDVDPlayerVideo::Process()
 				if (iDecoderState & VC_BUFFER)
 					break;
 
+				/* 调用空的数据进行解码，然后返回解码器的状态还有VC_BUFFER ，然后下次循环就会跳出此循环*/
 				// the decoder didn't need more data, flush the remaning buffer
 				iDecoderState = m_pVideoCodec->Decode(NULL, 0, DVD_NOPTS_VALUE, DVD_NOPTS_VALUE);
 			}
