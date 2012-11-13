@@ -999,6 +999,7 @@ bool CDVDPlayer::ReadPacket(DemuxPacket*& packet, CDemuxStream*& stream)
 	// check if we should read from subtitle demuxer
 	if(m_dvdPlayerSubtitle.AcceptsData() && m_pSubtitleDemuxer )
 	{
+		/* 读取字幕数据包*/
 		if(m_pSubtitleDemuxer)
 			packet = m_pSubtitleDemuxer->Read();
 
@@ -1024,6 +1025,7 @@ bool CDVDPlayer::ReadPacket(DemuxPacket*& packet, CDemuxStream*& stream)
 	}
 
 	// read a data frame from stream.
+	/* 从流中读取一个数据包回来*/
 	if(m_pDemuxer)
 		packet = m_pDemuxer->Read();
 
@@ -1189,6 +1191,12 @@ bool CDVDPlayer::IsBetterStream(CCurrentStream& current, CDemuxStream* stream)
 				了thread_func  线程工作，即func  函数是在thread_func  线程中完成的
 			2)	如果execute = avcodec_default_execute()，则avcodec_default_execute()  函数中只是直接的对func  函数的调用，所以
 				func  函数是在线程video  中完成的
+
+	说明:	各个解码线程，即解码器( 如视频解码器m_dvdPlayerVideo、音频解码器、字幕解码器等)，这些解码
+			器实例都有一个线程函数，同时都有一个消息队列成员m_dvdPlayerVideo -> m_messageQueue，线程函数都是
+			对这个消息队列进行处理，外面的如果想控制这个解码器实例，都是通过向此消息队列发送
+			消息来实现的
+			
 */
 
 void CDVDPlayer::Process()
@@ -1441,6 +1449,7 @@ void CDVDPlayer::Process()
 			}
 
 			// make sure we tell all players to finish it's data
+			/* 没有读取到数据包，然后给所有的解码器发送结束数据处理的消息*/
 			if(m_CurrentAudio.inited)
 				m_dvdPlayerAudio.SendMessage(new CDVDMsg(CDVDMsg::GENERAL_EOF));
 			

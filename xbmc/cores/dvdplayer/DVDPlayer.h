@@ -368,54 +368,56 @@ protected:
     int iSelectedAudioStream; // mpeg stream id, or -1 if disabled
   } m_dvd;
 
-  struct SPlayerState
-  {
-    SPlayerState() { Clear(); }
-    void Clear()
-    {
-      timestamp     = 0;
-      time          = 0;
-      time_total    = 0;
-      time_offset   = 0;
-      dts           = DVD_NOPTS_VALUE;
-      player_state  = "";
-      chapter       = 0;
-      chapter_name  = "";
-      chapter_count = 0;
-      canrecord     = false;
-      recording     = false;
-      demux_video   = "";
-      demux_audio   = "";
-      cache_bytes   = 0;
-      cache_level   = 0.0;
-      cache_delay   = 0.0;
-      cache_offset  = 0.0;
-    }
+/* 播放器状态转换数据结构*/
+struct SPlayerState
+{
+	SPlayerState() { Clear(); }
+	void Clear()
+	{
+		timestamp     = 0;
+		time          = 0;
+		time_total    = 0;
+		time_offset   = 0;
+		dts           = DVD_NOPTS_VALUE;
+		player_state  = "";
+		chapter       = 0;
+		chapter_name  = "";
+		chapter_count = 0;
+		canrecord     = false;
+		recording     = false;
+		demux_video   = "";
+		demux_audio   = "";
+		cache_bytes   = 0;
+		cache_level   = 0.0;
+		cache_delay   = 0.0;
+		cache_offset  = 0.0;
+	}
 
-    double timestamp;         // last time of update
-    double time_offset;       // difference between time and pts
+	double timestamp;         // last time of update
+	double time_offset;       // difference between time and pts
 
-    double time;              // current playback time
-    double time_total;        // total playback time
-    double dts;               // last known dts
+	double time;              	// current playback time
+	double time_total;      /* 播放持续的总时间，见CDVDDemuxFFmpeg::GetStreamLength() */		// total playback time
+	double dts;               	// last known dts
 
-    std::string player_state;  // full player state
+	std::string player_state;  // full player state
 
-    int         chapter;      // current chapter
-    std::string chapter_name; // name of current chapter
-    int         chapter_count;// number of chapter
+	int         chapter;      // current chapter
+	std::string chapter_name; // name of current chapter
+	int         chapter_count;// number of chapter
 
-    bool canrecord;           // can input stream record
-    bool recording;           // are we currently recording
+	bool canrecord;           // can input stream record
+	bool recording;           // are we currently recording
 
-    std::string demux_video;
-    std::string demux_audio;
+	std::string demux_video;
+	std::string demux_audio;
 
-    __int64 cache_bytes;   // number of bytes current's cached
-    double  cache_level;   // current estimated required cache level
-    double  cache_delay;   // time until cache is expected to reach estimated level
-    double  cache_offset;  // percentage of file ahead of current position
-  } m_State;
+	__int64 cache_bytes;   // number of bytes current's cached
+	double  cache_level;   // current estimated required cache level
+	double  cache_delay;   // time until cache is expected to reach estimated level
+	double  cache_offset;  // percentage of file ahead of current position
+} m_State;
+
   CCriticalSection m_StateSection;
 
   CEvent m_ready;

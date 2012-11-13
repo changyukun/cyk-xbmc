@@ -114,7 +114,7 @@ public:
   virtual void      SetDiscard(AVDiscard discard);
   virtual AVDiscard GetDiscard();
 
-  int iId;         // most of the time starting from 0
+  int iId;   /* 序号，此值与m_pFormatContext->streams  数组中各个单元的序号对应*/      // most of the time starting from 0
   int iPhysicalId; // id
   CodecID codec;
   unsigned int codec_fourcc; // if available
@@ -221,14 +221,14 @@ public:
 
 typedef struct DemuxPacket
 {
-  BYTE* pData;   // data
-  int iSize;     // data size
-  int iStreamId; // integer representing the stream index
-  int iGroupId;  // the group this data belongs to, used to group data from different streams together
+	BYTE* 	pData;   		/* 数据包buffer  	*/																								// data
+	int 		iSize;     	/* 数据长度		*/																								// data size
+	int 		iStreamId; 	/* 数据流id，索引，即与m_pFormatContext->streams[]  数组下标相对应*/																							// integer representing the stream index
+	int 		iGroupId;  	/* 数据流组id，一组为不同的数据流组成的，见CDVDPlayer::ReadPacket  对其赋值*/				// the group this data belongs to, used to group data from different streams together
 
-  double pts; // pts in DVD_TIME_BASE
-  double dts; // dts in DVD_TIME_BASE
-  double duration; // duration in DVD_TIME_BASE if available
+	double pts; 		// pts in DVD_TIME_BASE
+	double dts; 		// dts in DVD_TIME_BASE
+	double duration; 	// duration in DVD_TIME_BASE if available
 } DemuxPacket;
 
 

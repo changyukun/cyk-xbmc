@@ -601,7 +601,7 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 
 		/* 调用ffmpeg 打开demuxer */
 		// open the demuxer
-		if (m_dllAvFormat.av_open_input_stream(&m_pFormatContext, m_ioContext, strFile.c_str(), iformat, NULL) < 0) 
+		if (m_dllAvFormat.av_open_input_stream(&m_pFormatContext, m_ioContext, strFile.c_str(), iformat, NULL) < 0) /* 调用demux  打开*/
 		{
 			CLog::Log(LOGERROR, "%s - Error, could not open file %s", __FUNCTION__, strFile.c_str());
 			Dispose();
@@ -662,7 +662,7 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 	if (m_pFormatContext->nb_programs)
 	{
 		// look for first non empty stream and discard nonselected programs
-		/* 选出第一个节目作为播放的*/
+		/* 选出第一个节目作为播放的，即第一个节目中流的个数大于0 的即为第一个有效的节目*/
 		for (unsigned int i = 0; i < m_pFormatContext->nb_programs; i++)
 		{
 			if(m_program == UINT_MAX && m_pFormatContext->programs[i]->nb_stream_indexes > 0)
@@ -847,13 +847,19 @@ double CDVDDemuxFFmpeg::ConvertTimestamp(int64_t pts, int den, int num)
 {
 /*
 	参数:
-		1、
+		1、pts	: 传入一个读取到的数据包的pts / dts  的值( 相当于数据包中原始的值)
+		2、den	: 传入一个计算因子(  理解为从流里面描述得到的)
+		3、num	: 传入一个计算因子(  理解为从流里面描述得到的)
 		
 	返回:
 		1、
 		
 	说明:
-		1、
+		1、注意数据包中的pts  、dts  与ffmpeg  用于解码的pts  、dts  有一定的区别，区别就在用
+			通过此函数将数据包中的pts 、dts  转换成了ffmpeg  用于解码的pts、dts  了
+
+		2、此函数实质返回的是经过计算( 用传入的两个因子) 的数据包的pts 、dts  的值减去
+			流的起始时间的长度值，然后将这个长度值乘以DVD_TIME_BASE  作为最后的返回
 */
 	if (pts == (int64_t)AV_NOPTS_VALUE)
 		return DVD_NOPTS_VALUE;
@@ -861,19 +867,21 @@ double CDVDDemuxFFmpeg::ConvertTimestamp(int64_t pts, int den, int num)
 	// do calculations in floats as they can easily overflow otherwise
 	// we don't care for having a completly exact timestamp anyway
 	double timestamp = (double)pts * num  / den;
-	double starttime = 0.0f;
+	double starttime = 0.0f; /* 起始时间为0 */
 
 	// for dvd's we need the original time
 	if(m_pInput->IsStreamType(DVDSTREAM_TYPE_DVD))
-		starttime = static_cast<CDVDInputStreamNavigator*>(m_pInput)->GetTimeStampCorrection() / DVD_TIME_BASE;
-	else if (m_pFormatContext->start_time != (int64_t)AV_NOPTS_VALUE)
+		starttime = static_cast<CDVDInputStreamNavigator*>(m_pInput)->GetTimeStampCorrection() / DVD_TIME_BASE; /* 计算一个起始时间*/
+	else if (m_pFormatContext->start_time != (int64_t)AV_NOPTS_VALUE)  /* 计算一个起始时间*/
 		starttime = (double)m_pFormatContext->start_time / AV_TIME_BASE;
 
+	/* 最后确定时间长度，时间戳减去起始时间的差值*/
 	if(timestamp > starttime)
 		timestamp -= starttime;
-	else if( timestamp + 0.1f > starttime )
+	else if( timestamp + 0.1f > starttime ) /* 时间戳+ 0.1  就大于起始时间了，则认为时间为0，确切的说是当前时间戳与起始时间的差值为0  */
 		timestamp = 0;
 
+	/* 计算最后的返回结果，即乘以DVD_TIME_BASE  */
 	return timestamp*DVD_TIME_BASE;
 }
 
@@ -953,12 +961,13 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 			}
 			else /* 读取到正确的数据包*/
 			{
-				AVStream *stream = m_pFormatContext->streams[pkt.stream_index];
+				AVStream *stream = m_pFormatContext->streams[pkt.stream_index]; /* 取出此数据包对应的流的信息*/
 
 				/* 分配一块用于存取数据包的内存，返回的就是这个内存*/
 				if (m_program != UINT_MAX)
 				{
 					/* check so packet belongs to selected program */
+					/* 判断这个数据包是否属于当前这个节目的*/
 					for (unsigned int i = 0; i < m_pFormatContext->programs[m_program]->nb_stream_indexes; i++)
 					{
 						if(pkt.stream_index == (int)m_pFormatContext->programs[m_program]->stream_index[i])
@@ -980,9 +989,11 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 					// lavf sometimes bugs out and gives 0 dts/pts instead of no dts/pts
 					// since this could only happens on initial frame under normal
 					// circomstances, let's assume it is wrong all the time
-					if(pkt.dts == 0)
+					
+					if(pkt.dts == 0) /* 包中没有dts  时间*/
 						pkt.dts = AV_NOPTS_VALUE;
-					if(pkt.pts == 0)
+					
+					if(pkt.pts == 0) /* 包中没有pts  时间*/
 						pkt.pts = AV_NOPTS_VALUE;
 
 					if(m_bMatroska && stream->codec && stream->codec->codec_type == AVMEDIA_TYPE_VIDEO)
@@ -1017,6 +1028,7 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 					if (pkt.data)
 						memcpy(pPacket->pData, pkt.data, pPacket->iSize); /* 拷贝数据*/
 
+					/* 转换计算得到包的时间戳*/
 					pPacket->pts = ConvertTimestamp(pkt.pts, stream->time_base.den, stream->time_base.num);
 					pPacket->dts = ConvertTimestamp(pkt.dts, stream->time_base.den, stream->time_base.num);
 					pPacket->duration =  DVD_SEC_TO_TIME((double)pkt.duration * stream->time_base.num / stream->time_base.den);
@@ -1224,7 +1236,7 @@ int CDVDDemuxFFmpeg::GetStreamLength()
 		1、
 		
 	说明:
-		1、
+		1、返回流持续的时间，毫秒数
 */
 	if (!m_pFormatContext)
 		return 0;
@@ -1317,7 +1329,10 @@ void CDVDDemuxFFmpeg::AddStream(int iId)
 		1、
 		
 	说明:
-		1、
+		1、此函数传入的参数iId  实质为m_pFormatContext->streams[]  数组中某个单元的序号，然后根据这个
+			流的编解码类型再具体分配一个特定的流的实例( 如音频的CDemuxStreamAudioFFmpeg，视频的
+			CDemuxStreamVideoFFmpeg  等等)，然后用成员数组m_streams[]  中以参数iId  为序号的单元来保存这个
+			实例，保存的同时利用m_pFormatContext->streams[]  的单元来填充这个实例的相关信息
 */
 	AVStream* pStream = m_pFormatContext->streams[iId];
 	if (pStream)
