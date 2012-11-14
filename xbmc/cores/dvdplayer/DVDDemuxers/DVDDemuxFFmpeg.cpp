@@ -860,6 +860,8 @@ double CDVDDemuxFFmpeg::ConvertTimestamp(int64_t pts, int den, int num)
 
 		2、此函数实质返回的是经过计算( 用传入的两个因子) 的数据包的pts 、dts  的值减去
 			流的起始时间的长度值，然后将这个长度值乘以DVD_TIME_BASE  作为最后的返回
+
+		3、结合CDVDDemuxFFmpeg::Read()  函数的说明
 */
 	if (pts == (int64_t)AV_NOPTS_VALUE)
 		return DVD_NOPTS_VALUE;
@@ -895,7 +897,26 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 		1、
 		
 	说明:
-		1、
+		1、此函数的流程如下:
+			A、首先调用ffmpeg  的av_read_frame()  读取一个数据包回来，命名为PacketRaw  吧( 类型为AVPacket )
+			B、正确的读取到PacketRaw  后就分配一个用于返回类型的数据包内存，命名为PacketFF  吧( 类型为DemuxPacket )
+			C、将PacketRaw  包中的数据填充到PacketFF  包中，其中有些数据需要进行转换，如pts、dts、duration 等等
+
+				具体转换为:
+
+				已知:
+					den  	=  stream->time_base.den							// 	从流中得到的
+					num 	=  stream->time_base.num							// 	从流中得到的
+					start 	=  m_pFormatContext->start_time / AV_TIME_BASE		// 	将m_pFormatContext->start_time  转换为含有多少个AV_TIME_BASE  的值。
+																				(  假设AV_TIME_BASE  为60，则m_pFormatContext->start_time 的单位为秒，
+																				而下面计算得到的timestamp  的单位为分钟，所以此处相当于
+																				将秒转换为分钟统一计算，即统一单位计算)
+				则:
+					timestamp 		= (PacketRaw->pts) * num / den				// 	此值相当于一个含有多少个AV_TIME_BASE  的值，见上面说明，相当于单位为分钟
+					diff 				= timestamp - start						// 	计算两个差值，即包的时间戳与整个流的起始时间戳的差值，见上面说明，相当于单位为分钟
+					PacketFF->pts  	= diff * AV_TIME_BASE						// 	相当于将差值的分钟数转换为秒返回		
+
+				关于这个时间的转换，可以参看CDVDDemuxFFmpeg::ConvertTimestamp()  方法的源代码
 */
 	g_demuxer = this;
 
@@ -1267,7 +1288,7 @@ CDemuxStream* CDVDDemuxFFmpeg::GetStream(int iStreamId)
 		1、
 		
 	说明:
-		1、
+		1、见方法AddStream()  对m_streams  的操作
 */
 	if (iStreamId < 0 || iStreamId >= MAX_STREAMS) 
 		return NULL;

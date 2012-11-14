@@ -679,17 +679,20 @@ typedef struct AVStream {
 	一个节目的数据结构定义
 	一个节目内可能还有多个数据流，如音频流、视频流
 */
-typedef struct AVProgram {
-    int            id;
+typedef struct AVProgram 
+{
+	int            id;
 #if FF_API_OLD_METADATA
-    attribute_deprecated char           *provider_name; ///< network name for DVB streams
-    attribute_deprecated char           *name;          ///< service name for DVB streams
+	attribute_deprecated char           *provider_name; ///< network name for DVB streams
+	attribute_deprecated char           *name;          ///< service name for DVB streams
 #endif
-    int            flags;
-    enum AVDiscard discard;        ///< selects which program to discard and which to feed to the caller
-    unsigned int   *stream_index; /* 指向保存各个流序号的指针数组，相当于每个单元保存着各个流的序号*/
-    unsigned int   nb_stream_indexes; /* 节目内流索引的个数，相当于流的个数*/
-    AVMetadata *metadata;
+	int            flags;
+	enum AVDiscard discard;        ///< selects which program to discard and which to feed to the caller
+	unsigned int   *stream_index; /* 指向保存各个流序号的
+								  指针数组，相当于每个
+								  单元保存着各个流的序号*/
+	unsigned int   nb_stream_indexes; /* 节目内流索引的个数，相当于流的个数*/
+	AVMetadata *metadata;
 } AVProgram;
 
 #define AVFMTCTX_NOHEADER      0x0001 /**< signal that no header is present
@@ -744,7 +747,8 @@ typedef struct AVChapter {
 typedef struct AVFormatContext 
 {
 	const AVClass *av_class; /* 此值被设置为全局变量av_format_context_class  ，见函数avformat_alloc_context 中*/   /**< Set by avformat_alloc_context. */
-	/* Can only be iformat or oformat, not both at the same time. */
+
+	/* Can only be iformat or oformat, not both at the same time. */																																			
 	struct AVInputFormat *iformat; /* 解复用数据结构，见函数av_open_input_stream 对其赋值，注意数据输入格式与数据输出格式不能同时赋值，即此数据结构不能同时作为输入、输出的容器，如此值为ff_mpegts_demuxer */
 	struct AVOutputFormat *oformat; /* 复用数据结构，见上面iformat  域成员的说明*/
 	void *priv_data;
@@ -757,6 +761,8 @@ typedef struct AVFormatContext
 	AVStream **streams;
 #endif
 	char filename[1024]; /**< input or output filename */
+
+	
 	/* stream info */
 	int64_t timestamp;
 #if FF_API_OLD_METADATA
@@ -784,7 +790,11 @@ typedef struct AVFormatContext
 	* AV_TIME_BASE fractional seconds. NEVER set this value directly:
 	* It is deduced from the AVStream values.
 	*/
-	int64_t start_time;
+	int64_t start_time; /* 	此值为流的起始时间戳。可以理解为流中的时间戳均为一个长度的值，即相当于
+						包中所有的时间都是以某个时间为基准，然后计算与此基准的差值，如pts、dts  都
+						理解为一个与基准的差值
+					     	对此域的理解可参考CDVDDemuxFFmpeg::ConvertTimestamp() 的说明
+					  */
 
 	/**
 	* Decoding: duration of the stream, in AV_TIME_BASE fractional

@@ -114,6 +114,10 @@ public:
   virtual void      SetDiscard(AVDiscard discard);
   virtual AVDiscard GetDiscard();
 
+  /*
+  	见CDVDDemuxFFmpeg::AddStream()  方法对此类中各个域成员的赋值
+  */
+
   int iId;   /* 序号，此值与m_pFormatContext->streams  数组中各个单元的序号对应*/      // most of the time starting from 0
   int iPhysicalId; // id
   CodecID codec;
@@ -226,6 +230,10 @@ typedef struct DemuxPacket
 	int 		iStreamId; 	/* 数据流id，索引，即与m_pFormatContext->streams[]  数组下标相对应*/																							// integer representing the stream index
 	int 		iGroupId;  	/* 数据流组id，一组为不同的数据流组成的，见CDVDPlayer::ReadPacket  对其赋值*/				// the group this data belongs to, used to group data from different streams together
 
+	/* 
+		如下域成员pts、dts  的值的含义，参看方法CDVDDemuxFFmpeg::Read()  说明，这些
+		值都是转换后的值，即PacketFF  包的值
+	*/
 	double pts; 		// pts in DVD_TIME_BASE
 	double dts; 		// dts in DVD_TIME_BASE
 	double duration; 	// duration in DVD_TIME_BASE if available

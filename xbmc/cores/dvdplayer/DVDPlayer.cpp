@@ -1040,7 +1040,7 @@ bool CDVDPlayer::ReadPacket(DemuxPacket*& packet, CDemuxStream*& stream)
 		if(packet->iStreamId < 0)
 			return true;
 
-		stream = m_pDemuxer->GetStream(packet->iStreamId);
+		stream = m_pDemuxer->GetStream(packet->iStreamId); /* 见此CDVDDemuxFFmpeg::GetStream()  方法分析，*/
 		if (!stream)
 		{
 			CLog::Log(LOGERROR, "%s - Error demux packet doesn't belong to a valid stream", __FUNCTION__);
@@ -1533,6 +1533,7 @@ void CDVDPlayer::ProcessPacket(CDemuxStream* pStream, DemuxPacket* pPacket)
 
 	/*
 		这里根据流的类型进行分别处理，如视频、音频、字母等等
+		首先对包中的数据判断是否是当前正在播放的音频、视频，然后才交由具体的播放器去处理
 	*/
 	try
 	{
@@ -1932,7 +1933,11 @@ bool CDVDPlayer::CheckPlayerInit(CCurrentStream& current, unsigned int source)
 		1、
 		
 	说明:
-		1、
+		1、此函数的参数current  所代表的内容要视此函数被谁调用了，如下几种情况
+			A ) 如video 通过ProcessVideoData() 方法调用，则参数current 就为m_CurrentVideo
+			B ) 如audio 通过ProcessAudioData() 方法调用，则参数current 就为m_CurrentAudio
+			C ) 如subdata 通过ProcessSubData() 方法调用，则参数current 就为m_CurrentSubtitle
+			D ) 如teletexdata 通过ProcessTeletextData() 方法调用，则参数current 就为m_CurrentTeletext
 */
 	if(current.startpts != DVD_NOPTS_VALUE && current.dts != DVD_NOPTS_VALUE)
 	{
@@ -1970,13 +1975,15 @@ bool CDVDPlayer::CheckPlayerInit(CCurrentStream& current, unsigned int source)
 	//If this is the first packet after a discontinuity, send it as a resync
 	if (current.inited == false && current.dts != DVD_NOPTS_VALUE)
 	{
-		current.inited   = true;
-		current.startpts = current.dts;
+		current.inited   = true; /* 设定inited  标记为真*/
+		current.startpts = current.dts; /* 将此包的dts  就作为此当前流的startts，主要看是谁调用的此函数
+										如视频通过ProcessVideoData() 方法调用，则current 就为m_CurrentVideo
+										如音频通过ProcessAudioData() 方法调用，则current 就为m_CurrentAudio*/
 
 		bool setclock = false;
 		if(m_playSpeed == DVD_PLAYSPEED_NORMAL)
 		{
-			if(     source == DVDPLAYER_AUDIO)
+			if(source == DVDPLAYER_AUDIO)
 				setclock = !m_CurrentVideo.inited;
 			else if(source == DVDPLAYER_VIDEO)
 				setclock = !m_CurrentAudio.inited;
@@ -1988,8 +1995,10 @@ bool CDVDPlayer::CheckPlayerInit(CCurrentStream& current, unsigned int source)
 		}
 
 		double starttime = current.startpts;
+		
 		if(m_CurrentAudio.inited && m_CurrentAudio.startpts != DVD_NOPTS_VALUE && m_CurrentAudio.startpts < starttime)
 			starttime = m_CurrentAudio.startpts;
+		
 		if(m_CurrentVideo.inited && m_CurrentVideo.startpts != DVD_NOPTS_VALUE && m_CurrentVideo.startpts < starttime)
 			starttime = m_CurrentVideo.startpts;
 
@@ -2023,6 +2032,7 @@ void CDVDPlayer::UpdateTimestamps(CCurrentStream& current, DemuxPacket* pPacket)
 			如果包中dts 、pts 都没有，则保持current 中的原值不变
 */
 	double dts = current.dts;
+
 	/* update stored values */
 	if(pPacket->dts != DVD_NOPTS_VALUE)
 		dts = pPacket->dts;
@@ -2087,7 +2097,7 @@ void CDVDPlayer::CheckContinuity(CCurrentStream& current, DemuxPacket* pPacket)
 	double mindts, maxdts;
 
 	/*
-		注意这里dts  最大最下值获取的原则:
+		注意这里dts  最大最小值获取的原则:
 		如果音频的没有dts ，则就用视频的dts
 		如果视频的没有dts ，则就用音频的dts
 		如果两个都有，则用其中最小的作为最小值，其中最大的最为最大值
@@ -2108,7 +2118,7 @@ void CDVDPlayer::CheckContinuity(CCurrentStream& current, DemuxPacket* pPacket)
 	if( mindts == DVD_NOPTS_VALUE || maxdts == DVD_NOPTS_VALUE )
 		return;
 
-	/* 相当于要播放前面已经播放过的*/
+	/* 包的时间戳值太小了，可能需要同步了*/
 	if( pPacket->dts < mindts - DVD_MSEC_TO_TIME(100) && current.inited)
 	{
 		/* if video player is rendering a stillframe, we need to make sure */
@@ -2129,7 +2139,7 @@ void CDVDPlayer::CheckContinuity(CCurrentStream& current, DemuxPacket* pPacket)
 	}
 
 	/* stream jump forward */
-	/* 相当于要播放后续的*/
+	/* 包的时间戳值太大了，可能需要同步了*/
 	if( pPacket->dts > maxdts + DVD_MSEC_TO_TIME(1000) && current.inited)
 	{
 		CLog::Log(LOGWARNING, "CDVDPlayer::CheckContinuity - resync forward :%d, prev:%f, curr:%f, diff:%f" , current.type, current.dts, pPacket->dts, pPacket->dts - current.dts);
@@ -2767,6 +2777,7 @@ void CDVDPlayer::HandleMessages()
 				int player = ((CDVDMsgInt*)pMsg)->m_value;
 				if(player == DVDPLAYER_AUDIO)
 					m_CurrentAudio.started = true;
+				
 				if(player == DVDPLAYER_VIDEO)
 					m_CurrentVideo.started = true;
 				CLog::Log(LOGDEBUG, "CDVDPlayer::HandleMessages - player started %d", player);

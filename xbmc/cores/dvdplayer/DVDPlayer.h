@@ -57,17 +57,33 @@ class CStreamInfo;
 class CCurrentStream
 {
 public:
-	int              id;     // demuxerid of current playing stream
-	int              source;
-	double           dts;    // last dts from demuxer, used to find disncontinuities
-	CDVDStreamInfo   hint;   // stream hints, used to notice stream changes
-	void*            stream; // pointer or integer, identifying stream playing. if it changes stream changed
-	bool             inited;
-	bool             started; // has the player started
-	const StreamType type;
+	int              		id;     	// demuxerid of current playing stream
+	
+	int              		source;
+	
+	double           		dts;    	/* 见UpdateTimestamps()  方法中对此值的更新，相当于每读取一个
+							数据包都用转换后( 见CDVDDemuxFFmpeg::Read() 说明如何转换) 的时
+							间戳来更新此值*/   // last dts from demuxer, used to find disncontinuities
+							
+	CDVDStreamInfo  	hint;   	// stream hints, used to notice stream changes
+	
+	void*            		stream; // pointer or integer, identifying stream playing. if it changes stream changed
+	
+	bool             		inited;	/* 是否初始化标记，当此值为false 的时候，可能会进行一次
+							同步的操作，如在方法CheckContinuity() 中就是通过将此值设置为
+							false，然后在方法CheckPlayerInit()  中检测此值为false  后进行一次同步
+
+							在函数CheckPlayerInit()  中被设定为真的( 参看函数代码)
+							*/
+							
+	bool             		started; // has the player started
+	
+	const StreamType 	type;
+	
 	// stuff to handle starting after seek
-	double   startpts;
-	CDVDMsg* startsync;
+	double   			startpts;
+	
+	CDVDMsg* 		startsync;
 
 	CCurrentStream(StreamType t) : type(t)
 	{
@@ -314,7 +330,7 @@ protected:
 
 
   CCurrentStream m_CurrentAudio;
-  CCurrentStream m_CurrentVideo;
+  CCurrentStream m_CurrentVideo; 	/* 见方法CDVDPlayer::OpenVideoStream()  对其进行相应的赋值*/
   CCurrentStream m_CurrentSubtitle;
   CCurrentStream m_CurrentTeletext;
 
