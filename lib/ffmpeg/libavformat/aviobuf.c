@@ -1382,7 +1382,7 @@ int url_fdopen(ByteIOContext **s, URLContext *h)
 		return AVERROR(ENOMEM);
 	}
 
-	if (init_put_byte(*s, buffer, buffer_size, (h->flags & URL_WRONLY || h->flags & URL_RDWR), h,url_read, url_write, url_seek) < 0) 
+	if (init_put_byte(*s, buffer, buffer_size, (h->flags & URL_WRONLY || h->flags & URL_RDWR), h, url_read, url_write, url_seek) < 0) 
 	{
 		av_free(buffer);
 		av_freep(s);
