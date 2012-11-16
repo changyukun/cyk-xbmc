@@ -1360,7 +1360,7 @@ int url_fdopen(ByteIOContext **s, URLContext *h)
 	uint8_t *buffer;
 	int buffer_size, max_packet_size;
 
-	max_packet_size = url_get_max_packet_size(h);
+	max_packet_size = url_get_max_packet_size(h);/* 获取传入参数指定的最大值*/
 	if (max_packet_size) 
 	{
 		buffer_size = max_packet_size; /* no need to bufferize more than one packet */
@@ -1370,12 +1370,12 @@ int url_fdopen(ByteIOContext **s, URLContext *h)
 		buffer_size = IO_BUFFER_SIZE;
 	}
 	
-	buffer = av_malloc(buffer_size);
+	buffer = av_malloc(buffer_size);/* 分配内存空间*/
 	
 	if (!buffer)
 		return AVERROR(ENOMEM);
 
-	*s = av_mallocz(sizeof(ByteIOContext));
+	*s = av_mallocz(sizeof(ByteIOContext)); /* 分配内存空间*/
 	if(!*s) 
 	{
 		av_free(buffer);

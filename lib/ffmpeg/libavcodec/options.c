@@ -566,8 +566,19 @@ AVCodecContext *avcodec_alloc_context2(enum AVMediaType codec_type)
 	return avctx;
 }
 
-void avcodec_get_context_defaults(AVCodecContext *s){
-    avcodec_get_context_defaults2(s, AVMEDIA_TYPE_UNKNOWN);
+void avcodec_get_context_defaults(AVCodecContext *s)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+    	avcodec_get_context_defaults2(s, AVMEDIA_TYPE_UNKNOWN);
 }
 
 AVCodecContext *avcodec_alloc_context(void)
