@@ -135,7 +135,7 @@ protected:
   D3DDEVTYPE                  m_devType;
   D3DPRESENT_PARAMETERS       m_D3DPP;
   D3DDISPLAYMODEEX            m_D3DDMEX;
-  HWND                        m_hFocusWnd;
+  HWND                        m_hFocusWnd; /* 窗口、创建渲染设备时指定的就是此句柄，见SetFocusWnd  方法的调用*/
   HWND                        m_hDeviceWnd;
   unsigned int                m_nBackBufferWidth;
   unsigned int                m_nBackBufferHeight;

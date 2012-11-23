@@ -86,7 +86,7 @@ bool CWinSystemWin32DX::CreateNewWindow(CStdString name, bool fullScreen, RESOLU
 	if(m_hWnd == NULL)
 		return false;
 
-	SetFocusWnd(m_hWnd);
+	SetFocusWnd(m_hWnd);/* 此处将窗口句柄设定到了d3d 中，即渲染等操作所对应的窗口*/
 	SetDeviceWnd(m_hWnd);
 	CRenderSystemDX::m_interlaced = ((res.dwFlags & D3DPRESENTFLAG_INTERLACED) != 0);
 	CRenderSystemDX::m_useWindowedDX = UseWindowedDX(fullScreen);
