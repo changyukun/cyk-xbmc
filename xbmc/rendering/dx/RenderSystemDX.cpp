@@ -145,7 +145,7 @@ bool CRenderSystemDX::InitRenderSystem()
 	if (m_useD3D9Ex)
 	{
 		CLog::Log(LOGDEBUG, __FUNCTION__" - trying D3D9Ex...");
-		if (FAILED(g_Direct3DCreate9Ex(D3D_SDK_VERSION, (IDirect3D9Ex**) &m_pD3D)))
+		if (FAILED(g_Direct3DCreate9Ex(D3D_SDK_VERSION, (IDirect3D9Ex**) &m_pD3D)))/* 创建一个Direct3D9 的接口*/
 		{
 			CLog::Log(LOGDEBUG, __FUNCTION__" - D3D9Ex creation failure, falling back to D3D9");
 			m_useD3D9Ex = false;
@@ -154,7 +154,7 @@ bool CRenderSystemDX::InitRenderSystem()
 		{
 			D3DCAPS9 caps;
 			memset(&caps, 0, sizeof(caps));
-			m_pD3D->GetDeviceCaps(D3DADAPTER_DEFAULT, m_devType, &caps);
+			m_pD3D->GetDeviceCaps(D3DADAPTER_DEFAULT, m_devType, &caps); /* 获取显卡的功能，如是否支持硬件加速*/
 			// Evaluate if the driver is WDDM - this detection method is not guaranteed 100%
 			if (!g_advancedSettings.m_ForceD3D9Ex && (!(caps.Caps2 & D3DCAPS2_CANSHARERESOURCE) || !(caps.DevCaps2 & D3DDEVCAPS2_CAN_STRETCHRECT_FROM_TEXTURES)))
 			{
@@ -171,7 +171,7 @@ bool CRenderSystemDX::InitRenderSystem()
 
 	if (!m_useD3D9Ex)
 	{
-		m_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
+		m_pD3D = Direct3DCreate9(D3D_SDK_VERSION);/* 创建一个Direct3D9 的接口*/
 		if(m_pD3D == NULL)
 			return false;
 	}
