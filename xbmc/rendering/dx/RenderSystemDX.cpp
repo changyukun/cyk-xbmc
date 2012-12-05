@@ -194,7 +194,7 @@ void CRenderSystemDX::SetRenderParams(unsigned int width, unsigned int height, b
 		1、
 		
 	说明:
-		1、
+		1、此函数实现设置后缓存的宽、高、全屏等相关信息
 */
 	m_nBackBufferWidth  = width;
 	m_nBackBufferHeight = height;
@@ -212,15 +212,16 @@ void CRenderSystemDX::SetMonitor(HMONITOR monitor)
 		1、
 		
 	说明:
-		1、
+		1、此函数实质就是利用传入的显示器的句柄，然后找到相应的显卡，然后
+			用m_adapter  保存此显卡所对应的序号
 */
 	if (!m_pD3D)
 		return;
 
 	// find the appropriate screen
-	for (unsigned int adapter = 0; adapter < m_pD3D->GetAdapterCount(); adapter++)
+	for (unsigned int adapter = 0; adapter < m_pD3D->GetAdapterCount(); adapter++)/* 获得显卡的数据*/
 	{
-		HMONITOR hMonitor = m_pD3D->GetAdapterMonitor(adapter);
+		HMONITOR hMonitor = m_pD3D->GetAdapterMonitor(adapter);/* 获得相应的显示器*/
 		if (hMonitor == monitor && adapter != m_adapter)
 		{
 			m_adapter       = adapter;
@@ -250,7 +251,7 @@ bool CRenderSystemDX::ResetRenderSystem(int width, int height, bool fullScreen, 
 
 	CRect rc;
 	rc.SetRect(0, 0, (float)width, (float)height);
-	SetViewPort(rc);
+	SetViewPort(rc);/* 见函数说明*/
 
 	BuildPresentParameters();
 
@@ -280,7 +281,7 @@ void CRenderSystemDX::OnMove()
 	if (!m_bRenderCreated)
 		return;
 
-	HMONITOR currentMonitor = m_pD3D->GetAdapterMonitor(m_adapter);
+	HMONITOR currentMonitor = m_pD3D->GetAdapterMonitor(m_adapter);/* 根据显卡的序号返回当前的显示器，见SetMonitor 方法说明*/
 	HMONITOR newMonitor = MonitorFromWindow(m_hDeviceWnd, MONITOR_DEFAULTTONULL);
 	if (newMonitor != NULL && currentMonitor != newMonitor)
 		ResetRenderSystem(m_nBackBufferWidth, m_nBackBufferHeight, m_bFullScreenDevice, m_refreshRate);
@@ -559,7 +560,7 @@ bool CRenderSystemDX::CreateDevice()
 
 	CLog::Log(LOGDEBUG, __FUNCTION__" on adapter %d", m_adapter);
 
-	BuildPresentParameters();
+	BuildPresentParameters(); /* 创建present  参数*/
 
 	D3DCAPS9 caps;
 	memset(&caps, 0, sizeof(caps));
@@ -587,7 +588,7 @@ bool CRenderSystemDX::CreateDevice()
 		/* 创建设备*/
 		hr = ((IDirect3D9Ex*)m_pD3D)->CreateDeviceEx(	m_adapter, 
 													m_devType, 
-													m_hFocusWnd,
+													m_hFocusWnd, /* 传入一个窗口句柄，即此directx 设备与此窗口绑定了*/
 													VertexProcessingFlags | D3DCREATE_MULTITHREADED, 
 													&m_D3DPP,
 													m_D3DPP.Windowed ? NULL : &m_D3DDMEX, 
@@ -632,7 +633,7 @@ bool CRenderSystemDX::CreateDevice()
 		}
 	}
 
-	if(m_pD3D->GetAdapterIdentifier(m_adapter, 0, &m_AIdentifier) == D3D_OK)
+	if(m_pD3D->GetAdapterIdentifier(m_adapter, 0, &m_AIdentifier) == D3D_OK) /* 获得默认显卡的信息，保存在m_AIdentifier 中*/
 	{
 		m_RenderRenderer = (const char*)m_AIdentifier.Description;
 		m_RenderVendor   = (const char*)m_AIdentifier.Driver;
@@ -640,12 +641,11 @@ bool CRenderSystemDX::CreateDevice()
 		                        			HIWORD(m_AIdentifier.DriverVersion.LowPart) , LOWORD(m_AIdentifier.DriverVersion.LowPart));
 	}
 
-	CLog::Log(LOGDEBUG, __FUNCTION__" - adapter %d: %s, %s, VendorId %lu, DeviceId %lu",
-	m_adapter, m_AIdentifier.Driver, m_AIdentifier.Description, m_AIdentifier.VendorId, m_AIdentifier.DeviceId);
+	CLog::Log(LOGDEBUG, __FUNCTION__" - adapter %d: %s, %s, VendorId %lu, DeviceId %lu", m_adapter, m_AIdentifier.Driver, m_AIdentifier.Description, m_AIdentifier.VendorId, m_AIdentifier.DeviceId);
 
 	// get our render capabilities
 	// re-read caps, there may be changes depending on the vertex processing type
-	m_pD3DDevice->GetDeviceCaps(&caps);
+	m_pD3DDevice->GetDeviceCaps(&caps); /* 获取渲染器的能力*/
 
 	m_maxTextureSize = min(caps.MaxTextureWidth, caps.MaxTextureHeight);
 
@@ -719,7 +719,14 @@ bool CRenderSystemDX::CreateDevice()
 	else
 		m_screenHeight = m_nBackBufferHeight;
 
-	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR );
+/*
+	纹理过滤器的作用:
+	纹理被映射到屏幕中的三角形上。通常纹理三角形和屏幕三角形是不一样大的。当
+	纹理三角形比屏幕三角形小时，纹理三角形会被适当放大。当纹理三角形比屏幕三
+	角形大时，纹理三角形会被适当缩小。这两种情况变形都会出现，过滤( filtering )  是一
+	种direct3d  用它来帮助这些形变的平滑技术。
+*/
+	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR ); /* 设定纹理过滤器模式*/
 	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR );
 
 	m_bRenderCreated = true;
@@ -978,7 +985,7 @@ bool CRenderSystemDX::PresentRender(const CDirtyRegionList &dirty)
 		1、
 		
 	说明:
-		1、
+		1、见函数PresentRenderImpl  的说明
 */
 	if (!m_bRenderCreated)
 		return false;
@@ -1060,37 +1067,41 @@ void CRenderSystemDX::SetCameraPosition(const CPoint &camera, int screenWidth, i
 		1、
 		
 	说明:
-		1、
+		1、设定摄像机位置
+		2、见函数中的代码注释
 */
 	if (!m_bRenderCreated)
 		return;
 
 	// grab the viewport dimensions and location
 	D3DVIEWPORT9 viewport;
-	m_pD3DDevice->GetViewport(&viewport);
-	float w = viewport.Width*0.5f;
-	float h = viewport.Height*0.5f;
+	m_pD3DDevice->GetViewport(&viewport); /* 先获取viewport  */
+	float w = viewport.Width*0.5f; /* 取出viewport 的中点*/
+	float h = viewport.Height*0.5f; /* 取出viewport 的中点*/
 
-	CPoint offset = camera - CPoint(screenWidth*0.5f, screenHeight*0.5f);
+	CPoint offset = camera - CPoint(screenWidth*0.5f, screenHeight*0.5f); /* 计算传入的摄像机的点与viewport 中点的偏移*/
 
+	/* ======    世界变换========================================*/
 	// world view.  Until this is moved onto the GPU (via a vertex shader for instance), we set it to the identity
 	// here.
 	D3DXMATRIX mtxWorld;
 	D3DXMatrixIdentity(&mtxWorld);
-	m_pD3DDevice->SetTransform(D3DTS_WORLD, &mtxWorld);
+	m_pD3DDevice->SetTransform(D3DTS_WORLD, &mtxWorld); /* 世界变换*/
 
+	/* ======    视角变换========================================*/
 	// camera view.  Multiply the Y coord by -1 then translate so that everything is relative to the camera
 	// position.
 	D3DXMATRIX flipY, translate, mtxView;
 	D3DXMatrixScaling(&flipY, 1.0f, -1.0f, 1.0f);
 	D3DXMatrixTranslation(&translate, -(viewport.X + w + offset.x), -(viewport.Y + h + offset.y), 2*h);
 	D3DXMatrixMultiply(&mtxView, &translate, &flipY);
-	m_pD3DDevice->SetTransform(D3DTS_VIEW, &mtxView);
+	m_pD3DDevice->SetTransform(D3DTS_VIEW, &mtxView); /* 视角变换*/
 
+	/* ======    投影变换========================================*/
 	// projection onto screen space
 	D3DXMATRIX mtxProjection;
 	D3DXMatrixPerspectiveOffCenterLH(&mtxProjection, (-w - offset.x)*0.5f, (w - offset.x)*0.5f, (-h + offset.y)*0.5f, (h + offset.y)*0.5f, h, 100*h);
-	m_pD3DDevice->SetTransform(D3DTS_PROJECTION, &mtxProjection);
+	m_pD3DDevice->SetTransform(D3DTS_PROJECTION, &mtxProjection); /* 投影变换*/
 
 	m_world = mtxWorld;
 	m_view = mtxView;
@@ -1172,7 +1183,7 @@ bool CRenderSystemDX::TestRender()
 	// specify the FVF, so the vertex buffer knows what data it contains.
 	if( FAILED( m_pD3DDevice->CreateVertexBuffer( 3 * sizeof( CUSTOMVERTEX ), 0, D3DFVF_CUSTOMVERTEX, D3DPOOL_DEFAULT, &pVB, NULL ) ) )
 	{
-		return false;;
+		return false;
 	}
 
 	// Now we fill the vertex buffer. To do this, we need to Lock() the VB to
@@ -1237,7 +1248,7 @@ void CRenderSystemDX::GetViewPort(CRect& viewPort)
 		1、
 		
 	说明:
-		1、
+		1、获取viewport 
 */
 	if (!m_bRenderCreated)
 		return;
@@ -1261,7 +1272,9 @@ void CRenderSystemDX::SetViewPort(CRect& viewPort)
 		1、
 		
 	说明:
-		1、
+		1、设置viewport 
+		2、Present() 是将我们的后备缓冲交换至前缓冲。而SetViewPort 相当于在后备缓冲的某个
+			指定区域绘图，因此我们的Present()是将包含多个视口的后缓冲交换出去。
 */
 	if (!m_bRenderCreated)
 		return;

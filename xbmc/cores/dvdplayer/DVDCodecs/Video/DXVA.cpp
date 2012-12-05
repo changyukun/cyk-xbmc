@@ -307,7 +307,7 @@ static const dxva2_mode_t *dxva2_find_mode(const GUID *guid)
 		1、
 		
 	说明:
-		1、
+		1、实质就是在全局数组dxva2_modes  中查找与传入参数相匹配的单元
 */
 	for (unsigned i = 0; dxva2_modes[i].name; i++)
 	{

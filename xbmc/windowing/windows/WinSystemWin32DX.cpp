@@ -90,8 +90,8 @@ bool CWinSystemWin32DX::CreateNewWindow(CStdString name, bool fullScreen, RESOLU
 	SetDeviceWnd(m_hWnd);
 	CRenderSystemDX::m_interlaced = ((res.dwFlags & D3DPRESENTFLAG_INTERLACED) != 0);
 	CRenderSystemDX::m_useWindowedDX = UseWindowedDX(fullScreen);
-	SetRenderParams(m_nWidth, m_nHeight, fullScreen, res.fRefreshRate);
-	SetMonitor(GetMonitor(res.iScreen).hMonitor);
+	SetRenderParams(m_nWidth, m_nHeight, fullScreen, res.fRefreshRate); /* 设定渲染的参数，如宽、高、全屏等信息*/
+	SetMonitor(GetMonitor(res.iScreen).hMonitor); /* 设定显卡等信息*/
 
 	return true;
 }

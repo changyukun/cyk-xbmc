@@ -124,18 +124,18 @@ protected:
   BOOL IsDepthFormatOk(D3DFORMAT DepthFormat, D3DFORMAT RenderTargetFormat);
   void OnMove();
 
-  LPDIRECT3D9                 m_pD3D; /* 在方法CRenderSystemDX::InitRenderSystem()  得到创建*/
+  LPDIRECT3D9                 m_pD3D; /* 用于保存Direct3D9 的接口，在方法CRenderSystemDX::InitRenderSystem()  得到创建*/
 
   // our adapter could change as we go
   bool                        m_needNewDevice;
-  unsigned int                m_adapter;
+  unsigned int                m_adapter; /* 用于保存显示器所对应的显卡的序号，见SetMonitor 方法*/
   LPDIRECT3DDEVICE9           m_pD3DDevice;  /* 在方法CRenderSystemDX::InitRenderSystem() ==> CRenderSystemDX::CreateDevice()  得到创建*/
   unsigned int                m_screenHeight;
 
   D3DDEVTYPE                  m_devType;
-  D3DPRESENT_PARAMETERS       m_D3DPP;
+  D3DPRESENT_PARAMETERS       m_D3DPP; /* 用于保存Direct3D9 接口的present 参数，见方法BuildPresentParameters  对其进行赋值*/
   D3DDISPLAYMODEEX            m_D3DDMEX;
-  HWND                        m_hFocusWnd; /* 窗口、创建渲染设备时指定的就是此句柄，见SetFocusWnd  方法的调用*/
+  HWND                        m_hFocusWnd; /* 窗口、创建渲染设备时指定的就是此句柄，见SetFocusWnd  方法的调用( 函数CWinSystemWin32DX::CreateNewWindow )*/
   HWND                        m_hDeviceWnd;
   unsigned int                m_nBackBufferWidth;
   unsigned int                m_nBackBufferHeight;
@@ -149,7 +149,7 @@ protected:
   DWORD                       m_defaultD3DUsage;
   D3DPOOL                     m_defaultD3DPool;
   bool                        m_useWindowedDX;
-  D3DADAPTER_IDENTIFIER9      m_AIdentifier;
+  D3DADAPTER_IDENTIFIER9      m_AIdentifier; /* 用于保存显卡的信息，见CRenderSystemDX::CreateDevice() 中对其赋值*/
 
   CCriticalSection            m_resourceSection;
   std::vector<ID3DResource*>  m_resources;
