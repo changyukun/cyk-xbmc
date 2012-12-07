@@ -1069,6 +1069,7 @@ void CRenderSystemDX::SetCameraPosition(const CPoint &camera, int screenWidth, i
 	说明:
 		1、设定摄像机位置
 		2、见函数中的代码注释
+		3、详细信息请网上查找
 */
 	if (!m_bRenderCreated)
 		return;
