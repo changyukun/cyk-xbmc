@@ -1081,14 +1081,47 @@ void CRenderSystemDX::SetCameraPosition(const CPoint &camera, int screenWidth, i
 
 	CPoint offset = camera - CPoint(screenWidth*0.5f, screenHeight*0.5f); /* 计算传入的摄像机的点与viewport 中点的偏移*/
 
-	/* ======    世界变换========================================*/
+	/* ======    世界变换========================================
+		我们在建立三维实体的数学模型时，通常以实体的某一点为坐标原点，比如一个球体，
+		很自然就用球心做原点，这样构成的坐标系称为本地坐标系(Local Coordinates)。实体总是位
+		于某个场景(World Space) 中，而场景采用世界坐标系(World Coordinates)，因此需要把实体的本地
+		坐标变换成世界坐标，这个变换被称为世界变换。
+
+		具体变换的步骤如下:
+		1、首先把实体放置在世界坐标系的原点，使两个坐标系重合
+		2、在世界空间中，对实体进行平行移动，其对应的平移变换阵Tt  可由函数D3DXMatrixTranslation 求得
+		3、把平移后的实体沿自身的Z 轴旋转一个角度(角度大于0  表示从Z 轴的正向朝原点看去，旋转
+			方向为顺时针；反之为逆时针，下同)，对应的旋转变换阵Tz 用D3DXMatrixRotationZ 计算
+		4、把实体沿自身的Y 轴旋转一个角度，用D3DXMatrixRotationY 求出变换阵Ty
+		5、把实体沿自身的X 轴旋转一个角度，用D3DXMatrixRotationX 求出变换阵Tx
+		6、最后对实体进行缩放，假设三个轴的缩放系数分别为Sx、Sy、Sz，该操作对应的变换
+			阵Ts 可由函数D3DXMatrixScaling 求得
+		7、最终的世界变换矩阵Tw = Ts * Tx * Ty * Tz * Tt ，在Direct3D 中，矩阵乘法用函数D3DXMatrixMultiply 实现，
+			注意相乘顺序为操作的逆序。
+	*/
 	// world view.  Until this is moved onto the GPU (via a vertex shader for instance), we set it to the identity
 	// here.
 	D3DXMATRIX mtxWorld;
 	D3DXMatrixIdentity(&mtxWorld);
 	m_pD3DDevice->SetTransform(D3DTS_WORLD, &mtxWorld); /* 世界变换*/
 
-	/* ======    视角变换========================================*/
+
+	
+
+	/* ======    视角变换========================================
+		实体确定后，接下来要确定观察者在世界坐标系中的方位，换句话说，就是在世界坐标
+		系中如何放置摄像机。观察者( 摄像机)  所看到的景象，就是Direct3D 窗口显示的内容。
+
+		确定观察者需要三个量:
+		1、观察者的坐标
+		2、视线方向，为一个矢量，不过Direct3D  用视线上的一个点来替代，此时视线方向就是从
+			观察者指向该目标点，这样表示更直观一些。
+		3、上方向，通俗地说，就是观察者的头顶方向，用一个矢量表示。
+
+		确定后以观察者为原点，视线为z  轴，上方向或它的一个分量为Y  轴( X 轴可由左手法则得
+		出，为右方向)，这就构成了视角坐标系，我们需要把实体从世界坐标空间转换到视角坐
+		标空间，这个坐标变换就称为视角变换(View Transformation)
+	*/
 	// camera view.  Multiply the Y coord by -1 then translate so that everything is relative to the camera
 	// position.
 	D3DXMATRIX flipY, translate, mtxView;
@@ -1097,7 +1130,29 @@ void CRenderSystemDX::SetCameraPosition(const CPoint &camera, int screenWidth, i
 	D3DXMatrixMultiply(&mtxView, &translate, &flipY);
 	m_pD3DDevice->SetTransform(D3DTS_VIEW, &mtxView); /* 视角变换*/
 
-	/* ======    投影变换========================================*/
+	/* ======    投影变换========================================
+		实体转换到视角空间后，还要经过投影变换(Projection Transformation)，三维的实体才能显示在
+		二维的计算机屏幕上。打个比方，如果把屏幕看做照相机中胶卷，那么投影变换就相
+		当于照相机的镜头。
+
+		Direct3D 使用透视投影变换(Perspective Transformation)，此时在视角空间中，可视区域是一个以
+		视线为轴心的棱台(Viewing Frustum)。想像一下你处在一个伸手不见五指的房间里，面前有
+		一扇窗户，你可以透过窗户看到各种景物。窗户就是棱台的前裁剪平面，天空、远山
+		等背景是后裁剪平面，其间的可视范围是景深。投影变换把位于可视棱台内的景物投
+		影到前裁剪平面，由于采用透视投影，距离观察者远的对象会变小，从而更具真实感
+
+		透视投影变换由四个量决定:
+		1、前裁剪平面的宽度w
+		2、前裁剪平面的高度h
+		3、前裁剪平面到原点的距离z1
+		4、后裁剪平面到原点的距离z2
+
+		由于w、h 用起来不是很直观，因此实际应用中，常用fov 和aspect 代替w、h，其中fov 是Y 
+		方向上的可视角度，通常取45度；aspect 是前裁剪平面的高度与宽度之比，通常取1
+		(由三角形定义，可知h = 2 * z1 * tg(fov/2) ,   w = h/aspect ) 
+
+		用这四个量来调用函数D3DXMatrixPerspectiveFovLH，即可获得投影变换矩阵
+	*/
 	// projection onto screen space
 	D3DXMATRIX mtxProjection;
 	D3DXMatrixPerspectiveOffCenterLH(&mtxProjection, (-w - offset.x)*0.5f, (w - offset.x)*0.5f, (-h + offset.y)*0.5f, (h + offset.y)*0.5f, h, 100*h);
