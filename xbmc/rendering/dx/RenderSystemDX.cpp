@@ -1070,6 +1070,11 @@ void CRenderSystemDX::SetCameraPosition(const CPoint &camera, int screenWidth, i
 		1、设定摄像机位置
 		2、见函数中的代码注释
 		3、详细信息请网上查找
+
+		绘制多图元实体的一般方法是:  
+			1、首先为图元设置各自的世界变换矩阵、材质、纹理( 视角矩阵、投影矩阵、灯
+				光都属于全局性参数，设置一次即可)
+			2、然后对该图元调用DrawPrimitive 方法
 */
 	if (!m_bRenderCreated)
 		return;
@@ -1404,7 +1409,7 @@ void CRenderSystemDX::Register(ID3DResource *resource)
 		1、
 		
 	说明:
-		1、
+		1、见类CD3DTexture  的create  方法，实质就是将传入的指针对象插入到容器中
 */
 	CSingleLock lock(m_resourceSection);
 	m_resources.push_back(resource);
