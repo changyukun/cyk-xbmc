@@ -86,7 +86,7 @@ bool CD3DTexture::Create(UINT width, UINT height, UINT mipLevels, DWORD usage, D
 		1、
 
 	说明:
-		1、
+		1、创建纹理
 */
 	m_width = width;
 	m_height = height;
