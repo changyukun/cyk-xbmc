@@ -743,13 +743,15 @@ bool CRenderSystemDX::PresentRenderImpl(const CDirtyRegionList &dirty)
 {
 /*
 	参数:
-		1、
+		1、dirty : 此参数在此函数中没有使用
 		
 	返回:
 		1、
 		
 	说明:
-		1、
+		1、此函数实质就是调用Direct3D  的Present  进行前后缓冲的交换，即真的将
+			后缓冲显示到显示器上面
+		2、搜索direct3d-->present  可以跟踪此函数的被调用过程
 */
 	HRESULT hr;
 
@@ -790,7 +792,7 @@ bool CRenderSystemDX::PresentRenderImpl(const CDirtyRegionList &dirty)
 		SetThreadPriority(GetCurrentThread(), priority);
 	}
 
-	hr = m_pD3DDevice->Present( NULL, NULL, 0, NULL );
+	hr = m_pD3DDevice->Present( NULL, NULL, 0, NULL ); /* Direct3D 的present  方法被调用的过程--->4 ，搜索cyk  direct3d-->present  */
 
 	if( D3DERR_DEVICELOST == hr )
 	{
@@ -985,12 +987,12 @@ bool CRenderSystemDX::PresentRender(const CDirtyRegionList &dirty)
 		1、
 		
 	说明:
-		1、见函数PresentRenderImpl  的说明
+		1、见函数PresentRenderImpl  的说明，调用Direct3D  的Present  进行前后缓冲的交换
 */
 	if (!m_bRenderCreated)
 		return false;
 
-	bool result = PresentRenderImpl(dirty);
+	bool result = PresentRenderImpl(dirty); /* Direct3D 的present  方法被调用的过程--->3 ，搜索cyk  direct3d-->present  */
 
 	return result;
 }

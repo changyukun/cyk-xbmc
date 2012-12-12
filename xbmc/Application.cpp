@@ -2337,8 +2337,11 @@ bool CApplication::RenderNoPresent()
 
 		// close window overlays
 		CGUIDialog *overlay = (CGUIDialog *)g_windowManager.GetWindow(WINDOW_DIALOG_VIDEO_OVERLAY);
-		if (overlay) overlay->Close(true);
-			overlay = (CGUIDialog *)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_OVERLAY);
+		if (overlay) 
+			overlay->Close(true);
+
+		overlay = (CGUIDialog *)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_OVERLAY);
+		
 		if (overlay) 
 			overlay->Close(true);
 
@@ -2568,7 +2571,8 @@ void CApplication::Render()
 	m_lastFrameTime = XbmcThreads::SystemClockMillis();
 
 	if (flip)
-		g_graphicsContext.Flip(dirtyRegions);
+		g_graphicsContext.Flip(dirtyRegions); /* Direct3D 的present  方法被调用的过程--->1 ，搜索cyk  direct3d-->present  */
+	
 	CTimeUtils::UpdateFrameTime(flip);
 
 	g_renderManager.UpdateResolution();

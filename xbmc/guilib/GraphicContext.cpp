@@ -1265,7 +1265,7 @@ void CGraphicContext::Flip(const CDirtyRegionList& dirty)
 	说明:
 		1、
 */
-  	g_Windowing.PresentRender(dirty);
+  	g_Windowing.PresentRender(dirty); /* Direct3D 的present  方法被调用的过程--->2 ，搜索cyk  direct3d-->present  */
 }
 
 void CGraphicContext::ApplyHardwareTransform()
