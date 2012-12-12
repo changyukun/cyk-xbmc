@@ -2315,7 +2315,7 @@ bool CApplication::RenderNoPresent()
 		1、
 		
 	说明:
-		1、
+		1、在函数CApplication::Render()  中被调用，而CApplication::Render()  会被入口函数所调用
 */
 	MEASURE_FUNCTION;
 
