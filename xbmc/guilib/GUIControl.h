@@ -306,21 +306,29 @@ protected:
 	void UpdateStates(ANIMATION_TYPE type, ANIMATION_PROCESS currentProcess, ANIMATION_STATE currentState);
 	bool SendWindowMessage(CGUIMessage &message);
 
+	/* 控件的导航及动作*/
 	// navigation and actions
-	CGUIAction m_actionLeft;
-	CGUIAction m_actionRight;
-	CGUIAction m_actionUp;
-	CGUIAction m_actionDown;
-	CGUIAction m_actionBack;
+	CGUIAction m_actionLeft;		/* 见CGUIControl::SetNavigationActions() 方法的设定*/
+	CGUIAction m_actionRight;	/* 见CGUIControl::SetNavigationActions() 方法的设定*/
+	CGUIAction m_actionUp;		/* 见CGUIControl::SetNavigationActions() 方法的设定*/
+	CGUIAction m_actionDown;	/* 见CGUIControl::SetNavigationActions() 方法的设定*/
+	CGUIAction m_actionBack;		/* 见CGUIControl::SetNavigationActions() 方法的设定*/
 	CGUIAction m_actionNext;
 	CGUIAction m_actionPrev;
 
-	float m_posX;
-	float m_posY;
-	float m_height;
-	float m_width;
+	/* 
+		通常每个控件的构造函数都会设定这几个坐标值的，例如
+		见CGUIControlFactory::Create  函数new 各个控件时的代码
+	*/
+	float m_posX; 	/* 控件左上角x  的坐标*/
+	float m_posY; 	/* 控件左上角y  的坐标*/
+	float m_height; 	/* 控件的高度*/
+	float m_width; 	/* 控件的宽度*/
+	
 	CRect m_hitRect; /* 保存控件可以点击的矩形信息，见CGUIControlFactory::Create()  方法中对其的赋值*/
+
 	CGUIInfoColor m_diffuseColor;
+	
 	int m_controlID; /* 每个CGuiWindow  实例的id 号，如WINDOW_HOME、WINDOW_PROGRAMS 等值*/
 	int m_parentID; /* 父窗体的id 号*/
 	bool m_bHasFocus; /* 此窗体或控件是否具有焦点，见方法CGUIControl::SetFocus()  的说明*/
@@ -353,7 +361,7 @@ protected:
 	TransformMatrix m_transform;
 	TransformMatrix m_cachedTransform; // Contains the absolute transform the control
 
-	bool  m_controlIsDirty;
+	bool  m_controlIsDirty; /* 标记此控件是否为dirty  状态*/
 	CRect m_renderRegion;         // In screen coordinates
 };
 

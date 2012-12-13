@@ -746,7 +746,7 @@ float CGUIControl::GetXPosition() const
 		1、
 
 	说明:
-		1、
+		1、返回控件左上角x  的坐标
 */
   	return m_posX;
 }
@@ -761,7 +761,7 @@ float CGUIControl::GetYPosition() const
 		1、
 
 	说明:
-		1、
+		1、返回控件左上角y  的坐标
 */
   	return m_posY;
 }
@@ -776,7 +776,7 @@ float CGUIControl::GetWidth() const
 		1、
 
 	说明:
-		1、
+		1、返回控件的宽度
 */
   	return m_width;
 }
@@ -791,7 +791,7 @@ float CGUIControl::GetHeight() const
 		1、
 
 	说明:
-		1、
+		1、返回控件的高度
 */
   	return m_height;
 }
@@ -839,7 +839,7 @@ void CGUIControl::SetNavigation(int up, int down, int left, int right, int back)
 		1、
 
 	说明:
-		1、
+		1、设定上、下、左、右、后五个导航的信息
 */
 	m_actionUp.SetNavigation(up);
 	m_actionDown.SetNavigation(down);
@@ -858,7 +858,7 @@ void CGUIControl::SetTabNavigation(int next, int prev)
 		1、
 
 	说明:
-		1、
+		1、设定前一个、后一个两个导航的信息
 */
 	m_actionNext.SetNavigation(next);
 	m_actionPrev.SetNavigation(prev);
@@ -876,7 +876,8 @@ void CGUIControl::SetNavigationActions(const CGUIAction &up, const CGUIAction &d
 		1、
 
 	说明:
-		1、
+		1、设定控件的各个导航的具体动作，如
+			上、下、左、右、后
 */
 	if (!m_actionLeft.HasAnyActions()  || replace) 	m_actionLeft  		= left;
 	if (!m_actionRight.HasAnyActions() || replace) 	m_actionRight		= right;

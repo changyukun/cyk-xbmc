@@ -1661,7 +1661,7 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 		control->SetEnableCondition(enableCondition);
 		control->SetAnimations(animations);
 		control->SetColorDiffuse(colorDiffuse);
-		control->SetNavigationActions(upActions, downActions, leftActions, rightActions, backActions);
+		control->SetNavigationActions(upActions, downActions, leftActions, rightActions, backActions); /* 设定控件的导航动作，如上下左右等等动作*/
 		control->SetPulseOnSelect(bPulse);
 		if (hasCamera)
 			control->SetCamera(camera);
