@@ -68,107 +68,112 @@ public:
   bool         scaleDiffuse;
 };
 
+/* 用于保存控件纹理信息的数据结构*/
 class CTextureInfo
 {
 public:
-  CTextureInfo();
-  CTextureInfo(const CStdString &file);
-  CTextureInfo& operator=(const CTextureInfo &right);
-  bool       useLarge;
-  CRect      border;      // scaled  - unneeded if we get rid of scale on load
-  int        orientation; // orientation of the texture (0 - 7 == EXIForientation - 1)
-  CStdString diffuse;     // diffuse overlay texture
-  CStdString filename;    // main texture file
+	CTextureInfo();
+	CTextureInfo(const CStdString &file);
+	CTextureInfo& operator=(const CTextureInfo &right);
+	bool       useLarge;
+	CRect      border;      // scaled  - unneeded if we get rid of scale on load
+	int        orientation; // orientation of the texture (0 - 7 == EXIForientation - 1)
+	CStdString diffuse;     // diffuse overlay texture
+	CStdString filename;    /* 贴图图片的目录*/  // main texture file
 };
 
+
+/*
+	gui 部分的纹理相关操作的基类，见类CGUITextureD3D  就是基于此类实现的
+*/
 class CGUITextureBase
 {
 public:
-  CGUITextureBase(float posX, float posY, float width, float height, const CTextureInfo& texture);
-  CGUITextureBase(const CGUITextureBase &left);
-  virtual ~CGUITextureBase(void);
+	CGUITextureBase(float posX, float posY, float width, float height, const CTextureInfo& texture);
+	CGUITextureBase(const CGUITextureBase &left);
+	virtual ~CGUITextureBase(void);
 
-  bool Process(unsigned int currentTime);
-  void Render();
+	bool Process(unsigned int currentTime);
+	void Render();
 
-  void DynamicResourceAlloc(bool bOnOff);
-  bool AllocResources();
-  void FreeResources(bool immediately = false);
-  void SetInvalid();
+	void DynamicResourceAlloc(bool bOnOff);
+	bool AllocResources();
+	void FreeResources(bool immediately = false);
+	void SetInvalid();
 
-  bool SetVisible(bool visible);
-  bool SetAlpha(unsigned char alpha);
-  bool SetDiffuseColor(color_t color);
-  bool SetPosition(float x, float y);
-  bool SetWidth(float width);
-  bool SetHeight(float height);
-  bool SetFileName(const CStdString &filename);
-  bool SetAspectRatio(const CAspectRatio &aspect);
+	bool SetVisible(bool visible);
+	bool SetAlpha(unsigned char alpha);
+	bool SetDiffuseColor(color_t color);
+	bool SetPosition(float x, float y);
+	bool SetWidth(float width);
+	bool SetHeight(float height);
+	bool SetFileName(const CStdString &filename);
+	bool SetAspectRatio(const CAspectRatio &aspect);
 
-  const CStdString& GetFileName() const { return m_info.filename; };
-  float GetTextureWidth() const { return m_frameWidth; };
-  float GetTextureHeight() const { return m_frameHeight; };
-  float GetWidth() const { return m_width; };
-  float GetHeight() const { return m_height; };
-  float GetXPosition() const { return m_posX; };
-  float GetYPosition() const { return m_posY; };
-  int GetOrientation() const;
-  const CRect &GetRenderRect() const { return m_vertex; };
-  bool IsLazyLoaded() const { return m_info.useLarge; };
+	const CStdString& GetFileName() const { return m_info.filename; };
+	float GetTextureWidth() const { return m_frameWidth; };
+	float GetTextureHeight() const { return m_frameHeight; };
+	float GetWidth() const { return m_width; };
+	float GetHeight() const { return m_height; };
+	float GetXPosition() const { return m_posX; };
+	float GetYPosition() const { return m_posY; };
+	int GetOrientation() const;
+	const CRect &GetRenderRect() const { return m_vertex; };
+	bool IsLazyLoaded() const { return m_info.useLarge; };
 
-  bool HitTest(const CPoint &point) const { return CRect(m_posX, m_posY, m_posX + m_width, m_posY + m_height).PtInRect(point); };
-  bool IsAllocated() const { return m_isAllocated != NO; };
-  bool FailedToAlloc() const { return m_isAllocated == NORMAL_FAILED || m_isAllocated == LARGE_FAILED; };
-  bool ReadyToRender() const;
-protected:
-  bool CalculateSize();
-  void LoadDiffuseImage();
-  bool AllocateOnDemand();
-  bool UpdateAnimFrame();
-  void Render(float left, float top, float bottom, float right, float u1, float v1, float u2, float v2, float u3, float v3);
-  void OrientateTexture(CRect &rect, float width, float height, int orientation);
+	bool HitTest(const CPoint &point) const { return CRect(m_posX, m_posY, m_posX + m_width, m_posY + m_height).PtInRect(point); };
+	bool IsAllocated() const { return m_isAllocated != NO; };
+	bool FailedToAlloc() const { return m_isAllocated == NORMAL_FAILED || m_isAllocated == LARGE_FAILED; };
+	bool ReadyToRender() const;
+	protected:
+	bool CalculateSize();
+	void LoadDiffuseImage();
+	bool AllocateOnDemand();
+	bool UpdateAnimFrame();
+	void Render(float left, float top, float bottom, float right, float u1, float v1, float u2, float v2, float u3, float v3);
+	void OrientateTexture(CRect &rect, float width, float height, int orientation);
 
-  // functions that our implementation classes handle
-  virtual void Allocate() {}; ///< called after our textures have been allocated
-  virtual void Free() {};     ///< called after our textures have been freed
-  virtual void Begin(color_t color) {};
-  virtual void Draw(float *x, float *y, float *z, const CRect &texture, const CRect &diffuse, int orientation)=0;
-  virtual void End() {};
+	// functions that our implementation classes handle
+	virtual void Allocate() {}; ///< called after our textures have been allocated
+	virtual void Free() {};     ///< called after our textures have been freed
+	virtual void Begin(color_t color) {};
+	virtual void Draw(float *x, float *y, float *z, const CRect &texture, const CRect &diffuse, int orientation)=0;
+	virtual void End() {};
 
-  bool m_visible;
-  color_t m_diffuseColor;
+	bool m_visible;
+	color_t m_diffuseColor;
 
-  float m_posX;         // size of the frame
-  float m_posY;
-  float m_width;
-  float m_height;
+	float m_posX;         // size of the frame
+	float m_posY;
+	float m_width;
+	float m_height;
 
-  CRect m_vertex;       // vertex coords to render
-  bool m_invalid;       // if true, we need to recalculate
+	CRect m_vertex;       // vertex coords to render
+	bool m_invalid;       // if true, we need to recalculate
 
-  unsigned char m_alpha;
+	unsigned char m_alpha;
 
-  float m_frameWidth, m_frameHeight;          // size in pixels of the actual frame within the texture
-  float m_texCoordsScaleU, m_texCoordsScaleV; // scale factor for pixel->texture coordinates
+	float m_frameWidth, m_frameHeight;          // size in pixels of the actual frame within the texture
+	float m_texCoordsScaleU, m_texCoordsScaleV; // scale factor for pixel->texture coordinates
 
-  // animations
-  int m_currentLoop;
-  unsigned int m_currentFrame;
-  uint32_t m_frameCounter;
+	// animations
+	int m_currentLoop;
+	unsigned int m_currentFrame;
+	uint32_t m_frameCounter;
 
-  float m_diffuseU, m_diffuseV;           // size of the diffuse frame (in tex coords)
-  float m_diffuseScaleU, m_diffuseScaleV; // scale factor of the diffuse frame (from texture coords to diffuse tex coords)
-  CPoint m_diffuseOffset;                 // offset into the diffuse frame (it's not always the origin)
+	float m_diffuseU, m_diffuseV;           // size of the diffuse frame (in tex coords)
+	float m_diffuseScaleU, m_diffuseScaleV; // scale factor of the diffuse frame (from texture coords to diffuse tex coords)
+	CPoint m_diffuseOffset;                 // offset into the diffuse frame (it's not always the origin)
 
-  bool m_allocateDynamically;
-  enum ALLOCATE_TYPE { NO = 0, NORMAL, LARGE, NORMAL_FAILED, LARGE_FAILED };
-  ALLOCATE_TYPE m_isAllocated;
+	bool m_allocateDynamically;
+	enum ALLOCATE_TYPE { NO = 0, NORMAL, LARGE, NORMAL_FAILED, LARGE_FAILED };
+	ALLOCATE_TYPE m_isAllocated;
 
-  CTextureInfo m_info;
-  CAspectRatio m_aspect;
+	CTextureInfo m_info; /* 用于保存纹理信息，见构造函数*/
+	CAspectRatio m_aspect;
 
-  CTextureArray m_diffuse;
-  CTextureArray m_texture;
+	CTextureArray m_diffuse;
+	CTextureArray m_texture;
 };
 
 

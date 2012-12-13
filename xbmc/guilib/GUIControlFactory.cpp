@@ -1134,8 +1134,11 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 	if (XMLUtils::GetString(pControlNode, "info", infoString))
 		singleInfo = g_infoManager.TranslateString(infoString);
 
-	GetTexture(pControlNode, "texturefocus", textureFocus);
-	GetTexture(pControlNode, "texturenofocus", textureNoFocus);
+	/*
+		关于控件纹理相关的操作，可以看看类CGUITextureD3D 
+	*/
+	GetTexture(pControlNode, "texturefocus", textureFocus); 		/* 获取控件焦点状态下的纹理信息*/
+	GetTexture(pControlNode, "texturenofocus", textureNoFocus);	/* 获取控件非焦点状态下的纹理信息*/
 	GetTexture(pControlNode, "alttexturefocus", textureAltFocus);
 	GetTexture(pControlNode, "alttexturenofocus", textureAltNoFocus);
 
@@ -1653,7 +1656,7 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
 	// things that apply to all controls
 	if (control)
 	{
-		control->SetHitRect(hitRect);
+		control->SetHitRect(hitRect); /* 设定控件的可以点击的范围*/
 		control->SetVisibleCondition(visibleCondition, allowHiddenFocus);
 		control->SetEnableCondition(enableCondition);
 		control->SetAnimations(animations);

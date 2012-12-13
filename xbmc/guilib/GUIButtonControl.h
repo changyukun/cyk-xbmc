@@ -90,8 +90,8 @@ protected:
   virtual void ProcessText(unsigned int currentTime);
   CGUILabel::COLOR GetTextColor() const;
 
-  CGUITexture m_imgFocus;
-  CGUITexture m_imgNoFocus;
+  CGUITexture m_imgFocus;  	/* windows 系统见CGUITextureD3D  定义*/
+  CGUITexture m_imgNoFocus;	/* windows 系统见CGUITextureD3D  定义*/
   unsigned int  m_focusCounter;
   unsigned char m_alpha;
 

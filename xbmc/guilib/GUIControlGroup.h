@@ -97,7 +97,7 @@ protected:
   bool IsValidControl(const CGUIControl *control) const;
 
   // sub controls
-  std::vector<CGUIControl *> m_children; /* 子控件的容器*/
+  std::vector<CGUIControl *> m_children; /* 子控件的容器，每添加一个控件就相当于向此容器中添加一个单元，每个窗体CGUIWindow  都是一个控件组同时也是一个控件*/
   typedef std::vector<CGUIControl *>::iterator iControls;
   typedef std::vector<CGUIControl *>::const_iterator ciControls;
   typedef std::vector<CGUIControl *>::reverse_iterator rControls;
@@ -110,8 +110,8 @@ protected:
   const LookupMap &GetLookup() { return m_lookup; };
   LookupMap m_lookup;
 
-  int  m_defaultControl;
-  bool m_defaultAlways;
+  int  m_defaultControl;  /* 见方法CGUIWindow::Load()  中对其进行赋值，即分析xml  文件的结果对其赋值*/
+  bool m_defaultAlways; /* 见方法CGUIWindow::Load()  中对其进行赋值，即分析xml  文件的结果对其赋值*/
   int m_focusedControl;
   bool m_renderFocusedLast;
 };

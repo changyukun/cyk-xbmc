@@ -319,7 +319,7 @@ protected:
 	float m_posY;
 	float m_height;
 	float m_width;
-	CRect m_hitRect;
+	CRect m_hitRect; /* 保存控件可以点击的矩形信息，见CGUIControlFactory::Create()  方法中对其的赋值*/
 	CGUIInfoColor m_diffuseColor;
 	int m_controlID; /* 每个CGuiWindow  实例的id 号，如WINDOW_HOME、WINDOW_PROGRAMS 等值*/
 	int m_parentID; /* 父窗体的id 号*/
@@ -331,10 +331,10 @@ protected:
 									的构造函数中对其进行的赋值，如控件是一个控制
 									组、button  等等*/
 
-	CGUIControl *m_parentControl;   // our parent control if we're part of a group
+	CGUIControl *m_parentControl; /* 指向其父控件的指针，见CGUIControlGroup::AddControl  的说明*/ // our parent control if we're part of a group
 
 	// visibility condition/state
-	unsigned int m_visibleCondition;
+	unsigned int m_visibleCondition; /* 见方法CGUIWindow::Load()  中对其进行赋值，即分析xml  文件的结果对其赋值*/
 	GUIVISIBLE m_visible;
 	bool m_visibleFromSkinCondition;
 	bool m_forceHidden;       // set from the code when a hidden operation is given - overrides m_visible

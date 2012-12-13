@@ -339,7 +339,8 @@ void CGUIWindow::LoadControl(TiXmlElement* pControl, CGUIControlGroup *pGroup)
 		rect.x2 = rect.x1 + pGroup->GetWidth();
 		rect.y2 = rect.y1 + pGroup->GetHeight();
 	}
-	
+
+	/* 根据xml  的信息创建一个控件*/
 	CGUIControl* pGUIControl = factory.Create(GetID(), rect, pControl); /* 创建一个控件，见函数内部*/
 	
 	if (pGUIControl)

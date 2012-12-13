@@ -805,9 +805,25 @@ void CGUIControlGroup::AddControl(CGUIControl *control, int position /* = -1*/)
 	
 	if (position < 0 || position > (int)m_children.size())
 		position = (int)m_children.size();
+
 	
 	m_children.insert(m_children.begin() + position, control);
-	control->SetParentControl(this);
+
+	/* 
+		设定此控件的父控件的指针，见方法CGUIControlGroup::AddControl  的代码，应该是
+		谁调用的这个方法，谁就是此控件的父控件
+
+		见函数CGUIWindow::LoadControl()  中对此方法的调用如下
+			if (pGroup)
+				pGroup->AddControl(pGUIControl);  // ---> 调用1
+			else
+				AddControl(pGUIControl);   // ---> 调用2
+
+		其中调用1  是pGroup 调用的此方法，所以pGUIControl  控件的父控件就是pGroup
+		而调用2  是则应该是CGUIWindow::LoadControl()  这个方法的实体作为他的父控件的
+	*/
+	control->SetParentControl(this); 
+
 	control->SetPushUpdates(m_pushedUpdates);
 	
 	AddLookup(control);

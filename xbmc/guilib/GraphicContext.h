@@ -126,9 +126,10 @@ public:
   inline float GetGUIScaleY() const XBMC_FORCE_INLINE { return m_guiScaleY; }
   inline color_t MergeAlpha(color_t color) const XBMC_FORCE_INLINE
   {
-    color_t alpha = m_finalTransform.TransformAlpha((color >> 24) & 0xff);
-    if (alpha > 255) alpha = 255;
-    return ((alpha << 24) & 0xff000000) | (color & 0xffffff);
+	color_t alpha = m_finalTransform.TransformAlpha((color >> 24) & 0xff);
+	if (alpha > 255) 
+		alpha = 255;
+	return ((alpha << 24) & 0xff000000) | (color & 0xffffff);
   }
 
   void SetOrigin(float x, float y);
@@ -172,37 +173,77 @@ public:
   void ClipRect(CRect &vertex, CRect &texture, CRect *diffuse = NULL);
   inline unsigned int AddGUITransform()
   {
-    unsigned int size = m_groupTransform.size();
-    m_groupTransform.push(m_guiTransform);
-    UpdateFinalTransform(m_groupTransform.top());
-    return size;
+	/*
+		参数:
+			1、
+			
+		返回:
+			1、
+			
+		说明:
+			1、
+	*/
+	unsigned int size = m_groupTransform.size();
+	m_groupTransform.push(m_guiTransform);
+	UpdateFinalTransform(m_groupTransform.top());
+	return size;
   }
   inline TransformMatrix AddTransform(const TransformMatrix &matrix)
   {
-    ASSERT(m_groupTransform.size());
-    TransformMatrix absoluteMatrix = m_groupTransform.size() ? m_groupTransform.top() * matrix : matrix;
-    m_groupTransform.push(absoluteMatrix);
-    UpdateFinalTransform(absoluteMatrix);
-    return absoluteMatrix;
+	/*
+		参数:
+			1、
+			
+		返回:
+			1、
+			
+		说明:
+			1、
+	*/
+	ASSERT(m_groupTransform.size());
+	TransformMatrix absoluteMatrix = m_groupTransform.size() ? m_groupTransform.top() * matrix : matrix;
+	m_groupTransform.push(absoluteMatrix);
+	UpdateFinalTransform(absoluteMatrix);
+	return absoluteMatrix;
   }
   inline void SetTransform(const TransformMatrix &matrix)
   {
-    // TODO: We only need to add it to the group transform as other transforms may be added on top of this one later on
-    //       Once all transforms are cached then this can be removed and UpdateFinalTransform can be called directly
-    ASSERT(m_groupTransform.size());
-    m_groupTransform.push(matrix);
-    UpdateFinalTransform(m_groupTransform.top());
+	/*
+		参数:
+			1、
+			
+		返回:
+			1、
+			
+		说明:
+			1、
+	*/
+	// TODO: We only need to add it to the group transform as other transforms may be added on top of this one later on
+	//       Once all transforms are cached then this can be removed and UpdateFinalTransform can be called directly
+	ASSERT(m_groupTransform.size());
+	m_groupTransform.push(matrix);
+	UpdateFinalTransform(m_groupTransform.top());
   }
   inline unsigned int RemoveTransform()
   {
-    ASSERT(m_groupTransform.size());
-    if (m_groupTransform.size())
-      m_groupTransform.pop();
-    if (m_groupTransform.size())
-      UpdateFinalTransform(m_groupTransform.top());
-    else
-      UpdateFinalTransform(TransformMatrix());
-    return m_groupTransform.size();
+	/*
+		参数:
+			1、
+			
+		返回:
+			1、
+			
+		说明:
+			1、
+	*/
+	ASSERT(m_groupTransform.size());
+	if (m_groupTransform.size())
+		m_groupTransform.pop();
+	if (m_groupTransform.size())
+		UpdateFinalTransform(m_groupTransform.top());
+	else
+		UpdateFinalTransform(TransformMatrix());
+	return m_groupTransform.size();
   }
 
   CRect generateAABB(const CRect &rect) const;

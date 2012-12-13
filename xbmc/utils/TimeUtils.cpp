@@ -36,29 +36,51 @@
 
 int64_t CurrentHostCounter(void)
 {
+
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #if   defined(TARGET_DARWIN)
-  return( (int64_t)CVGetCurrentHostTime() );
+	return( (int64_t)CVGetCurrentHostTime() );
 #elif defined(TARGET_WINDOWS)
-  LARGE_INTEGER PerformanceCount;
-  QueryPerformanceCounter(&PerformanceCount);
-  return( (int64_t)PerformanceCount.QuadPart );
+	LARGE_INTEGER PerformanceCount;
+	QueryPerformanceCounter(&PerformanceCount);
+	return( (int64_t)PerformanceCount.QuadPart );
 #else
-  struct timespec now;
-  clock_gettime(CLOCK_MONOTONIC, &now);
-  return( ((int64_t)now.tv_sec * 1000000000L) + now.tv_nsec );
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC, &now);
+	return( ((int64_t)now.tv_sec * 1000000000L) + now.tv_nsec );
 #endif
 }
 
 int64_t CurrentHostFrequency(void)
 {
+
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
 #if defined(TARGET_DARWIN)
-  return( (int64_t)CVGetHostClockFrequency() );
+	return( (int64_t)CVGetHostClockFrequency() );
 #elif defined(TARGET_WINDOWS)
-  LARGE_INTEGER Frequency;
-  QueryPerformanceFrequency(&Frequency);
-  return( (int64_t)Frequency.QuadPart );
+	LARGE_INTEGER Frequency;
+	QueryPerformanceFrequency(&Frequency);
+	return( (int64_t)Frequency.QuadPart );
 #else
-  return( (int64_t)1000000000L );
+	return( (int64_t)1000000000L );
 #endif
 }
 
@@ -67,32 +89,63 @@ unsigned int CTimeUtils::frameTime = 0;
 
 void CTimeUtils::UpdateFrameTime(bool flip)
 {
-  if (!frameTimer)
-    frameTimer = new CTimeSmoother();
-  unsigned int currentTime = XbmcThreads::SystemClockMillis();
-  if (flip)
-    frameTimer->AddTimeStamp(currentTime);
-  frameTime = frameTimer->GetNextFrameTime(currentTime);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if (!frameTimer)
+		frameTimer = new CTimeSmoother();
+	unsigned int currentTime = XbmcThreads::SystemClockMillis();
+	if (flip)
+		frameTimer->AddTimeStamp(currentTime);
+	frameTime = frameTimer->GetNextFrameTime(currentTime);
 }
 
 unsigned int CTimeUtils::GetFrameTime()
 {
-  return frameTime;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+  	return frameTime;
 }
 
 CDateTime CTimeUtils::GetLocalTime(time_t time)
 {
-  CDateTime result;
 
-  tm *local = localtime(&time); // Conversion to local time
-  /*
-   * Microsoft implementation of localtime returns NULL if on or before epoch.
-   * http://msdn.microsoft.com/en-us/library/bf12f0hc(VS.80).aspx
-   */
-  if (local)
-    result = *local;
-  else
-    result = time; // Use the original time as close enough.
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	CDateTime result;
 
-  return result;
+	tm *local = localtime(&time); // Conversion to local time
+	/*
+	* Microsoft implementation of localtime returns NULL if on or before epoch.
+	* http://msdn.microsoft.com/en-us/library/bf12f0hc(VS.80).aspx
+	*/
+	if (local)
+		result = *local;
+	else
+		result = time; // Use the original time as close enough.
+
+	return result;
 }

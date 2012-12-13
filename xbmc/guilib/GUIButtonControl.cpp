@@ -29,8 +29,8 @@ using namespace std;
 
 CGUIButtonControl::CGUIButtonControl(int parentID, int controlID, float posX, float posY, float width, float height, const CTextureInfo& textureFocus, const CTextureInfo& textureNoFocus, const CLabelInfo& labelInfo)
 										: CGUIControl(parentID, controlID, posX, posY, width, height)
-										, m_imgFocus(posX, posY, width, height, textureFocus)
-										, m_imgNoFocus(posX, posY, width, height, textureNoFocus)
+										, m_imgFocus(posX, posY, width, height, textureFocus) 		/* 用纹理信息数据结构、坐标等信息构造m_imgFocus  实例*/
+										, m_imgNoFocus(posX, posY, width, height, textureNoFocus) 	/* 用纹理信息数据结构、坐标等信息构造m_imgNoFocus  实例*/
 										, m_label(posX, posY, width, height, labelInfo)
 										, m_label2(posX, posY, width, height, labelInfo)
 {

@@ -257,6 +257,7 @@ void CGUIControl::DoRender()
 		1、
 */
 	g_graphicsContext.SetTransform(m_cachedTransform);
+
 	if (m_hasCamera)
 		g_graphicsContext.SetCameraPosition(m_camera);
 	
@@ -877,11 +878,11 @@ void CGUIControl::SetNavigationActions(const CGUIAction &up, const CGUIAction &d
 	说明:
 		1、
 */
-	if (!m_actionLeft.HasAnyActions()  || replace) m_actionLeft  = left;
-	if (!m_actionRight.HasAnyActions() || replace) m_actionRight = right;
-	if (!m_actionUp.HasAnyActions()    || replace) m_actionUp    = up;
-	if (!m_actionDown.HasAnyActions()  || replace) m_actionDown  = down;
-	if (!m_actionBack.HasAnyActions()  || replace) m_actionBack  = back;
+	if (!m_actionLeft.HasAnyActions()  || replace) 	m_actionLeft  		= left;
+	if (!m_actionRight.HasAnyActions() || replace) 	m_actionRight		= right;
+	if (!m_actionUp.HasAnyActions()    || replace) 	m_actionUp    		= up;
+	if (!m_actionDown.HasAnyActions()  || replace) 	m_actionDown  	= down;
+	if (!m_actionBack.HasAnyActions()  || replace) 	m_actionBack  	= back;
 }
 
 void CGUIControl::SetWidth(float width)
@@ -1595,7 +1596,7 @@ void CGUIControl::SetHitRect(const CRect &rect)
 		1、
 
 	说明:
-		1、
+		1、见CGUIControlFactory::Create()  方法的调用
 */
   	m_hitRect = rect;
 }
