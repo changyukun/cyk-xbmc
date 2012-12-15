@@ -512,7 +512,7 @@ void CGraphicContext::SetVideoResolution(RESOLUTION res, bool forceUpdate)
 		1、
 		
 	说明:
-		1、
+		1、设定视频分辨率
 */
 	RESOLUTION lastRes = m_Resolution;
 

@@ -143,12 +143,13 @@ public:
 	bool m_visible;
 	color_t m_diffuseColor;
 
+	/* 用于保存纹理坐标的信息，见构造函数对其进行的赋值*/
 	float m_posX;         // size of the frame
 	float m_posY;
 	float m_width;
 	float m_height;
 
-	CRect m_vertex;       // vertex coords to render
+	CRect m_vertex;   /* 用于保存控件范围的矩形信息，见构造函数对其进行的赋值*/    // vertex coords to render
 	bool m_invalid;       // if true, we need to recalculate
 
 	unsigned char m_alpha;

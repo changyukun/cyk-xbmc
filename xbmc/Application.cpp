@@ -460,9 +460,11 @@ bool CApplication::OnEvent(XBMC_Event& newEvent)
 			g_application.ProcessMouse();
 			break;
 			
-		case XBMC_VIDEORESIZE:
+		case XBMC_VIDEORESIZE:/* 视频尺寸发生变化*/
 			if (!g_application.m_bInitializing &&!g_advancedSettings.m_fullScreen)
 			{
+				/* 既不是没初始化，也不是全屏，所以这种情况下视频尺寸
+				发生变化则需要重新设置分辨率*/
 				g_Windowing.SetWindowResolution(newEvent.resize.w, newEvent.resize.h);
 				g_graphicsContext.SetVideoResolution(RES_WINDOW, true);
 				g_guiSettings.SetInt("window.width", newEvent.resize.w);
@@ -2630,10 +2632,10 @@ bool CApplication::OnKey(const CKey& key)
 		1、
 */
 	// Turn the mouse off, as we've just got a keypress from controller or remote
-	g_Mouse.SetActive(false);
+	g_Mouse.SetActive(false); /* 按键状态，所以先关闭鼠标的激活状态*/
 
 	// get the current active window
-	int iWin = g_windowManager.GetActiveWindow() & WINDOW_ID_MASK;
+	int iWin = g_windowManager.GetActiveWindow() & WINDOW_ID_MASK;/* 获取当前的激活窗口*/
 
 	// this will be checked for certain keycodes that need
 	// special handling if the screensaver is active

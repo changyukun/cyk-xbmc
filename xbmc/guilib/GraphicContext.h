@@ -257,7 +257,7 @@ protected:
   CStdString m_strMediaDir;
   CRect m_videoRect;
   bool m_bFullScreenRoot;
-  bool m_bFullScreenVideo;
+  bool m_bFullScreenVideo; /* 在方法CGraphicContext::SetFullScreenVideo  中被赋值*/
   bool m_bCalibrating;
   RESOLUTION m_Resolution;
 
