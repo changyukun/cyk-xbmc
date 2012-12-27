@@ -92,7 +92,7 @@ typedef struct PacketQueue
 	AVPacketList *first_pkt, *last_pkt;
 	int nb_packets;
 	int size;
-	int abort_request;
+	int abort_request; /* 见函数packet_queue_abort  中对其的赋值*/
 	SDL_mutex *mutex;
 	SDL_cond *cond;
 } PacketQueue;
@@ -279,7 +279,7 @@ static char *vfilters = NULL;
 
 /* current context */
 static int is_full_screen;
-static VideoState *cur_stream;
+static VideoState *cur_stream; /* 在main  函数中得到赋值*/
 static int64_t audio_callback_time;
 
 static AVPacket flush_pkt;
@@ -303,7 +303,7 @@ static void packet_queue_init(PacketQueue *q)
 		1、
 		
 	说明:
-		1、
+		1、此函数用于实现对各个队列( 视频包、音频包等)  的初始化操作
 */
 	memset(q, 0, sizeof(PacketQueue));
 	q->mutex = SDL_CreateMutex();
@@ -321,7 +321,7 @@ static void packet_queue_flush(PacketQueue *q)
 		1、
 		
 	说明:
-		1、
+		1、此函数实现清空指定队列中的数据，并释放相应的队列资源
 */
 	AVPacketList *pkt, *pkt1;
 
@@ -366,7 +366,8 @@ static int packet_queue_put(PacketQueue *q, AVPacket *pkt)
 		1、
 		
 	说明:
-		1、
+		1、此函数将传入的数据包插入到相应的队列中，如视频包插入到视频队列，音频包
+			插入到音频包队列中
 */
 	AVPacketList *pkt1;
 
@@ -392,7 +393,7 @@ static int packet_queue_put(PacketQueue *q, AVPacket *pkt)
 	q->nb_packets++;
 	q->size += pkt1->pkt.size + sizeof(*pkt1);
 	/* XXX: should duplicate packet data in DV case */
-	SDL_CondSignal(q->cond);
+	SDL_CondSignal(q->cond); /* 释放数据插入到队列中的消息出去，在函数packet_queue_get 会等此消息*/
 
 	SDL_UnlockMutex(q->mutex);
 	return 0;
@@ -408,7 +409,7 @@ static void packet_queue_abort(PacketQueue *q)
 		1、
 		
 	说明:
-		1、
+		1、设定此队列的abort_request  标记为1
 */
 	SDL_LockMutex(q->mutex);
 
@@ -424,13 +425,15 @@ static int packet_queue_get(PacketQueue *q, AVPacket *pkt, int block)
 {
 /*
 	参数:
-		1、
+		1、q		: 传入一个队列
+		2、pkt		: 用于返回获得到的包
+		3、block	: 是否阻塞等待
 		
 	返回:
 		1、
 		
 	说明:
-		1、
+		1、从指定的队列中取出一个包，通过参数pkt  返回包数据
 */
 	AVPacketList *pkt1;
 	int ret;
@@ -458,12 +461,12 @@ static int packet_queue_get(PacketQueue *q, AVPacket *pkt, int block)
 			ret = 1;
 			break;
 		}
-		else if (!block)
+		else if (!block) /* 不需要阻塞等待则直接返回*/
 		{
 			ret = 0;
 			break;
 		} 
-		else
+		else  /* 需要阻塞等待则在此等待数据插入到此队列中的消息，在函数packet_queue_put  中会释放此信号*/
 		{
 			SDL_CondWait(q->cond, q->mutex);
 		}
@@ -1369,7 +1372,7 @@ static void stream_seek(VideoState *is, int64_t pos, int64_t rel, int seek_by_by
 		1、
 		
 	说明:
-		1、
+		1、调用此函数进行定位申请,  定位的处理在线程decode_thread  中进行
 */
 	if (!is->seek_req) 
 	{
@@ -1952,11 +1955,11 @@ static int get_video_frame(VideoState *is, AVFrame *frame, int64_t *pts, AVPacke
 		1、
 		
 	说明:
-		1、
+		1、获取一帧视频数据，并对获得到的数据进行解码
 */
 	int len1, got_picture, i;
 
-	if (packet_queue_get(&is->videoq, pkt, 1) < 0)
+	if (packet_queue_get(&is->videoq, pkt, 1) < 0) /* 见函数中的分析*/
 		return -1;
 
 	if (pkt->data == flush_pkt.data) 
@@ -1986,9 +1989,7 @@ static int get_video_frame(VideoState *is, AVFrame *frame, int64_t *pts, AVPacke
 		return 0;
 	}
 
-	len1 = avcodec_decode_video2(is->video_st->codec,
-									frame, &got_picture,
-									pkt);
+	len1 = avcodec_decode_video2(is->video_st->codec, frame, &got_picture, pkt); /* 调用ffmpeg  对数据进行解码*/
 
 	if (got_picture) 
 	{
@@ -2375,7 +2376,7 @@ static int video_thread(void *arg)
 		1、
 		
 	说明:
-		1、
+		1、视频解码的主线程
 */
 	VideoState *is = arg;
 	AVFrame *frame= avcodec_alloc_frame();
@@ -2422,7 +2423,7 @@ static int video_thread(void *arg)
 							is->video_st->time_base.num, is->video_st->time_base.den, pts_int);
 		}
 #else
-		ret = get_video_frame(is, frame, &pts_int, &pkt);
+		ret = get_video_frame(is, frame, &pts_int, &pkt); /* 获取一包数据并对此数据进行解码*/
 #endif
 
 		if (ret < 0)
@@ -3102,7 +3103,7 @@ static int decode_thread(void *arg)
 		1、
 		
 	说明:
-		1、
+		1、相当于播放器的主线程
 */
 	VideoState *is = arg;
 	AVFormatContext *ic;
@@ -3121,7 +3122,7 @@ static int decode_thread(void *arg)
 	is->subtitle_stream = -1;
 
 	global_video_state = is;
-	url_set_interrupt_cb(decode_interrupt_cb);
+	url_set_interrupt_cb(decode_interrupt_cb); /* 设定回调函数到ffmpeg  中*/
 
 	memset(ap, 0, sizeof(*ap));
 
@@ -3133,7 +3134,7 @@ static int decode_thread(void *arg)
 
 	set_context_opts(ic, avformat_opts, AV_OPT_FLAG_DECODING_PARAM, NULL);
 
-	err = av_open_input_file(&ic, is->filename, is->iformat, 0, ap);
+	err = av_open_input_file(&ic, is->filename, is->iformat, 0, ap); /* 打开demux ，见函数内部分析*/
 	if (err < 0) 
 	{
 		print_error(is->filename, err);
@@ -3145,7 +3146,7 @@ static int decode_thread(void *arg)
 	if(genpts)
 		ic->flags |= AVFMT_FLAG_GENPTS;
 
-	err = av_find_stream_info(ic);
+	err = av_find_stream_info(ic); /* 获取流媒体信息*/
 	if (err < 0)
 	{
 		fprintf(stderr, "%s: could not find codec parameters\n", is->filename);
@@ -3222,12 +3223,13 @@ static int decode_thread(void *arg)
 		goto fail;
 	}
 
+	/* 播放器主线程----------------------------- */
 	for(;;) 
 	{
 		if (is->abort_request)
 			break;
 		
-		if (is->paused != is->last_paused) 
+		if (is->paused != is->last_paused) /* 是否暂停*/
 		{
 			is->last_paused = is->paused;
 			if (is->paused)
@@ -3244,7 +3246,7 @@ static int decode_thread(void *arg)
 			continue;
 		}
 #endif
-		if (is->seek_req)
+		if (is->seek_req) /* 是否为seek */
 		{
 			int64_t seek_target= is->seek_pos;
 			int64_t seek_min= is->seek_rel > 0 ? seek_target - is->seek_rel + 2: INT64_MIN;
@@ -3290,7 +3292,7 @@ static int decode_thread(void *arg)
 			continue;
 		}
 		
-		if(eof)
+		if(eof) /* 是否读取到文件尾了*/
 		{
 			if(is->video_stream >= 0)
 			{
@@ -3318,7 +3320,7 @@ static int decode_thread(void *arg)
 			continue;
 		}
 		
-		ret = av_read_frame(ic, pkt);
+		ret = av_read_frame(ic, pkt); /* 读取一个数据包*/
 		
 		if (ret < 0)
 		{
@@ -3400,7 +3402,7 @@ static VideoState *stream_open(const char *filename, AVInputFormat *iformat)
 		1、
 		
 	说明:
-		1、
+		1、流文件打开
 */
 	VideoState *is;
 
@@ -3420,7 +3422,7 @@ static VideoState *stream_open(const char *filename, AVInputFormat *iformat)
 	is->subpq_cond = SDL_CreateCond();
 
 	is->av_sync_type = av_sync_type;
-	is->parse_tid = SDL_CreateThread(decode_thread, is);
+	is->parse_tid = SDL_CreateThread(decode_thread, is);/* 创建解码线程*/
 	if (!is->parse_tid)
 	{
 		av_free(is);

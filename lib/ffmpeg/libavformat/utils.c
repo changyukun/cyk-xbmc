@@ -998,7 +998,7 @@ int av_open_input_file(AVFormatContext **ic_ptr,
 	pd->buf = NULL;
 	pd->buf_size = 0;
 
-	if (!fmt) 
+	if (!fmt)  /* 如果文件的格式还没确定，则需要探测输入文件的格式*/
 	{
 		/* guess format if no file can be opened */
 		fmt = av_probe_input_format(pd, 0);
