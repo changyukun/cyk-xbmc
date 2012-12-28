@@ -216,7 +216,7 @@ typedef struct VideoState
 	PtsCorrectionContext pts_ctx;
 
 #if CONFIG_AVFILTER
-	AVFilterContext *out_video_filter;          ///<the last filter in the video chain
+	AVFilterContext *out_video_filter;     /* 见configure_video_filters  函数中对其进行的赋值*/     ///<the last filter in the video chain
 #endif
 
 	float skip_frames;
@@ -2213,7 +2213,7 @@ static int input_request_frame(AVFilterLink *link)
 	AVPacket pkt;
 	int ret;
 
-	while (!(ret = get_video_frame(priv->is, priv->frame, &pts, &pkt)))
+	while (!(ret = get_video_frame(priv->is, priv->frame, &pts, &pkt))) /* 读取并解码一帧的视频数据*/
 		av_free_packet(&pkt);
 	
 	if (ret < 0)
@@ -2226,6 +2226,7 @@ static int input_request_frame(AVFilterLink *link)
 	else 
 	{
 		picref = avfilter_get_video_buffer(link, AV_PERM_WRITE, link->w, link->h);
+		
 		av_image_copy(picref->data, picref->linesize,
 						priv->frame->data, priv->frame->linesize,
 						picref->format, link->w, link->h);
@@ -2235,6 +2236,7 @@ static int input_request_frame(AVFilterLink *link)
 	picref->pts = pts;
 	picref->pos = pkt.pos;
 	picref->video->pixel_aspect = priv->is->video_st->codec->sample_aspect_ratio;
+	
 	avfilter_start_frame(link, picref);
 	avfilter_draw_slice(link, 0, link->h, 1);
 	avfilter_end_frame(link);
@@ -2324,10 +2326,10 @@ static int configure_video_filters(AVFilterGraph *graph, VideoState *is, const c
 	snprintf(sws_flags_str, sizeof(sws_flags_str), "flags=%d", sws_flags);
 	graph->scale_sws_opts = av_strdup(sws_flags_str);
 
-	if ((ret = avfilter_graph_create_filter(&filt_src, &input_filter, "src", NULL, is, graph)) < 0)
+	if ((ret = avfilter_graph_create_filter(&filt_src, &input_filter, "src", NULL, is, graph)) < 0) /* 创建一个源filter  的上下文*/
 		goto the_end;
 	
-	if ((ret = avfilter_graph_create_filter(&filt_out, &ffsink, "out", NULL, &ffsink_ctx, graph)) < 0)
+	if ((ret = avfilter_graph_create_filter(&filt_out, &ffsink, "out", NULL, &ffsink_ctx, graph)) < 0) /* 创建一个输出filter  的上下文*/
 		goto the_end;
 
 	if(vfilters) 
@@ -2376,7 +2378,7 @@ static int video_thread(void *arg)
 		1、
 		
 	说明:
-		1、视频解码的主线程
+		1、视频解码的主线程，见函数stream_component_open  中的调用
 */
 	VideoState *is = arg;
 	AVFrame *frame= avcodec_alloc_frame();
@@ -2385,12 +2387,13 @@ static int video_thread(void *arg)
 	int ret;
 
 #if CONFIG_AVFILTER
-	AVFilterGraph *graph = avfilter_graph_alloc();
+	AVFilterGraph *graph = avfilter_graph_alloc(); /* 分配一个滤镜图表的数据结构内存*/
 	AVFilterContext *filt_out = NULL;
 	int64_t pos;
 
-	if ((ret = configure_video_filters(graph, is, vfilters)) < 0)
+	if ((ret = configure_video_filters(graph, is, vfilters)) < 0) /* 配置滤镜*/
 		goto the_end;
+	
 	filt_out = is->out_video_filter;
 #endif
 
@@ -2405,7 +2408,7 @@ static int video_thread(void *arg)
 		while (is->paused && !is->videoq.abort_request)
 			SDL_Delay(10);
 #if CONFIG_AVFILTER
-		ret = get_filtered_video_frame(filt_out, frame, &picref, &tb);
+		ret = get_filtered_video_frame(filt_out, frame, &picref, &tb); /* 获取一包数据并对此数据进行解码，解码后再经过filter  处理*/
 		if (picref)
 		{
 			pts_int = picref->pts;
@@ -2882,7 +2885,7 @@ static int stream_component_open(VideoState *is, int stream_index)
 		1、
 		
 	说明:
-		1、
+		1、此函数内部间接的实现了创建解码音视频的线程
 */
 	AVFormatContext *ic = is->ic;
 	AVCodecContext *avctx;

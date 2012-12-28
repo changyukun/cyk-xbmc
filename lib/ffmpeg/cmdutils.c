@@ -800,27 +800,49 @@ FILE *get_preset_file(char *filename, size_t filename_size,
 
 static int ffsink_init(AVFilterContext *ctx, const char *args, void *opaque)
 {
-    FFSinkContext *priv = ctx->priv;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	FFSinkContext *priv = ctx->priv;
 
-    if (!opaque)
-        return AVERROR(EINVAL);
-    *priv = *(FFSinkContext *)opaque;
+	if (!opaque)
+		return AVERROR(EINVAL);
+	
+	*priv = *(FFSinkContext *)opaque;
 
-    return 0;
+	return 0;
 }
 
 static void null_end_frame(AVFilterLink *inlink) { }
 
 static int ffsink_query_formats(AVFilterContext *ctx)
 {
-    FFSinkContext *priv = ctx->priv;
-    enum PixelFormat pix_fmts[] = { priv->pix_fmt, PIX_FMT_NONE };
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	FFSinkContext *priv = ctx->priv;
+	enum PixelFormat pix_fmts[] = { priv->pix_fmt, PIX_FMT_NONE };
 
-    avfilter_set_common_formats(ctx, avfilter_make_format_list(pix_fmts));
-    return 0;
+	avfilter_set_common_formats(ctx, avfilter_make_format_list(pix_fmts));
+	return 0;
 }
 
-AVFilter ffsink = {
+AVFilter ffsink = 
+{
     .name      = "ffsink",
     .priv_size = sizeof(FFSinkContext),
     .init      = ffsink_init,
@@ -835,26 +857,40 @@ AVFilter ffsink = {
     .outputs   = (AVFilterPad[]) {{ .name = NULL }},
 };
 
-int get_filtered_video_frame(AVFilterContext *ctx, AVFrame *frame,
-                             AVFilterBufferRef **picref_ptr, AVRational *tb)
+int get_filtered_video_frame(AVFilterContext *ctx, AVFrame *frame, AVFilterBufferRef **picref_ptr, AVRational *tb)
 {
-    int ret;
-    AVFilterBufferRef *picref;
+/*
+	参数:
+		1、ctx			: 传入一个滤镜的上下文数据结构( 两个滤镜上下文是通过一个滤镜链数据结构联系在一起的)
+		2、frame		: 用于返回数据
+		3、picref_ptr	:
+		4、tb
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int ret;
+	AVFilterBufferRef *picref;
 
-    if ((ret = avfilter_request_frame(ctx->inputs[0])) < 0)
-        return ret;
-    if (!(picref = ctx->inputs[0]->cur_buf))
-        return AVERROR(ENOENT);
-    *picref_ptr = picref;
-    ctx->inputs[0]->cur_buf = NULL;
-    *tb = ctx->inputs[0]->time_base;
+	if ((ret = avfilter_request_frame(ctx->inputs[0])) < 0) /* 见函数的分析*/
+		return ret;
+	
+	if (!(picref = ctx->inputs[0]->cur_buf))
+		return AVERROR(ENOENT);
+	
+	*picref_ptr = picref;
+	ctx->inputs[0]->cur_buf = NULL;
+	*tb = ctx->inputs[0]->time_base;
 
-    memcpy(frame->data,     picref->data,     sizeof(frame->data));
-    memcpy(frame->linesize, picref->linesize, sizeof(frame->linesize));
-    frame->interlaced_frame = picref->video->interlaced;
-    frame->top_field_first  = picref->video->top_field_first;
+	memcpy(frame->data,     picref->data,     sizeof(frame->data));
+	memcpy(frame->linesize, picref->linesize, sizeof(frame->linesize));
+	frame->interlaced_frame = picref->video->interlaced;
+	frame->top_field_first  = picref->video->top_field_first;
 
-    return 1;
+	return 1;
 }
 
 #endif /* CONFIG_AVFILTER */

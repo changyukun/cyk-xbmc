@@ -86,8 +86,11 @@ int avfilter_graph_add_filter(AVFilterGraph *graph, AVFilterContext *filter)
 	return 0;
 }
 
-int avfilter_graph_create_filter(AVFilterContext **filt_ctx, AVFilter *filt,
-								const char *name, const char *args, void *opaque,
+int avfilter_graph_create_filter(AVFilterContext **filt_ctx, 
+								AVFilter *filt,
+								const char *name, 
+								const char *args, 
+								void *opaque,
 								AVFilterGraph *graph_ctx)
 {
 /*
@@ -104,7 +107,12 @@ int avfilter_graph_create_filter(AVFilterContext **filt_ctx, AVFilter *filt,
 		1、
 		
 	说明:
-		1、
+		1、此函数的功能:
+			a、创建了一个滤镜上下文的内存空间
+			b、对创建的滤镜上下文数据结构进行了填充，其中参数filt  就被设置到filt_ctx -> filter 中了
+			c、调用了传入滤镜filt  的初始化函数，其中参数4、5  作为初始化函数的参数
+			d、将创建的这个滤镜上下文添加到了参数6  所指定的滤镜图表数据结构中，并更新
+				滤镜图表中的滤镜上下文的个数
 */
 	int ret;
 
