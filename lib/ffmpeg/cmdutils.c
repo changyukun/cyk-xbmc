@@ -875,6 +875,15 @@ int get_filtered_video_frame(AVFilterContext *ctx, AVFrame *frame, AVFilterBuffe
 	int ret;
 	AVFilterBufferRef *picref;
 
+/*
+	滤镜链是如何获取数据并经过滤镜链进行处理的?  见函数avfilter_request_frame  对自身的嵌入式调用
+
+	下面的代码对函数avfilter_request_frame  调用时传入的是滤镜链表中最后一个"  滤镜链数据结构"，
+	"  滤镜链数据结构"  是用来将两个"  滤镜上下文"  进行连接的功能，即两个滤镜进行连接。
+	通过传入的最后一个"  滤镜链数据结构"  ，然后函数avfilter_request_frame  内部会嵌入式的自身调用
+	逐级向上找到每一个相连接的滤镜，一直到找到滤镜中指定了request_frame  函数的滤镜为止
+	
+*/
 	if ((ret = avfilter_request_frame(ctx->inputs[0])) < 0) /* 见函数的分析*/
 		return ret;
 	

@@ -86,6 +86,50 @@ int avfilter_graph_add_filter(AVFilterGraph *graph, AVFilterContext *filter)
 	return 0;
 }
 
+/*
+	滤镜链表的工作过程:
+	
+	1、首先调用函数avfilter_request_frame(AVFilterLink *link)  来申请视频数据，传递给此函数的参数
+		是整个滤镜链表的最后一个"  滤镜链数据结构"，通过这个"  滤镜链数据结构"，此
+		函数内部会嵌入式的调用自身，一直向上找到滤镜链表头，然后调用滤镜链表头
+		的那个滤镜的request_frame  函数进行数据获取
+
+		如get_filtered_video_frame 函数中的调用
+
+	2、在第1  步中找到了头滤镜的request_frame  函数( 如: input_request_frame )，通常这个request_frame 
+		函数中会分为如下几个步骤完成功能
+		
+		A、调用一个获取一帧数据、并对数据解码后得到一个数据的包
+			( 如: input_request_frame() --> get_video_frame() )
+			
+		B、根据得到的数据包、滤镜的相关信息等分配一个AVFilterBufferRef  的空间，即保存数据
+			( 如: input_request_frame() --> avfilter_get_video_buffer() )
+			
+		C、调用函数avfilter_start_frame(AVFilterLink *link, AVFilterBufferRef *picref) 进行处理，通常此函数的第一个
+			参数就是整个滤镜链表的第一个"  滤镜链数据结构"，第二个参数就是B  步骤中
+			分配并填充了数据的AVFilterBufferRef  数据结构
+
+			在函数avfilter_start_frame  中就会按照滤镜链表逐级的向下处理AVFilterBufferRef ，每一级滤镜
+			会根据自己的需求决定是对上级滤镜传递过来的AVFilterBufferRef  结构是拷贝还是引用
+			相见avfilter_start_frame 函数的代码
+
+			( 如: input_request_frame() --> avfilter_start_frame() )
+			
+		D、调用函数avfilter_draw_slice(AVFilterLink *link, int y, int h, int slice_dir) 进行处理，通常此函数的第一个
+			参数就是整个滤镜链表的第一个"  滤镜链数据结构"
+
+			在函数avfilter_draw_slice 中就会按照滤镜链表逐级的向下处理，直到最后一个滤镜
+
+			( 如: input_request_frame() --> avfilter_draw_slice() )
+
+		F、调用函数avfilter_end_frame(AVFilterLink *link) 进行处理，通常参数为整个滤镜链表的第一个
+			"  滤镜链数据结构"
+
+			在函数avfilter_draw_slice 中就会按照滤镜链表逐级的向下处理，直到最后一个滤镜
+
+			( 如: input_request_frame() --> avfilter_end_frame() )
+*/
+
 int avfilter_graph_create_filter(AVFilterContext **filt_ctx, 
 								AVFilter *filt,
 								const char *name, 

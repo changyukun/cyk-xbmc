@@ -530,20 +530,25 @@ int avfilter_request_frame(AVFilterLink *link)
 {
 /*
 	参数:
-		1、
+		1、link	: 	传入一个"  滤镜链数据结构"  ，此结构实现了用来将两个"  滤镜上下文"  进行连接的功
+					能，即两个滤镜进行连接。
 		
 	返回:
 		1、
 		
 	说明:
-		1、
+		1、见函数get_filtered_video_frame  中的说明
+		2、此函数的说明
+			根据传入的"  滤镜链数据结构"  的源pad  ，即可找到其连接的上一级"  滤镜上下文"，如果
+			上级"  滤镜上下文"  没有指定request_frame  函数，则嵌入式的自身调用实现再上一级的查找，
+			一直找到指定了request_frame  函数的滤镜，即此滤镜链表的头
 */
 	FF_DPRINTF_START(NULL, request_frame); 
 
 	ff_dlog_link(NULL, link, 1);
 
 	if (link->srcpad->request_frame)
-		return link->srcpad->request_frame(link);
+		return link->srcpad->request_frame(link); /* 调用滤镜的request_frame  函数时传入的参数link  应该是整个滤镜链表的第一个"  滤镜链数据结构" */
 	else if (link->src->inputs[0])
 		return avfilter_request_frame(link->src->inputs[0]);
 	else 

@@ -2205,7 +2205,7 @@ static int input_request_frame(AVFilterLink *link)
 		1、
 		
 	说明:
-		1、
+		1、见函数avfilter_request_frame  中对此的调用
 */
 	FilterPriv *priv = link->src->priv;
 	AVFilterBufferRef *picref;
