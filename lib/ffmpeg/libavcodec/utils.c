@@ -50,371 +50,565 @@ static void *codec_mutex;
 
 void *av_fast_realloc(void *ptr, unsigned int *size, FF_INTERNALC_MEM_TYPE min_size)
 {
-    if(min_size < *size)
-        return ptr;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	if(min_size < *size)
+		return ptr;
 
-    min_size= FFMAX(17*min_size/16 + 32, min_size);
+	min_size= FFMAX(17*min_size/16 + 32, min_size);
 
-    ptr= av_realloc(ptr, min_size);
-    if(!ptr) //we could set this to the unmodified min_size but this is safer if the user lost the ptr and uses NULL now
-        min_size= 0;
+	ptr= av_realloc(ptr, min_size);
+	if(!ptr) //we could set this to the unmodified min_size but this is safer if the user lost the ptr and uses NULL now
+		min_size= 0;
 
-    *size= min_size;
+	*size= min_size;
 
-    return ptr;
+	return ptr;
 }
 
 void av_fast_malloc(void *ptr, unsigned int *size, FF_INTERNALC_MEM_TYPE min_size)
 {
-    void **p = ptr;
-    if (min_size < *size)
-        return;
-    min_size= FFMAX(17*min_size/16 + 32, min_size);
-    av_free(*p);
-    *p = av_malloc(min_size);
-    if (!*p) min_size = 0;
-    *size= min_size;
+/*
+	参数:
+		1、ptr	: 返回分配的内存指针
+		2、size : 返回实际分配的内存空间大小
+		3、min_size : 传入一个最小的内存值
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	void **p = ptr;
+	if (min_size < *size)
+		return;
+	min_size= FFMAX(17*min_size/16 + 32, min_size);
+	av_free(*p);
+	*p = av_malloc(min_size);
+	if (!*p) 
+		min_size = 0;
+	*size= min_size;
 }
 
 /* encoder management */
 static AVCodec *first_avcodec = NULL; /* 所有格式的编码器、解码器数据结构的链表*/
 
-AVCodec *av_codec_next(AVCodec *c){
-    if(c) return c->next;
-    else  return first_avcodec;
+AVCodec *av_codec_next(AVCodec *c)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、返回下一个codec，实质就是返回数组中当前单元的下一个单元
+*/
+	if(c)
+		return c->next;
+	else  
+		return first_avcodec;
 }
 
 void avcodec_register(AVCodec *codec)
 {
-    AVCodec **p;
-    avcodec_init();
-    p = &first_avcodec;
-    while (*p != NULL) p = &(*p)->next;
-    *p = codec;
-    codec->next = NULL;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、注册一个codec，实质就是将传入的codec  插入到first_avcodec 所指向的队列中
+*/
+	AVCodec **p;
+	avcodec_init();
+	p = &first_avcodec;
+	while (*p != NULL) 
+		p = &(*p)->next;
+	*p = codec;
+	codec->next = NULL;
 }
 
 #if LIBAVCODEC_VERSION_MAJOR < 53
 void register_avcodec(AVCodec *codec)
 {
-    avcodec_register(codec);
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、注册一个codec，实质就是将传入的codec  插入到first_avcodec 所指向的队列中
+*/
+    	avcodec_register(codec);
 }
 #endif
 
 unsigned avcodec_get_edge_width(void)
 {
-    return EDGE_WIDTH;
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+    	return EDGE_WIDTH;
 }
 
-void avcodec_set_dimensions(AVCodecContext *s, int width, int height){
-    s->coded_width = width;
-    s->coded_height= height;
-    s->width = -((-width )>>s->lowres);
-    s->height= -((-height)>>s->lowres);
+void avcodec_set_dimensions(AVCodecContext *s, int width, int height)
+{
+/*
+	参数:
+		1、s		: 传入一个AVCodecContext 解码器上下文，每个AVCodecContext  与一个codec 相对应
+		2、width	: 传入一个视频的宽度
+		3、height	: 传入一个视频的高度
+		
+	返回:
+		1、
+		
+	说明:
+		1、实质就是将传入的宽度、高度设定到AVCodecContext  的上下文中
+*/
+	s->coded_width = width;
+	s->coded_height= height;
+	s->width = -((-width )>>s->lowres);
+	s->height= -((-height)>>s->lowres);
 }
 
-typedef struct InternalBuffer{
-    int last_pic_num;
-    uint8_t *base[4];
-    uint8_t *data[4];
-    int linesize[4];
-    int width, height;
-    enum PixelFormat pix_fmt;
+typedef struct InternalBuffer
+{
+	int 		last_pic_num;	/* 最后一个图片的序号*/
+	uint8_t * 	base[4];			/* */
+	uint8_t * 	data[4];			/* 相当于用于指向四帧数据的buffer  指针*/
+	int 		linesize[4];		/* 相当于对应上面四个buffer  的内存数据的对齐方式，见avcodec_align_dimensions2 中对其的设置*/
+	int		 width, height;	/* 宽度、高度*/
+	enum PixelFormat 	pix_fmt;
 }InternalBuffer;
 
 #define INTERNAL_BUFFER_SIZE 32
 
-void avcodec_align_dimensions2(AVCodecContext *s, int *width, int *height, int linesize_align[4]){
-    int w_align= 1;
-    int h_align= 1;
+void avcodec_align_dimensions2(AVCodecContext *s, int *width, int *height, int linesize_align[4])
+{
+/*
+	参数:
+		1、s		: 传入一个AVCodecContext 解码器上下文，每个AVCodecContext  与一个codec 相对应
+		2、width	: 传入一个视频的宽度，返回一个视频宽度
+		3、height	: 传入一个视频的高度，返回一个视频高度
+		4、linesize_align	: 返回数据
+		
+	返回:
+		1、
+		
+	说明:
+		1、实质就是根据参数1  即解码上下文AVCodecContext  中的分辨率格式(pix_fmt)  来对视频的
+			宽度、高度、以及linesize_align[4]  等进行调整，通过后面三个参数返回
+*/
+	int w_align= 1;
+	int h_align= 1;
 
-    switch(s->pix_fmt){
-    case PIX_FMT_YUV420P:
-    case PIX_FMT_YUYV422:
-    case PIX_FMT_UYVY422:
-    case PIX_FMT_YUV422P:
-    case PIX_FMT_YUV440P:
-    case PIX_FMT_YUV444P:
-    case PIX_FMT_GRAY8:
-    case PIX_FMT_GRAY16BE:
-    case PIX_FMT_GRAY16LE:
-    case PIX_FMT_YUVJ420P:
-    case PIX_FMT_YUVJ422P:
-    case PIX_FMT_YUVJ440P:
-    case PIX_FMT_YUVJ444P:
-    case PIX_FMT_YUVA420P:
-        w_align= 16; //FIXME check for non mpeg style codecs and use less alignment
-        h_align= 16;
-        if(s->codec_id == CODEC_ID_MPEG2VIDEO || s->codec_id == CODEC_ID_MJPEG || s->codec_id == CODEC_ID_AMV || s->codec_id == CODEC_ID_THP || s->codec_id == CODEC_ID_H264)
-            h_align= 32; // interlaced is rounded up to 2 MBs
-        break;
-    case PIX_FMT_YUV411P:
-    case PIX_FMT_UYYVYY411:
-        w_align=32;
-        h_align=8;
-        break;
-    case PIX_FMT_YUV410P:
-        if(s->codec_id == CODEC_ID_SVQ1){
-            w_align=64;
-            h_align=64;
-        }
-    case PIX_FMT_RGB555:
-        if(s->codec_id == CODEC_ID_RPZA){
-            w_align=4;
-            h_align=4;
-        }
-    case PIX_FMT_PAL8:
-    case PIX_FMT_BGR8:
-    case PIX_FMT_RGB8:
-        if(s->codec_id == CODEC_ID_SMC){
-            w_align=4;
-            h_align=4;
-        }
-        break;
-    case PIX_FMT_BGR24:
-        if((s->codec_id == CODEC_ID_MSZH) || (s->codec_id == CODEC_ID_ZLIB)){
-            w_align=4;
-            h_align=4;
-        }
-        break;
-    default:
-        w_align= 1;
-        h_align= 1;
-        break;
-    }
+	switch(s->pix_fmt)
+	{
+		case PIX_FMT_YUV420P:
+		case PIX_FMT_YUYV422:
+		case PIX_FMT_UYVY422:
+		case PIX_FMT_YUV422P:
+		case PIX_FMT_YUV440P:
+		case PIX_FMT_YUV444P:
+		case PIX_FMT_GRAY8:
+		case PIX_FMT_GRAY16BE:
+		case PIX_FMT_GRAY16LE:
+		case PIX_FMT_YUVJ420P:
+		case PIX_FMT_YUVJ422P:
+		case PIX_FMT_YUVJ440P:
+		case PIX_FMT_YUVJ444P:
+		case PIX_FMT_YUVA420P:
+			w_align= 16; //FIXME check for non mpeg style codecs and use less alignment
+			h_align= 16;
+			if(s->codec_id == CODEC_ID_MPEG2VIDEO ||
+							s->codec_id == CODEC_ID_MJPEG || 
+							s->codec_id == CODEC_ID_AMV || 
+							s->codec_id == CODEC_ID_THP || 
+							s->codec_id == CODEC_ID_H264)
+				h_align= 32; // interlaced is rounded up to 2 MBs
+			break;
+			
+		case PIX_FMT_YUV411P:
+		case PIX_FMT_UYYVYY411:
+			w_align=32;
+			h_align=8;
+			break;
+			
+		case PIX_FMT_YUV410P:
+			if(s->codec_id == CODEC_ID_SVQ1)
+			{
+				w_align=64;
+				h_align=64;
+			}
+			
+		case PIX_FMT_RGB555:
+			if(s->codec_id == CODEC_ID_RPZA)
+			{
+				w_align=4;
+				h_align=4;
+			}
+			
+		case PIX_FMT_PAL8:
+		case PIX_FMT_BGR8:
+		case PIX_FMT_RGB8:
+			if(s->codec_id == CODEC_ID_SMC)
+			{
+				w_align=4;
+				h_align=4;
+			}
+			break;
+			
+		case PIX_FMT_BGR24:
+			if((s->codec_id == CODEC_ID_MSZH) || (s->codec_id == CODEC_ID_ZLIB))
+			{
+				w_align=4;
+				h_align=4;
+			}
+			break;
+			
+		default:
+			w_align= 1;
+			h_align= 1;
+			break;
+	}
 
-    *width = FFALIGN(*width , w_align);
-    *height= FFALIGN(*height, h_align);
-    if(s->codec_id == CODEC_ID_H264 || s->lowres)
-        *height+=2; // some of the optimized chroma MC reads one line too much
-                    // which is also done in mpeg decoders with lowres > 0
+	*width = FFALIGN(*width , w_align);
+	*height= FFALIGN(*height, h_align);
+	
+	if(s->codec_id == CODEC_ID_H264 || s->lowres)
+		*height+=2; // some of the optimized chroma MC reads one line too much
+					// which is also done in mpeg decoders with lowres > 0
 
-    linesize_align[0] =
-    linesize_align[1] =
-    linesize_align[2] =
-    linesize_align[3] = STRIDE_ALIGN;
-//STRIDE_ALIGN is 8 for SSE* but this does not work for SVQ1 chroma planes
-//we could change STRIDE_ALIGN to 16 for x86/sse but it would increase the
-//picture size unneccessarily in some cases. The solution here is not
-//pretty and better ideas are welcome!
+	linesize_align[0] =
+		linesize_align[1] =
+			linesize_align[2] =
+					linesize_align[3] = STRIDE_ALIGN;
+	//STRIDE_ALIGN is 8 for SSE* but this does not work for SVQ1 chroma planes
+	//we could change STRIDE_ALIGN to 16 for x86/sse but it would increase the
+	//picture size unneccessarily in some cases. The solution here is not
+	//pretty and better ideas are welcome!
 #if HAVE_MMX
-    if(s->codec_id == CODEC_ID_SVQ1 || s->codec_id == CODEC_ID_VP5 ||
-       s->codec_id == CODEC_ID_VP6 || s->codec_id == CODEC_ID_VP6F ||
-       s->codec_id == CODEC_ID_VP6A) {
-        linesize_align[0] =
-        linesize_align[1] =
-        linesize_align[2] = 16;
-    }
+	if(s->codec_id == CODEC_ID_SVQ1 || 
+					s->codec_id == CODEC_ID_VP5 ||
+					s->codec_id == CODEC_ID_VP6 || 
+					s->codec_id == CODEC_ID_VP6F ||
+					s->codec_id == CODEC_ID_VP6A) 
+	{
+		linesize_align[0] =
+			linesize_align[1] =
+				linesize_align[2] = 16;
+	}
 #endif
 }
 
-void avcodec_align_dimensions(AVCodecContext *s, int *width, int *height){
-    int chroma_shift = av_pix_fmt_descriptors[s->pix_fmt].log2_chroma_w;
-    int linesize_align[4];
-    int align;
-    avcodec_align_dimensions2(s, width, height, linesize_align);
-    align = FFMAX(linesize_align[0], linesize_align[3]);
-    linesize_align[1] <<= chroma_shift;
-    linesize_align[2] <<= chroma_shift;
-    align = FFMAX3(align, linesize_align[1], linesize_align[2]);
-    *width=FFALIGN(*width, align);
+void avcodec_align_dimensions(AVCodecContext *s, int *width, int *height)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int chroma_shift = av_pix_fmt_descriptors[s->pix_fmt].log2_chroma_w;
+	int linesize_align[4];
+	int align;
+	avcodec_align_dimensions2(s, width, height, linesize_align);
+	align = FFMAX(linesize_align[0], linesize_align[3]);
+	linesize_align[1] <<= chroma_shift;
+	linesize_align[2] <<= chroma_shift;
+	align = FFMAX3(align, linesize_align[1], linesize_align[2]);
+	*width=FFALIGN(*width, align);
 }
 
 #if LIBAVCODEC_VERSION_MAJOR < 53
-int avcodec_check_dimensions(void *av_log_ctx, unsigned int w, unsigned int h){
-    return av_image_check_size(w, h, 0, av_log_ctx);
+int avcodec_check_dimensions(void *av_log_ctx, unsigned int w, unsigned int h)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+    	return av_image_check_size(w, h, 0, av_log_ctx);
 }
 #endif
 
-int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic){
-    int i;
-    int w= s->width;
-    int h= s->height;
-    InternalBuffer *buf;
-    int *picture_number;
+int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int i;
+	int w= s->width;
+	int h= s->height;
+	InternalBuffer *buf;
+	int *picture_number;
 
-    if(pic->data[0]!=NULL) {
-        av_log(s, AV_LOG_ERROR, "pic->data[0]!=NULL in avcodec_default_get_buffer\n");
-        return -1;
-    }
-    if(s->internal_buffer_count >= INTERNAL_BUFFER_SIZE) {
-        av_log(s, AV_LOG_ERROR, "internal_buffer_count overflow (missing release_buffer?)\n");
-        return -1;
-    }
+	if(pic->data[0]!=NULL)
+	{
+		av_log(s, AV_LOG_ERROR, "pic->data[0]!=NULL in avcodec_default_get_buffer\n");
+		return -1;
+	}
+	
+	if(s->internal_buffer_count >= INTERNAL_BUFFER_SIZE)
+	{
+		av_log(s, AV_LOG_ERROR, "internal_buffer_count overflow (missing release_buffer?)\n");
+		return -1;
+	}
 
-    if(av_image_check_size(w, h, 0, s))
-        return -1;
+	if(av_image_check_size(w, h, 0, s))
+		return -1;
 
-    if(s->internal_buffer==NULL){
-        s->internal_buffer= av_mallocz((INTERNAL_BUFFER_SIZE+1)*sizeof(InternalBuffer));
-    }
+	if(s->internal_buffer==NULL)
+	{
+		s->internal_buffer= av_mallocz((INTERNAL_BUFFER_SIZE+1)*sizeof(InternalBuffer));
+	}
 #if 0
-    s->internal_buffer= av_fast_realloc(
-        s->internal_buffer,
-        &s->internal_buffer_size,
-        sizeof(InternalBuffer)*FFMAX(99,  s->internal_buffer_count+1)/*FIXME*/
-        );
+	s->internal_buffer= av_fast_realloc(
+									s->internal_buffer,
+									&s->internal_buffer_size,
+									sizeof(InternalBuffer)*FFMAX(99,  s->internal_buffer_count+1)/*FIXME*/
+									);
 #endif
 
-    buf= &((InternalBuffer*)s->internal_buffer)[s->internal_buffer_count];
-    picture_number= &(((InternalBuffer*)s->internal_buffer)[INTERNAL_BUFFER_SIZE]).last_pic_num; //FIXME ugly hack
-    (*picture_number)++;
+	buf= &((InternalBuffer*)s->internal_buffer)[s->internal_buffer_count];
+	picture_number= &(((InternalBuffer*)s->internal_buffer)[INTERNAL_BUFFER_SIZE]).last_pic_num; //FIXME ugly hack
+	(*picture_number)++;
 
-    if(buf->base[0] && (buf->width != w || buf->height != h || buf->pix_fmt != s->pix_fmt)){
-        for(i=0; i<4; i++){
-            av_freep(&buf->base[i]);
-            buf->data[i]= NULL;
-        }
-    }
+	if(buf->base[0] && (buf->width != w || buf->height != h || buf->pix_fmt != s->pix_fmt))
+	{
+		for(i=0; i<4; i++)
+		{
+			av_freep(&buf->base[i]);
+			buf->data[i]= NULL;
+		}
+	}
 
-    if(buf->base[0]){
-        pic->age= *picture_number - buf->last_pic_num;
-        buf->last_pic_num= *picture_number;
-    }else{
-        int h_chroma_shift, v_chroma_shift;
-        int size[4] = {0};
-        int tmpsize;
-        int unaligned;
-        AVPicture picture;
-        int stride_align[4];
+	if(buf->base[0])
+	{
+		pic->age= *picture_number - buf->last_pic_num;
+		buf->last_pic_num= *picture_number;
+	}
+	else
+	{
+		int h_chroma_shift, v_chroma_shift;
+		int size[4] = {0};
+		int tmpsize;
+		int unaligned;
+		AVPicture picture;
+		int stride_align[4];
 
-        avcodec_get_chroma_sub_sample(s->pix_fmt, &h_chroma_shift, &v_chroma_shift);
+		avcodec_get_chroma_sub_sample(s->pix_fmt, &h_chroma_shift, &v_chroma_shift);
 
-        avcodec_align_dimensions2(s, &w, &h, stride_align);
+		avcodec_align_dimensions2(s, &w, &h, stride_align);
 
-        if(!(s->flags&CODEC_FLAG_EMU_EDGE)){
-            w+= EDGE_WIDTH*2;
-            h+= EDGE_WIDTH*2;
-        }
+		if(!(s->flags&CODEC_FLAG_EMU_EDGE))
+		{
+			w+= EDGE_WIDTH*2;
+			h+= EDGE_WIDTH*2;
+		}
 
-        do {
-            // NOTE: do not align linesizes individually, this breaks e.g. assumptions
-            // that linesize[0] == 2*linesize[1] in the MPEG-encoder for 4:2:2
-            av_image_fill_linesizes(picture.linesize, s->pix_fmt, w);
-            // increase alignment of w for next try (rhs gives the lowest bit set in w)
-            w += w & ~(w-1);
+		do 
+		{
+			// NOTE: do not align linesizes individually, this breaks e.g. assumptions
+			// that linesize[0] == 2*linesize[1] in the MPEG-encoder for 4:2:2
+			av_image_fill_linesizes(picture.linesize, s->pix_fmt, w);
+			// increase alignment of w for next try (rhs gives the lowest bit set in w)
+			w += w & ~(w-1);
 
-            unaligned = 0;
-            for (i=0; i<4; i++){
-                unaligned |= picture.linesize[i] % stride_align[i];
-            }
-        } while (unaligned);
+			unaligned = 0;
+			for (i=0; i<4; i++)
+			{
+				unaligned |= picture.linesize[i] % stride_align[i];
+			}
+		} while (unaligned);
 
-        tmpsize = av_image_fill_pointers(picture.data, s->pix_fmt, h, NULL, picture.linesize);
-        if (tmpsize < 0)
-            return -1;
+		tmpsize = av_image_fill_pointers(picture.data, s->pix_fmt, h, NULL, picture.linesize);
+		if (tmpsize < 0)
+			return -1;
 
-        for (i=0; i<3 && picture.data[i+1]; i++)
-            size[i] = picture.data[i+1] - picture.data[i];
-        size[i] = tmpsize - (picture.data[i] - picture.data[0]);
+		for (i=0; i<3 && picture.data[i+1]; i++)
+			size[i] = picture.data[i+1] - picture.data[i];
+		size[i] = tmpsize - (picture.data[i] - picture.data[0]);
 
-        buf->last_pic_num= -256*256*256*64;
-        memset(buf->base, 0, sizeof(buf->base));
-        memset(buf->data, 0, sizeof(buf->data));
+		buf->last_pic_num= -256*256*256*64;
+		memset(buf->base, 0, sizeof(buf->base));
+		memset(buf->data, 0, sizeof(buf->data));
 
-        for(i=0; i<4 && size[i]; i++){
-            const int h_shift= i==0 ? 0 : h_chroma_shift;
-            const int v_shift= i==0 ? 0 : v_chroma_shift;
+		for(i=0; i<4 && size[i]; i++)
+		{
+			const int h_shift= i==0 ? 0 : h_chroma_shift;
+			const int v_shift= i==0 ? 0 : v_chroma_shift;
 
-            buf->linesize[i]= picture.linesize[i];
+			buf->linesize[i]= picture.linesize[i];
 
-            buf->base[i]= av_malloc(size[i]+16); //FIXME 16
-            if(buf->base[i]==NULL) return -1;
-            memset(buf->base[i], 128, size[i]);
+			buf->base[i]= av_malloc(size[i]+16); //FIXME 16
+			if(buf->base[i]==NULL)
+				return -1;
+			
+			memset(buf->base[i], 128, size[i]);
 
-            // no edge if EDGE EMU or not planar YUV
-            if((s->flags&CODEC_FLAG_EMU_EDGE) || !size[2])
-                buf->data[i] = buf->base[i];
-            else
-                buf->data[i] = buf->base[i] + FFALIGN((buf->linesize[i]*EDGE_WIDTH>>v_shift) + (EDGE_WIDTH>>h_shift), stride_align[i]);
-        }
-        if(size[1] && !size[2])
-            ff_set_systematic_pal2((uint32_t*)buf->data[1], s->pix_fmt);
-        buf->width  = s->width;
-        buf->height = s->height;
-        buf->pix_fmt= s->pix_fmt;
-        pic->age= 256*256*256*64;
-    }
-    pic->type= FF_BUFFER_TYPE_INTERNAL;
+			// no edge if EDGE EMU or not planar YUV
+			if((s->flags&CODEC_FLAG_EMU_EDGE) || !size[2])
+				buf->data[i] = buf->base[i];
+			else
+				buf->data[i] = buf->base[i] + FFALIGN((buf->linesize[i]*EDGE_WIDTH>>v_shift) + (EDGE_WIDTH>>h_shift), stride_align[i]);
+		}
+		if(size[1] && !size[2])
+			ff_set_systematic_pal2((uint32_t*)buf->data[1], s->pix_fmt);
+		
+		buf->width  = s->width;
+		buf->height = s->height;
+		buf->pix_fmt= s->pix_fmt;
+		pic->age= 256*256*256*64;
+	}
+	pic->type= FF_BUFFER_TYPE_INTERNAL;
 
-    for(i=0; i<4; i++){
-        pic->base[i]= buf->base[i];
-        pic->data[i]= buf->data[i];
-        pic->linesize[i]= buf->linesize[i];
-    }
-    s->internal_buffer_count++;
+	for(i=0; i<4; i++)
+	{
+		pic->base[i]= buf->base[i];
+		pic->data[i]= buf->data[i];
+		pic->linesize[i]= buf->linesize[i];
+	}
+	s->internal_buffer_count++;
 
-    if(s->pkt) pic->pkt_pts= s->pkt->pts;
-    else       pic->pkt_pts= AV_NOPTS_VALUE;
-    pic->reordered_opaque= s->reordered_opaque;
+	if(s->pkt)
+		pic->pkt_pts= s->pkt->pts;
+	else       
+		pic->pkt_pts= AV_NOPTS_VALUE;
+	
+	pic->reordered_opaque= s->reordered_opaque;
 
-    if(s->debug&FF_DEBUG_BUFFERS)
-        av_log(s, AV_LOG_DEBUG, "default_get_buffer called on pic %p, %d buffers used\n", pic, s->internal_buffer_count);
+	if(s->debug&FF_DEBUG_BUFFERS)
+		av_log(s, AV_LOG_DEBUG, "default_get_buffer called on pic %p, %d buffers used\n", pic, s->internal_buffer_count);
 
-    return 0;
+	return 0;
 }
 
-void avcodec_default_release_buffer(AVCodecContext *s, AVFrame *pic){
-    int i;
-    InternalBuffer *buf, *last;
+void avcodec_default_release_buffer(AVCodecContext *s, AVFrame *pic)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	int i;
+	InternalBuffer *buf, *last;
 
-    assert(pic->type==FF_BUFFER_TYPE_INTERNAL);
-    assert(s->internal_buffer_count);
+	assert(pic->type==FF_BUFFER_TYPE_INTERNAL);
+	assert(s->internal_buffer_count);
 
-    buf = NULL; /* avoids warning */
-    for(i=0; i<s->internal_buffer_count; i++){ //just 3-5 checks so is not worth to optimize
-        buf= &((InternalBuffer*)s->internal_buffer)[i];
-        if(buf->data[0] == pic->data[0])
-            break;
-    }
-    assert(i < s->internal_buffer_count);
-    s->internal_buffer_count--;
-    last = &((InternalBuffer*)s->internal_buffer)[s->internal_buffer_count];
+	buf = NULL; /* avoids warning */
+	for(i=0; i<s->internal_buffer_count; i++)
+	{ //just 3-5 checks so is not worth to optimize
+		buf= &((InternalBuffer*)s->internal_buffer)[i];
+		if(buf->data[0] == pic->data[0])
+			break;
+	}
+	assert(i < s->internal_buffer_count);
+	s->internal_buffer_count--;
+	last = &((InternalBuffer*)s->internal_buffer)[s->internal_buffer_count];
 
-    FFSWAP(InternalBuffer, *buf, *last);
+	FFSWAP(InternalBuffer, *buf, *last);
 
-    for(i=0; i<4; i++){
-        pic->data[i]=NULL;
-//        pic->base[i]=NULL;
-    }
-//printf("R%X\n", pic->opaque);
+	for(i=0; i<4; i++)
+	{
+		pic->data[i]=NULL;
+		//        pic->base[i]=NULL;
+	}
+	//printf("R%X\n", pic->opaque);
 
-    if(s->debug&FF_DEBUG_BUFFERS)
-        av_log(s, AV_LOG_DEBUG, "default_release_buffer called on pic %p, %d buffers used\n", pic, s->internal_buffer_count);
+	if(s->debug&FF_DEBUG_BUFFERS)
+		av_log(s, AV_LOG_DEBUG, "default_release_buffer called on pic %p, %d buffers used\n", pic, s->internal_buffer_count);
 }
 
-int avcodec_default_reget_buffer(AVCodecContext *s, AVFrame *pic){
-    AVFrame temp_pic;
-    int i;
+int avcodec_default_reget_buffer(AVCodecContext *s, AVFrame *pic)
+{
+/*
+	参数:
+		1、
+		
+	返回:
+		1、
+		
+	说明:
+		1、
+*/
+	AVFrame temp_pic;
+	int i;
 
-    /* If no picture return a new buffer */
-    if(pic->data[0] == NULL) {
-        /* We will copy from buffer, so must be readable */
-        pic->buffer_hints |= FF_BUFFER_HINTS_READABLE;
-        return s->get_buffer(s, pic);
-    }
+	/* If no picture return a new buffer */
+	if(pic->data[0] == NULL)
+	{
+		/* We will copy from buffer, so must be readable */
+		pic->buffer_hints |= FF_BUFFER_HINTS_READABLE;
+		return s->get_buffer(s, pic);
+	}
 
-    /* If internal buffer type return the same buffer */
-    if(pic->type == FF_BUFFER_TYPE_INTERNAL) {
-        pic->reordered_opaque= s->reordered_opaque;
-        return 0;
-    }
+	/* If internal buffer type return the same buffer */
+	if(pic->type == FF_BUFFER_TYPE_INTERNAL) 
+	{
+		pic->reordered_opaque= s->reordered_opaque;
+		return 0;
+	}
 
-    /*
-     * Not internal type and reget_buffer not overridden, emulate cr buffer
-     */
-    temp_pic = *pic;
-    for(i = 0; i < 4; i++)
-        pic->data[i] = pic->base[i] = NULL;
-    pic->opaque = NULL;
-    /* Allocate new frame */
-    if (s->get_buffer(s, pic))
-        return -1;
-    /* Copy image data from old buffer to new buffer */
-    av_picture_copy((AVPicture*)pic, (AVPicture*)&temp_pic, s->pix_fmt, s->width,
-             s->height);
-    s->release_buffer(s, &temp_pic); // Release old frame
-    return 0;
+	/*
+	* Not internal type and reget_buffer not overridden, emulate cr buffer
+	*/
+	temp_pic = *pic;
+	for(i = 0; i < 4; i++)
+		pic->data[i] = pic->base[i] = NULL;
+	
+	pic->opaque = NULL;
+	/* Allocate new frame */
+	if (s->get_buffer(s, pic))
+		return -1;
+	/* Copy image data from old buffer to new buffer */
+	av_picture_copy((AVPicture*)pic, (AVPicture*)&temp_pic, s->pix_fmt, s->width, s->height);
+	s->release_buffer(s, &temp_pic); // Release old frame
+	return 0;
 }
 
 int avcodec_default_execute(AVCodecContext *c, int (*func)(AVCodecContext *c2, void *arg2),void *arg, int *ret, int count, int size)

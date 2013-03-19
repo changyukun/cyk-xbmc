@@ -454,6 +454,10 @@ void avcodec_get_context_defaults2(AVCodecContext *s, enum AVMediaType codec_typ
 		
 	说明:
 		1、分配一个AVCodecContext  类型的内存
+
+		2、此函数被调用的过程:
+			1、avcodec_alloc_context() ==> avcodec_alloc_context2() ==> avcodec_get_context_defaults2()
+			2、avcodec_alloc_context3() ==> avcodec_get_context_defaults3() ==> avcodec_get_context_defaults3
 */
 	int flags=0;
 	memset(s, 0, sizeof(AVCodecContext));

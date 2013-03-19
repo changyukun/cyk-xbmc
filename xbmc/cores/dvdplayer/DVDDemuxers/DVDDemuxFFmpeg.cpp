@@ -917,6 +917,12 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 					PacketFF->pts  	= diff * AV_TIME_BASE						// 	相当于将差值的分钟数转换为秒返回		
 
 				关于这个时间的转换，可以参看CDVDDemuxFFmpeg::ConvertTimestamp()  方法的源代码
+
+		2、ffmpeg 的av_read_frame(AVFormatContext *s, AVPacket *pkt) 需要注意，在调用函数av_read_frame  的时候，其第二个参数
+			pkt  只是一个数据结构，实际读取到的包数据时保存在pkt->data  中的，而pkt->data  的内存是在ffmpeg 每次
+			调用av_read_frame  的时候分配的，因此在用完数据之后需要调用av_read_free  对其进行释放
+
+		3、调用ffmpeg  的读包函数后会将读取到的数据包转换成xbmc 识别的DemuxPacket  类型的数据包
 */
 	g_demuxer = this;
 
@@ -978,7 +984,7 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 				else
 					CLog::Log(LOGERROR, "CDVDDemuxFFmpeg::Read() returned invalid packet and eof reached");
 
-				m_dllAvCodec.av_free_packet(&pkt);
+				m_dllAvCodec.av_free_packet(&pkt); /* 释放掉pkt->data  的内存空间，因为av_read_frame()  的时候ffmpeg  内部会分配data 的内存空间，需要在用完之后释放*/
 			}
 			else /* 读取到正确的数据包*/
 			{
@@ -1085,7 +1091,7 @@ DemuxPacket* CDVDDemuxFFmpeg::Read()
 
 					pPacket->iStreamId = pkt.stream_index; // XXX just for now
 				}
-				m_dllAvCodec.av_free_packet(&pkt);
+				m_dllAvCodec.av_free_packet(&pkt); /* 释放掉pkt->data  的内存空间，因为av_read_frame()  的时候ffmpeg  内部会分配data 的内存空间，需要在用完之后释放*/
 			}
 		}
 	} // end of lock scope

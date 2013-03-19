@@ -234,22 +234,25 @@ static AVStream *add_video_stream(AVFormatContext *oc, enum CodecID codec_id)
 
 static AVFrame *alloc_picture(enum PixelFormat pix_fmt, int width, int height)
 {
-    AVFrame *picture;
-    uint8_t *picture_buf;
-    int size;
+	AVFrame *picture;
+	uint8_t *picture_buf;
+	int size;
 
-    picture = avcodec_alloc_frame();
-    if (!picture)
-        return NULL;
-    size = avpicture_get_size(pix_fmt, width, height);
-    picture_buf = av_malloc(size);
-    if (!picture_buf) {
-        av_free(picture);
-        return NULL;
-    }
-    avpicture_fill((AVPicture *)picture, picture_buf,
-                   pix_fmt, width, height);
-    return picture;
+	picture = avcodec_alloc_frame(); /* 分配一个帧空间*/
+	if (!picture)
+		return NULL;
+
+	size = avpicture_get_size(pix_fmt, width, height); /* 分配一个图片数据空间*/
+	picture_buf = av_malloc(size);
+	if (!picture_buf) 
+	{
+		av_free(picture);
+		return NULL;
+	}
+	
+	avpicture_fill((AVPicture *)picture, picture_buf, pix_fmt, width, height); /* 将帧与图片数据关联起来*/
+	
+	return picture;
 }
 
 static void open_video(AVFormatContext *oc, AVStream *st)

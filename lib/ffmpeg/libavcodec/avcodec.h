@@ -1135,7 +1135,7 @@ typedef struct AVFrame {
 
 /*
 	AVCodecContext 的enum CodecID codec_id  成员记录者当前数据流的Codec，void *priv_data  记录具体Codec  所对应的上
-	下文信息对像的指针，如MsrleContext。这三个结合起来现实数据解码的作用。我们可以傻逼的认
+	下文信息对像的指针，如MsrleContext。这三个结合起来实现数据解码的作用。我们可以傻逼的认
 	为AVCodecContext  是这个解码模块的容器类，Codec  是操作函数集合，类似MsrleContext的就是操作数据对像。
 	
 	他们之间关系的确立：

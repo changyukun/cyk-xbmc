@@ -595,7 +595,7 @@ void CDVDPlayerVideo::Process()
 /* ---->> 数据包消息*/
 		if (pMsg->IsType(CDVDMsg::DEMUXER_PACKET)) 
 		{
-			DemuxPacket* pPacket = ((CDVDMsgDemuxerPacket*)pMsg)->GetPacket();
+			DemuxPacket* pPacket = ((CDVDMsgDemuxerPacket*)pMsg)->GetPacket(); /* 得到读取回来的数据包，见方法CDVDDemuxFFmpeg::Read()  的说明*/
 			bool bPacketDrop     = ((CDVDMsgDemuxerPacket*)pMsg)->GetPacketDrop();
 
 			if (m_stalled)
@@ -656,7 +656,7 @@ void CDVDPlayerVideo::Process()
 			mFilters = m_pVideoCodec->SetFilters(mFilters); 
 
 			/* ---> 调用解码，对数据进行解码*/
-			int iDecoderState = m_pVideoCodec->Decode(pPacket->pData, pPacket->iSize, pPacket->dts, pPacket->pts);
+			int iDecoderState = m_pVideoCodec->Decode(pPacket->pData, pPacket->iSize, pPacket->dts, pPacket->pts); /* 见方法CDVDVideoCodecFFmpeg::Decode() */
 
 			// buffer packets so we can recover should decoder flush for some reason
 			if(m_pVideoCodec->GetConvergeCount() > 0)

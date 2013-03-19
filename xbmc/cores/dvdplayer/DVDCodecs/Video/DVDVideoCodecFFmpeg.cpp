@@ -271,7 +271,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 	m_pCodecContext->debug_mv = 0;
 	m_pCodecContext->debug = 0;
 	m_pCodecContext->workaround_bugs = FF_BUG_AUTODETECT;
-	m_pCodecContext->get_format = GetFormat;
+	m_pCodecContext->get_format = GetFormat; /* 设定获取解码格式的函数，硬解的解码器就是在这里面创建的*/
 	m_pCodecContext->codec_tag = hints.codec_tag;
 
 #if defined(__APPLE__) && defined(__arm__)
@@ -339,7 +339,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
 		return false;
 	}
 
-	m_pFrame = m_dllAvCodec.avcodec_alloc_frame(); /* 见ffmpeg  对此函数的定义*/
+	m_pFrame = m_dllAvCodec.avcodec_alloc_frame(); /* 见ffmpeg  对此函数的定义，分配存储解码出来的帧的内存空间*/
 	if (!m_pFrame) 
 		return false;
 

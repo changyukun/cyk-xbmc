@@ -64,6 +64,7 @@ public:
 
   bool               IsHardwareAllowed()                     { return !m_bSoftware; }
   IHardwareDecoder * GetHardware()                           { return m_pHardware; };
+  
   void               SetHardware(IHardwareDecoder* hardware) 
   {
 	SAFE_RELEASE(m_pHardware);
@@ -79,7 +80,7 @@ protected:
   void FilterClose();
   int  FilterProcess(AVFrame* frame);
 
-  AVFrame* m_pFrame;
+  AVFrame* m_pFrame; /* 见方法CDVDVideoCodecFFmpeg::Open()  对其进行的赋值*/
   AVCodecContext* m_pCodecContext;
 
   AVPicture* m_pConvertFrame; /* 用于帧转换存储转换后的帧结果的，在decode  方法中分配的内存*/
@@ -105,7 +106,7 @@ protected:
 
   std::string m_name;
   bool              m_bSoftware;
-  IHardwareDecoder *m_pHardware; /* 见方法SetHardware  中对其进行设定的*/
+  IHardwareDecoder *m_pHardware; /* 见方法GetFormat() ==> SetHardware  中对其进行设定的*/
   int m_iLastKeyframe;
   double m_dts;
   bool   m_started;
