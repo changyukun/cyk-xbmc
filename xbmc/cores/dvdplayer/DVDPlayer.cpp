@@ -1027,7 +1027,7 @@ bool CDVDPlayer::ReadPacket(DemuxPacket*& packet, CDemuxStream*& stream)
 	// read a data frame from stream.
 	/* 从流中读取一个数据包回来*/
 	if(m_pDemuxer)
-		packet = m_pDemuxer->Read();
+		packet = m_pDemuxer->Read(); /* 见方法CDVDDemuxFFmpeg::Read()  说明*/
 
 	if(packet)
 	{

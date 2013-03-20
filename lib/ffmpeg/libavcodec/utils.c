@@ -491,6 +491,7 @@ int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic)
 			else
 				buf->data[i] = buf->base[i] + FFALIGN((buf->linesize[i]*EDGE_WIDTH>>v_shift) + (EDGE_WIDTH>>h_shift), stride_align[i]);
 		}
+		
 		if(size[1] && !size[2])
 			ff_set_systematic_pal2((uint32_t*)buf->data[1], s->pix_fmt);
 		

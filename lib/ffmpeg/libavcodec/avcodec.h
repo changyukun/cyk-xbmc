@@ -1056,7 +1056,12 @@ typedef struct AVPanScan{
 #define FF_BUFFER_HINTS_REUSABLE 0x08 // Codec will reuse the buffer (update).
 
 
-/* 视频包数据结构*/
+/* 
+	包数据结构:
+	从技术上讲一个包可以包含部分或者其他的数据，但
+	是ffmpeg  的解释器保证了我们得到的包packets  包含的要
+	么是完整的要么是多种完整的帧
+*/
 typedef struct AVPacket 
 {
 	/**

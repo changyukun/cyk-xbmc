@@ -128,7 +128,7 @@ enum
 	AV_SYNC_EXTERNAL_CLOCK, /* synchronize to an external clock */
 };
 
-typedef struct VideoState 
+typedef struct VideoState  /* 见函数stream_open() 中对其进行的内存分配*/
 {
 	SDL_Thread *parse_tid;
 	SDL_Thread *video_tid;
@@ -202,7 +202,9 @@ typedef struct VideoState
 	double video_current_pts_drift;              ///<video_current_pts - time (av_gettime) at which we updated video_current_pts - used to have running video pts
 	int64_t video_current_pos;                   ///<current displayed file pos
 	VideoPicture pictq[VIDEO_PICTURE_QUEUE_SIZE];
-	int pictq_size, pictq_rindex, pictq_windex;
+	int pictq_size; /* 队列中图片的个数*/
+	int pictq_rindex; /* 表示要真正去显示的图片序号*/ 
+	int pictq_windex;
 	SDL_mutex *pictq_mutex;
 	SDL_cond *pictq_cond;
 #if !CONFIG_AVFILTER
@@ -288,7 +290,7 @@ static AVPacket flush_pkt;
 #define FF_REFRESH_EVENT (SDL_USEREVENT + 1)
 #define FF_QUIT_EVENT    (SDL_USEREVENT + 2)
 
-static SDL_Surface *screen;
+static SDL_Surface *screen; /* 见方法video_open  中通过调用SDL_SetVideoMode()  实现对其进行的赋值*/
 
 static int packet_queue_put(PacketQueue *q, AVPacket *pkt);
 
@@ -1182,7 +1184,10 @@ static int video_open(VideoState *is)
 		w = 640;
 		h = 480;
 	}
-	
+
+	/*
+		如果screen  已经创建，并且尺寸没有发生变化则直接返回就可以了，即用已经分配的screen 
+	*/
 	if(screen && is->width == screen->w && screen->w == w && is->height== screen->h && screen->h == h)
 		return 0;
 
@@ -1190,7 +1195,7 @@ static int video_open(VideoState *is)
 	screen = SDL_SetVideoMode(w, h, 0, flags);
 #else
 	/* setting bits_per_pixel = 0 or 32 causes blank video on OS X */
-	screen = SDL_SetVideoMode(w, h, 24, flags);
+	screen = SDL_SetVideoMode(w, h, 24, flags); /* 获得到视频显示的区域*/
 #endif
 	if (!screen) 
 	{
@@ -1219,7 +1224,7 @@ static void video_display(VideoState *is)
 		1、
 		
 	说明:
-		1、
+		1、视频显示函数
 */
 	if(!screen)
 		video_open(cur_stream);
@@ -1239,7 +1244,7 @@ static int refresh_thread(void *opaque)
 		1、
 		
 	说明:
-		1、
+		1、视频刷新线程，主要是用来顶起刷新视频图像的，发送一个SDL  事件出去，然后SDL  事件处理接收到后进行真正的刷新
 */
 	VideoState *is= opaque;
 	while(!is->abort_request)
@@ -1476,7 +1481,7 @@ static void video_refresh_timer(void *opaque)
 		1、
 		
 	说明:
-		1、
+		1、此函数在每一帧被显示的时候调用
 */
 	VideoState *is = opaque;
 	VideoPicture *vp;
@@ -1582,10 +1587,10 @@ retry:
 
 			/* display picture */
 			if (!display_disable)
-				video_display(is);
+				video_display(is); /* 进入真正的视频显示函数*/
 
 			/* update queue size and signal for next picture */
-			if (++is->pictq_rindex == VIDEO_PICTURE_QUEUE_SIZE)
+			if (++is->pictq_rindex == VIDEO_PICTURE_QUEUE_SIZE)/* 到头了，就重新从头再显示*/
 				is->pictq_rindex = 0;
 
 			SDL_LockMutex(is->pictq_mutex);
@@ -1633,7 +1638,9 @@ retry:
 				av_diff = get_audio_clock(is) - get_video_clock(is);
 			
 			printf("%7.2f A-V:%7.3f s:%3.1f aq=%5dKB vq=%5dKB sq=%5dB f=%"PRId64"/%"PRId64"   \r", get_master_clock(is), av_diff, FFMAX(is->skip_frames-1, 0), aqsize / 1024, vqsize / 1024, sqsize, is->pts_ctx.num_faulty_dts, is->pts_ctx.num_faulty_pts);
+
 			fflush(stdout);
+
 			last_time = cur_time;
 		}
 	}
@@ -1750,9 +1757,8 @@ static void alloc_picture(void *opaque)
 	vp->pix_fmt = is->video_st->codec->pix_fmt;
 #endif
 
-	vp->bmp = SDL_CreateYUVOverlay(vp->width, vp->height,
-							               SDL_YV12_OVERLAY,
-							               screen);
+	vp->bmp = SDL_CreateYUVOverlay(vp->width, vp->height, SDL_YV12_OVERLAY, screen); /* 根据screen  获取到bmp 的空间*/
+
 	if (!vp->bmp || vp->bmp->pitches[0] < vp->width) 
 	{
 		/* SDL allocates a buffer smaller than requested if the video
@@ -1949,17 +1955,22 @@ static int get_video_frame(VideoState *is, AVFrame *frame, int64_t *pts, AVPacke
 {
 /*
 	参数:
-		1、
+		1、is		: 传入一个video  状态的数据结构
+		2、frame 	: 用于返回解码后的帧数据
+		3、pts		: 用于返回最后得到帧( 参数2 )  的pts  值
+		4、pkt		: 用于返回从视频包队列中读取到的视频包
 		
 	返回:
 		1、
 		
 	说明:
-		1、获取一帧视频数据，并对获得到的数据进行解码
+		1、此函数实现了两个功能
+			a、从视频包队列中取出一个视频包( 通过参数pkt  返回)
+			b、对取出来的视频包进行解码，得到视频帧( 通过参数frame  返回)
 */
 	int len1, got_picture, i;
 
-	if (packet_queue_get(&is->videoq, pkt, 1) < 0) /* 见函数中的分析*/
+	if (packet_queue_get(&is->videoq, pkt, 1) < 0) /* 从视频包队列中取一个视频包回来*/
 		return -1;
 
 	if (pkt->data == flush_pkt.data) 
@@ -1993,7 +2004,7 @@ static int get_video_frame(VideoState *is, AVFrame *frame, int64_t *pts, AVPacke
 
 	if (got_picture) 
 	{
-		if (decoder_reorder_pts == -1)
+		if (decoder_reorder_pts == -1) /* 默认走的这里，即decoder_reorder_pts 为-1 */
 		{
 			*pts = guess_correct_pts(&is->pts_ctx, frame->pkt_pts, pkt->dts);
 		}
@@ -2407,6 +2418,7 @@ static int video_thread(void *arg)
 #endif
 		while (is->paused && !is->videoq.abort_request)
 			SDL_Delay(10);
+		
 #if CONFIG_AVFILTER
 		ret = get_filtered_video_frame(filt_out, frame, &picref, &tb); /* 获取一包数据并对此数据进行解码，解码后再经过filter  处理*/
 		if (picref)
@@ -2932,7 +2944,7 @@ static int stream_component_open(VideoState *is, int stream_index)
 		return -1;
 
 	/* prepare audio output */
-	if (avctx->codec_type == AVMEDIA_TYPE_AUDIO) 
+	if (avctx->codec_type == AVMEDIA_TYPE_AUDIO) /* 音频的输出是靠SDL  的回调函数来实现的。。。。*/
 	{
 		wanted_spec.freq = avctx->sample_rate;
 		wanted_spec.format = AUDIO_S16SYS;
@@ -2977,7 +2989,7 @@ static int stream_component_open(VideoState *is, int stream_index)
 			//        is->video_current_pts_time = av_gettime();
 
 			packet_queue_init(&is->videoq);
-			is->video_tid = SDL_CreateThread(video_thread, is);
+			is->video_tid = SDL_CreateThread(video_thread, is); /* 视频是创建的视频线程来进行解码的*/
 			break;
 		case AVMEDIA_TYPE_SUBTITLE:
 			is->subtitle_stream = stream_index;
@@ -3197,16 +3209,16 @@ static int decode_thread(void *arg)
 	/* open the streams */
 	if (st_index[AVMEDIA_TYPE_AUDIO] >= 0)
 	{
-		stream_component_open(is, st_index[AVMEDIA_TYPE_AUDIO]);
+		stream_component_open(is, st_index[AVMEDIA_TYPE_AUDIO]); /* 见函数内部，实现了解码线程的创建*/
 	}
 
 	ret=-1;
 	if (st_index[AVMEDIA_TYPE_VIDEO] >= 0) 
 	{
-		ret= stream_component_open(is, st_index[AVMEDIA_TYPE_VIDEO]);
+		ret= stream_component_open(is, st_index[AVMEDIA_TYPE_VIDEO]); /* 见函数内部，实现了解码线程的创建*/
 	}
 	
-	is->refresh_tid = SDL_CreateThread(refresh_thread, is);
+	is->refresh_tid = SDL_CreateThread(refresh_thread, is); /* 创建了视频刷新的线程*/
 
 	if(ret<0)
 	{
@@ -3329,8 +3341,10 @@ static int decode_thread(void *arg)
 		{
 			if (ret == AVERROR_EOF || url_feof(ic->pb))
 				eof=1;
+			
 			if (url_ferror(ic->pb))
 				break;
+			
 			SDL_Delay(100); /* wait for user event */
 			continue;
 		}
@@ -3409,9 +3423,10 @@ static VideoState *stream_open(const char *filename, AVInputFormat *iformat)
 */
 	VideoState *is;
 
-	is = av_mallocz(sizeof(VideoState));
+	is = av_mallocz(sizeof(VideoState));/* 先分配全局的VideoState  数据结构的内存空间 */
 	if (!is)
 		return NULL;
+	
 	av_strlcpy(is->filename, filename, sizeof(is->filename));
 	is->iformat = iformat;
 	is->ytop = 0;
@@ -4094,6 +4109,7 @@ static void opt_input_file(const char *filename)
 	
 	if (!strcmp(filename, "-"))
 		filename = "pipe:";
+	
 	input_filename = filename;
 }
 
@@ -4147,7 +4163,7 @@ int main(int argc, char **argv)
 #if !defined(__MINGW32__) && !defined(__APPLE__)
 	flags |= SDL_INIT_EVENTTHREAD; /* Not supported on Windows or Mac OS X */
 #endif
-	if (SDL_Init (flags)) 
+	if (SDL_Init (flags)) /* 初始化SDL  */
 	{
 		fprintf(stderr, "Could not initialize SDL - %s\n", SDL_GetError());
 		exit(1);
@@ -4162,16 +4178,18 @@ int main(int argc, char **argv)
 #endif
 	}
 
+	/* 设定SDL  的相关事件状态*/
 	SDL_EventState(SDL_ACTIVEEVENT, SDL_IGNORE);
 	SDL_EventState(SDL_SYSWMEVENT, SDL_IGNORE);
 	SDL_EventState(SDL_USEREVENT, SDL_IGNORE);
 
 	av_init_packet(&flush_pkt);
+	
 	flush_pkt.data= "FLUSH";
 
-	cur_stream = stream_open(input_filename, file_iformat);
+	cur_stream = stream_open(input_filename, file_iformat); /* 见函数内部，创建了解码器的主线程，即读取数据包的线程*/
 
-	event_loop();
+	event_loop(); /* 进入到SDL  的事件接收循环*/
 
 	/* never returns */
 

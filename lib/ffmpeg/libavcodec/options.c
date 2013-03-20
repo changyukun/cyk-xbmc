@@ -474,18 +474,17 @@ void avcodec_get_context_defaults2(AVCodecContext *s, enum AVMediaType codec_typ
 	
 	av_opt_set_defaults2(s, flags, flags);
 
-	s->time_base= (AVRational){0,1};
-	s->get_buffer= avcodec_default_get_buffer;
-	s->release_buffer= avcodec_default_release_buffer;
-	s->get_format= avcodec_default_get_format;
-	s->execute= avcodec_default_execute;
-	s->execute2= avcodec_default_execute2;
-	s->sample_aspect_ratio= (AVRational){0,1};
-	s->pix_fmt= PIX_FMT_NONE;
-	s->sample_fmt= AV_SAMPLE_FMT_NONE;
-
-	s->palctrl = NULL;
-	s->reget_buffer= avcodec_default_reget_buffer;
+	s->time_base				= (AVRational){0,1};
+	s->get_buffer				= avcodec_default_get_buffer;		/* buffer  分配函数，按照ffmpeg  的说明，解码数据包的时候，当一个包开始一帧的时候，ffmpeg  就会调用这个函数为帧分配内存*/
+	s->release_buffer			= avcodec_default_release_buffer;	/* buffer  释放函数*/
+	s->get_format			= avcodec_default_get_format;		/* 视频格式获取函数*/
+	s->execute				= avcodec_default_execute;			/* */
+	s->execute2				= avcodec_default_execute2;			/* */
+	s->sample_aspect_ratio	= (AVRational){0,1};					/* */
+	s->pix_fmt				= PIX_FMT_NONE;						/* */
+	s->sample_fmt			= AV_SAMPLE_FMT_NONE;				/* */
+	s->palctrl 				= NULL;								/* */
+	s->reget_buffer			= avcodec_default_reget_buffer;		/* */
 	s->reordered_opaque= AV_NOPTS_VALUE;
 }
 

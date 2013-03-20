@@ -1815,7 +1815,7 @@ int av_read_frame(AVFormatContext *s, AVPacket *pkt)
 		1、
 		
 	说明:
-		1、
+		1、此函数实现从流中读取一个数据包回来
 */
 	AVPacketList *pktl;
 	int eof=0;
