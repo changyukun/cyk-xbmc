@@ -1080,7 +1080,13 @@ typedef struct AVPacket
 	* Can be AV_NOPTS_VALUE if it is not stored in the file.
 	*/
 	int64_t 	dts; 			/* 包对应的dts  时间*/
-	uint8_t *	data; 			/* 指向存放视频包的数据的buffer */
+	uint8_t *	data; 			/* 指向存放数据包的数据buffer，当然数据包可以是音频数据包也可以是视频数据包 
+								在ffmpeg 的av_read_frame(AVFormatContext *s, AVPacket *pkt) 需要注意，在调用函数av_read_frame  的
+								时候，其第二个参数pkt  只是一个数据结构，实际读取到的包数据时保存在pkt->data  
+								中的( 就是此域成员) ，而pkt->data  的内存是在ffmpeg 每次调用av_read_frame  的时候分配
+								的，因此在用完数据之后需要调用av_read_free  对其进行释放( 释放此域成员所指向
+								的内存空间)
+							*/
 	int   		size; 			/* 存放视频包数据buffer  的长度*/
 	int   		stream_index;	/* 此包所属于的流的序列号，即与m_pFormatContext->streams[]  数组下标相对应*/
 	int   		flags;

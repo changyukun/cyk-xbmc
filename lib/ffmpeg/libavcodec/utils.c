@@ -960,7 +960,10 @@ int attribute_align_arg avcodec_decode_video2(AVCodecContext *avctx, AVFrame *pi
 {
 /*
 	参数:
-		1、
+		1、avctx			: 传入一个解码器的上下文结构体
+		2、picture			: 用于返回解码后的图片
+		3、got_picture_ptr	: 此值用于返回是否获得到一帧的数据( 为真表示从数据包中解码得到了一个完整的帧)
+		4、avpkt			: 传入一个数据包的数据结构，内部还有待解码的视频数据
 		
 	返回:
 		1、
