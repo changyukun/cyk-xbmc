@@ -1948,6 +1948,7 @@ static int output_picture2(VideoState *is, AVFrame *src_frame, double pts1, int6
 	printf("frame_type=%c clock=%0.3f pts=%0.3f\n",
 	av_get_pict_type_char(src_frame->pict_type), pts, pts1);
 #endif
+
 	return queue_picture(is, src_frame, pts, pos);
 }
 
@@ -1973,7 +1974,7 @@ static int get_video_frame(VideoState *is, AVFrame *frame, int64_t *pts, AVPacke
 	if (packet_queue_get(&is->videoq, pkt, 1) < 0) /* 从视频包队列中取一个视频包回来*/
 		return -1;
 
-	if (pkt->data == flush_pkt.data) 
+	if (pkt->data == flush_pkt.data) /* 刚刚获取的数据是flush  包，因此需要清空avdecodec  中的内存空间*/
 	{
 		avcodec_flush_buffers(is->video_st->codec);
 
@@ -2453,7 +2454,7 @@ static int video_thread(void *arg)
 		ret = output_picture2(is, frame, pts, pos);
 #else
 		ret = output_picture2(is, frame, pts,  pkt.pos);
-		av_free_packet(&pkt);
+		av_free_packet(&pkt); /* 这里实现了在decode_thread()  中没有释放的包数据空间(  有效的视频包) */
 #endif
 		if (ret < 0)
 			goto the_end;
@@ -3354,7 +3355,16 @@ static int decode_thread(void *arg)
 									av_q2d(ic->streams[pkt->stream_index]->time_base) -
 									(double)(start_time != AV_NOPTS_VALUE ? start_time : 0)/1000000
 									<= ((double)duration/1000000);
-		
+
+		/* 
+			参看数据结构AVPacket  中域成员data  的说明。
+			
+			注意这里，将有效包的pkt  插入到了相应的队列中，而无效包则释放了其存储数据的内存空间，这
+			个内存空间实在ffmpeg  内部分配的。所以有效的包要等包数据用完之后才释放的，如视频包，见
+			函数video_thread()  中调用av_free_packet()  进行释放的。
+
+			总之:  此处释放掉无效包的内存空间，有效包要等到数据处理完之后才释放。
+		*/
 		if (pkt->stream_index == is->audio_stream && pkt_in_play_range) 
 		{
 			packet_queue_put(&is->audioq, pkt);
@@ -3369,7 +3379,7 @@ static int decode_thread(void *arg)
 		} 
 		else 
 		{
-			av_free_packet(pkt);
+			av_free_packet(pkt); 
 		}
 	}
 	/* wait until the end */
