@@ -301,7 +301,7 @@ void CSelectionStreams::Update(SelectionStream& s)
 	if(index >= 0)
 		Get(s.type, index) = s;
 	else
-		m_Streams.push_back(s);
+		m_Streams.push_back(s); /* 压入容器*/
 }
 
 void CSelectionStreams::Update(CDVDInputStream* input, CDVDDemux* demuxer)
@@ -396,7 +396,7 @@ void CSelectionStreams::Update(CDVDInputStream* input, CDVDDemux* demuxer)
 				}
 				s.channels = ((CDemuxStreamAudio*)stream)->iChannels;
 			}
-			Update(s);
+			Update(s); /* 将这个SelectionStream  s  所包含流信息的结构体push  到容器中*/
 		}
 	}
 }
@@ -779,7 +779,7 @@ bool CDVDPlayer::OpenDemuxStream()
 
 	m_SelectionStreams.Clear(STREAM_NONE, STREAM_SOURCE_DEMUX);
 	m_SelectionStreams.Clear(STREAM_NONE, STREAM_SOURCE_NAV);
-	m_SelectionStreams.Update(m_pInputStream, m_pDemuxer); /* 见函数里面分析,  实现了对m_SelectionStreams 的赋值*/
+	m_SelectionStreams.Update(m_pInputStream, m_pDemuxer); /* 见函数里面分析CSelectionStreams::Update() ,  实现了对m_SelectionStreams 的赋值*/
 
 	/*
 		获取文件的总长度，一个分段文件的长度
@@ -1211,6 +1211,7 @@ void CDVDPlayer::Process()
 	说明:
 		1、
 */
+	/*==========>>  接收数据模块打开  <<==========*/
 	if (!OpenInputStream())/* 打开输入流，见函数内的代码分析*/
 	{
 		m_bAbortRequest = true;
@@ -1231,6 +1232,7 @@ void CDVDPlayer::Process()
 		g_settings.m_currentVideoSettings.m_SubtitleCached = true;
 	}
 
+	/*==========>>  拆分数据模块打开  <<==========*/
 	if(!OpenDemuxStream())/* 打开demux 实例*/
 	{
 		m_bAbortRequest = true;
@@ -1240,7 +1242,10 @@ void CDVDPlayer::Process()
 	// allow renderer to switch to fullscreen if requested
 	m_dvdPlayerVideo.EnableFullscreen(m_PlayerOptions.fullscreen);/* 打开视频全屏模式，根据选项m_PlayerOptions.fullscreen  的需求，是否允许全屏幕*/
 
+
+	/*============>>  解码模块打开  <<=============*/
 	OpenDefaultStreams(); /* changyukun AAA--1--BBB  间接创建启动视频解码器线程，见函数内部源码分析*/
+
 
 	// look for any EDL files
 	m_Edl.Clear();
@@ -1325,7 +1330,7 @@ void CDVDPlayer::Process()
 	while (!m_bAbortRequest)
 	{
 		// handle messages send to this thread, like seek or demuxer reset requests
-		HandleMessages();
+		HandleMessages();/* 处理应用发来的一些消息，如seek  等等*/
 
 		if(m_bAbortRequest)
 			break;

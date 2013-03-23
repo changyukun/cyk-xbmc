@@ -99,7 +99,7 @@ bool CDVDInputStreamFile::Open(const char* strFile, const std::string& content)
 	/* 
 		调用"  CFile 实例"  的open 方法。
 
-		见CFile::Open() ，仔细分析此open 函数会发调用Open 方法之后，此"  CFile 实例" 中
+		见CFile::Open() ，仔细分析此open 函数会发现调用Open 方法之后，此"  CFile 实例" 中
 		的m_pFile 指向的是CFileCache 类的一个实例
 	*/
 	if (!m_pFile->Open(strFile, READ_TRUNCATED | READ_BITRATE | READ_CHUNKED))

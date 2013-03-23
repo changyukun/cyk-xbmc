@@ -355,7 +355,7 @@ protected:
   CDVDClock m_clock;                // master clock
   CDVDOverlayContainer m_overlayContainer;
 
-  CDVDInputStream* m_pInputStream;  // input stream for current playing file
+  CDVDInputStream* m_pInputStream; /* 在方法CDVDPlayer::OpenInputStream()  中进行赋值，为CDVDInputStreamFile  类的一个实例*/   // input stream for current playing file
 
   
   CDVDDemux* m_pDemuxer; /* 	此值在函数OpenDemuxStream 中调用CDVDFactoryDemuxer::CreateDemuxer() 来

@@ -67,7 +67,7 @@ CDVDVideoCodec* CDVDFactoryCodec::OpenCodec(CDVDVideoCodec* pCodec, CDVDStreamIn
 	try
 	{
 		CLog::Log(LOGDEBUG, "FactoryCodec - Video: %s - Opening", pCodec->GetName());
-		if( pCodec->Open( hints, options ) )
+		if( pCodec->Open( hints, options ) ) /* 如CDVDVideoCodecFFmpeg::Open()  */
 		{
 			CLog::Log(LOGDEBUG, "FactoryCodec - Video: %s - Opened", pCodec->GetName());
 			return pCodec;
@@ -300,7 +300,7 @@ CDVDVideoCodec* CDVDFactoryCodec::CreateVideoCodec(CDVDStreamInfo &hint, unsigne
 	CStdString value;
 	value.Format("%d", surfaces);
 	options.push_back(CDVDCodecOption("surfaces", value));
-	if((pCodec = OpenCodec(new CDVDVideoCodecFFmpeg(), hint, options))) 
+	if((pCodec = OpenCodec(new CDVDVideoCodecFFmpeg(), hint, options))) /* 注意这里实例了一个CDVDVideoCodecFFmpeg  */
 		return pCodec;
 
 	return NULL;
